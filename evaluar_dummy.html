@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluar Trabajador — Huella Laboral</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --azul: #0E2A47;
+            --azul-hover: #0a1f35;
+            --verde: #2FBF71;
+            --texto: #2E2E2E;
+            --subtitulo: #6B7280;
+            --fondo: #FFFFFF;
+            --fondo-gris: #F7F8FA;
+            --borde: #E5E7EB;
+            --error: #EF4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--fondo-gris);
+            color: var(--texto);
+            font-size: 16px;
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        nav {
+            background: var(--fondo);
+            border-bottom: 1px solid var(--borde);
+            padding: 0 48px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-text { font-size: 18px; font-weight: 700; color: var(--azul); letter-spacing: -0.3px; }
+
+        .page-wrapper { max-width: 680px; margin: 0 auto; padding: 48px 24px 80px; }
+
+        /* TRABAJADOR CARD */
+        .trabajador-card {
+            background: var(--azul);
+            border-radius: 4px;
+            padding: 24px 28px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .trabajador-avatar {
+            width: 48px;
+            height: 48px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .trabajador-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 4px;
+        }
+
+        .trabajador-nombre { font-size: 18px; font-weight: 700; color: white; margin-bottom: 2px; }
+        .trabajador-rut { font-size: 13px; color: rgba(255,255,255,0.7); }
+
+        /* NO CONOZCO */
+        .no-conoce-block {
+            background: var(--fondo);
+            border: 2px solid var(--borde);
+            border-radius: 4px;
+            padding: 20px 24px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: border-color 0.15s;
+        }
+
+        .no-conoce-block:hover { border-color: var(--azul); }
+        .no-conoce-block.activo { border-color: var(--azul); background: rgba(14,42,71,0.03); }
+
+        .no-conoce-block input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--azul);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .no-conoce-text { font-size: 15px; font-weight: 500; color: var(--texto); }
+        .no-conoce-desc { font-size: 13px; color: var(--subtitulo); margin-top: 2px; }
+
+        /* FORM CARD */
+        .form-card {
+            background: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            transition: opacity 0.2s;
+        }
+
+        .form-card.deshabilitado { opacity: 0.4; pointer-events: none; }
+
+        .form-card-header {
+            padding: 20px 28px;
+            border-bottom: 1px solid var(--borde);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .form-card-number {
+            width: 24px;
+            height: 24px;
+            background: var(--azul);
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .form-card-title { font-size: 15px; font-weight: 700; color: var(--azul); }
+        .label-optional { font-size: 11px; font-weight: 400; color: var(--subtitulo); margin-left: 4px; }
+        .form-card-body { padding: 28px; }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+        .form-row.single { grid-template-columns: 1fr; }
+        .form-row:last-child { margin-bottom: 0; }
+        .form-group { display: flex; flex-direction: column; }
+
+        label { font-size: 13px; font-weight: 500; color: var(--texto); margin-bottom: 6px; }
+
+        input[type="text"], input[type="email"], input[type="date"] {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            color: var(--texto);
+            background: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 10px 14px;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            width: 100%;
+        }
+
+        input:focus { outline: none; border-color: var(--azul); box-shadow: 0 0 0 3px rgba(14,42,71,0.08); }
+        input.error { border-color: var(--error); }
+        .field-error { font-size: 12px; color: var(--error); margin-top: 4px; }
+
+        /* ATRIBUTOS */
+        .atributo-block {
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .atributo-block:last-child { margin-bottom: 0; }
+
+        .atributo-header {
+            background: var(--fondo-gris);
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--borde);
+        }
+
+        .atributo-nombre { font-size: 14px; font-weight: 700; color: var(--azul); margin-bottom: 2px; }
+        .atributo-desc { font-size: 12px; color: var(--subtitulo); }
+        .atributo-body { padding: 20px; }
+
+        /* ESCALA */
+        .escala-opciones { display: flex; gap: 8px; margin-bottom: 8px; }
+
+        .escala-opcion { flex: 1; position: relative; }
+
+        .escala-opcion input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+
+        .escala-opcion label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 4px;
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+            margin: 0;
+        }
+
+        .escala-opcion label:hover { border-color: var(--azul); background: rgba(14,42,71,0.03); }
+        .escala-opcion input:checked + label { border-color: var(--azul); background: var(--azul); }
+
+        .escala-numero { font-size: 16px; font-weight: 700; color: var(--azul); }
+        .escala-opcion input:checked + label .escala-numero { color: white; }
+
+        .escala-texto { font-size: 10px; color: var(--subtitulo); text-align: center; line-height: 1.3; }
+        .escala-opcion input:checked + label .escala-texto { color: rgba(255,255,255,0.8); }
+
+        .escala-error { font-size: 12px; color: var(--error); margin-bottom: 12px; }
+
+        textarea {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            color: var(--texto);
+            background: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 10px 14px;
+            width: 100%;
+            resize: vertical;
+            min-height: 72px;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            line-height: 1.5;
+        }
+
+        textarea:focus { outline: none; border-color: var(--azul); box-shadow: 0 0 0 3px rgba(14,42,71,0.08); }
+
+
+
+        /* LEYENDA */
+        .consent-leyenda {
+            background: rgba(47,191,113,0.08);
+            border: 1px solid rgba(47,191,113,0.3);
+            border-radius: 4px;
+            padding: 14px 18px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .consent-leyenda-text { font-size: 13px; color: #166534; line-height: 1.5; }
+
+        /* SUBMIT */
+        .btn-submit {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            color: white;
+            background: var(--azul);
+            border: 2px solid var(--azul);
+            border-radius: 4px;
+            padding: 14px 32px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.15s;
+        }
+
+        .btn-submit:hover { background: var(--azul-hover); border-color: var(--azul-hover); }
+        .btn-submit:disabled { background: var(--subtitulo); border-color: var(--subtitulo); cursor: not-allowed; }
+
+        /* MENSAJES */
+        .msg { padding: 14px 18px; border-radius: 4px; font-size: 14px; margin-bottom: 16px; display: none; }
+        .msg.error { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); color: #b91c1c; }
+        .msg.visible { display: block; }
+
+        /* ESTADOS */
+        .full-state { display: none; text-align: center; padding: 64px 24px; }
+        .full-state.visible { display: block; }
+
+        .state-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+
+        .state-title { font-size: 22px; font-weight: 700; color: var(--azul); margin-bottom: 12px; }
+        .state-desc { font-size: 15px; color: var(--subtitulo); line-height: 1.6; max-width: 400px; margin: 0 auto; }
+
+        @media (max-width: 600px) {
+            nav { padding: 0 20px; }
+            .page-wrapper { padding: 32px 16px 64px; }
+            .form-card-body { padding: 20px; }
+            .form-row { grid-template-columns: 1fr; }
+            .escala-texto { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">
+            <img src="Huella_Laboral.png" alt="Huella Laboral" style="height:36px; width:auto;">
+        </a>
+    </nav>
+
+    <div class="page-wrapper">
+
+        <!-- Token inválido -->
+        <div class="full-state" id="tokenError">
+            <div class="state-icon" style="background:rgba(239,68,68,0.08);">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round">
+                    <path d="M10 10l12 12M22 10L10 22"/>
+                </svg>
+            </div>
+            <div class="state-title">Enlace no válido</div>
+            <p class="state-desc">Este enlace de evaluación no es válido o ya fue utilizado. Si crees que es un error, contacta a quien te lo envió.</p>
+        </div>
+
+        <!-- Formulario -->
+        <div id="formWrapper" style="display:none;">
+
+            <div class="trabajador-card">
+                <div class="trabajador-avatar">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="8" r="4"/>
+                        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="trabajador-label">Solicitud de evaluación</div>
+                    <div class="trabajador-nombre" id="trabajadorNombre">Cargando...</div>
+                    <div class="trabajador-rut" id="trabajadorRut"></div>
+                </div>
+            </div>
+
+            <div id="msgGlobal" class="msg error"></div>
+
+            <form id="formEvaluacion" novalidate>
+
+                <!-- NO CONOZCO -->
+                <div class="no-conoce-block" id="noConoceBlock" onclick="toggleNoConoce()">
+                    <input type="checkbox" id="noConoce" onclick="event.stopPropagation(); toggleNoConoce()">
+                    <div>
+                        <div class="no-conoce-text">No conozco o no he trabajado con esta persona</div>
+                        <div class="no-conoce-desc">Al marcar esta opción el formulario quedará inhabilitado y solo podrás enviar esta respuesta.</div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 1: Datos del evaluador -->
+                <div class="form-card" id="seccionDatos">
+                    <div class="form-card-header">
+                        <div class="form-card-number">1</div>
+                        <span class="form-card-title">Tus datos</span>
+                    </div>
+                    <div class="form-card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="evalNombre">Nombre completo</label>
+                                <input type="text" id="evalNombre" placeholder="María García López">
+                                <span class="field-error" id="err-evalNombre"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="evalRut">RUT</label>
+                                <input type="text" id="evalRut" placeholder="12.345.678-9">
+                                <span class="field-error" id="err-evalRut"></span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="evalEmpresa">Nombre de la empresa</label>
+                                <input type="text" id="evalEmpresa" placeholder="Empresa S.A.">
+                                <span class="field-error" id="err-evalEmpresa"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="evalRutEmpresa">RUT empresa <span class="label-optional">(opcional)</span></label>
+                                <input type="text" id="evalRutEmpresa" placeholder="76.543.210-K">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="periodoDesde">Período laboral — Desde</label>
+                                <input type="date" id="periodoDesde">
+                                <span class="field-error" id="err-periodoDesde"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="periodoHasta">Período laboral — Hasta</label>
+                                <input type="date" id="periodoHasta">
+                                <span class="field-error" id="err-periodoHasta"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 2: Evaluación -->
+                <div class="form-card" id="seccionEvaluacion">
+                    <div class="form-card-header">
+                        <div class="form-card-number">2</div>
+                        <span class="form-card-title">Evaluación de desempeño</span>
+                    </div>
+                    <div class="form-card-body">
+
+                        <!-- Puntualidad -->
+                        <div class="atributo-block">
+                            <div class="atributo-header">
+                                <div class="atributo-nombre">Puntualidad y asistencia</div>
+                                <div class="atributo-desc">Cumplimiento de horarios, asistencia y compromisos de tiempo</div>
+                            </div>
+                            <div class="atributo-body">
+                                <div class="escala-opciones">
+                                    <div class="escala-opcion"><input type="radio" name="puntualidad" id="punt1" value="1"><label for="punt1"><span class="escala-numero">1</span><span class="escala-texto">Muy mejorable</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="puntualidad" id="punt2" value="2"><label for="punt2"><span class="escala-numero">2</span><span class="escala-texto">Mejorable</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="puntualidad" id="punt3" value="3"><label for="punt3"><span class="escala-numero">3</span><span class="escala-texto">Suficiente</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="puntualidad" id="punt4" value="4"><label for="punt4"><span class="escala-numero">4</span><span class="escala-texto">Bueno</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="puntualidad" id="punt5" value="5"><label for="punt5"><span class="escala-numero">5</span><span class="escala-texto">Muy bueno</span></label></div>
+                                </div>
+                                <div class="escala-error" id="err-puntualidad"></div>
+                                <div class="form-group">
+                                    <label for="puntComentario">Comentarios <span class="label-optional">(opcional)</span></label>
+                                    <textarea id="puntComentario" placeholder="Observaciones adicionales..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Desempeño -->
+                        <div class="atributo-block">
+                            <div class="atributo-header">
+                                <div class="atributo-nombre">Desempeño</div>
+                                <div class="atributo-desc">Calidad del trabajo, cumplimiento de objetivos y resultados obtenidos</div>
+                            </div>
+                            <div class="atributo-body">
+                                <div class="escala-opciones">
+                                    <div class="escala-opcion"><input type="radio" name="desempeno" id="des1" value="1"><label for="des1"><span class="escala-numero">1</span><span class="escala-texto">Muy mejorable</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="desempeno" id="des2" value="2"><label for="des2"><span class="escala-numero">2</span><span class="escala-texto">Mejorable</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="desempeno" id="des3" value="3"><label for="des3"><span class="escala-numero">3</span><span class="escala-texto">Suficiente</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="desempeno" id="des4" value="4"><label for="des4"><span class="escala-numero">4</span><span class="escala-texto">Bueno</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="desempeno" id="des5" value="5"><label for="des5"><span class="escala-numero">5</span><span class="escala-texto">Muy bueno</span></label></div>
+                                </div>
+                                <div class="escala-error" id="err-desempeno"></div>
+                                <div class="form-group">
+                                    <label for="desComentario">Comentarios <span class="label-optional">(opcional)</span></label>
+                                    <textarea id="desComentario" placeholder="Observaciones adicionales..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Confiabilidad -->
+                        <div class="atributo-block">
+                            <div class="atributo-header">
+                                <div class="atributo-nombre">Confiabilidad</div>
+                                <div class="atributo-desc">Honestidad, responsabilidad y cumplimiento de compromisos</div>
+                            </div>
+                            <div class="atributo-body">
+                                <div class="escala-opciones">
+                                    <div class="escala-opcion"><input type="radio" name="confiabilidad" id="con1" value="1"><label for="con1"><span class="escala-numero">1</span><span class="escala-texto">Muy mejorable</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="confiabilidad" id="con2" value="2"><label for="con2"><span class="escala-numero">2</span><span class="escala-texto">Mejorable</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="confiabilidad" id="con3" value="3"><label for="con3"><span class="escala-numero">3</span><span class="escala-texto">Suficiente</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="confiabilidad" id="con4" value="4"><label for="con4"><span class="escala-numero">4</span><span class="escala-texto">Bueno</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="confiabilidad" id="con5" value="5"><label for="con5"><span class="escala-numero">5</span><span class="escala-texto">Muy bueno</span></label></div>
+                                </div>
+                                <div class="escala-error" id="err-confiabilidad"></div>
+                                <div class="form-group">
+                                    <label for="conComentario">Comentarios <span class="label-optional">(opcional)</span></label>
+                                    <textarea id="conComentario" placeholder="Observaciones adicionales..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+
+
+                <!-- SECCIÓN 3: Otros comentarios -->
+                <div class="form-card" id="seccionComentarios">
+                    <div class="form-card-header">
+                        <div class="form-card-number">3</div>
+                        <span class="form-card-title">Otros comentarios <span class="label-optional" style="font-size:13px; font-weight:400;">(opcional)</span></span>
+                    </div>
+                    <div class="form-card-body">
+                        <div class="form-group">
+                            <textarea id="otrosComentarios" placeholder="Información adicional que consideres relevante sobre el desempeño o experiencia laboral de esta persona..." style="min-height:100px;"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LEYENDA -->
+                <div class="consent-leyenda">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#2FBF71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                        <path d="M9 12l2 2 4-4"/>
+                        <path d="M10 2a8 8 0 1 0 0 16A8 8 0 0 0 10 2z"/>
+                    </svg>
+                    <p class="consent-leyenda-text">El trabajador ha dado su consentimiento para ser evaluado y autoriza el uso de sus datos con fines de certificación laboral.</p>
+                </div>
+
+                <button type="submit" class="btn-submit" id="btnSubmit">Enviar evaluación</button>
+
+            </form>
+        </div>
+
+        <!-- Éxito -->
+        <div class="full-state" id="successState">
+            <div class="state-icon" style="background:rgba(47,191,113,0.12);">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="#2FBF71" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 16L12 22L26 10"/>
+                </svg>
+            </div>
+            <h2 class="state-title">Evaluación enviada correctamente</h2>
+            <p class="state-desc" id="successDesc">Tu evaluación ha sido registrada. El trabajador será notificado cuando todas las evaluaciones estén completas.</p>
+        </div>
+
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('token');
+
+        async function cargarDatos() {
+            // DUMMY: datos de prueba hardcodeados
+            document.getElementById('trabajadorNombre').textContent = 'Juan Pérez González';
+            document.getElementById('trabajadorRut').textContent = '12.345.678-9';
+            document.getElementById('formWrapper').style.display = 'block';
+        }
+
+        function mostrarTokenError() {
+            document.getElementById('tokenError').classList.add('visible');
+        }
+
+        let noConoceActivo = false;
+
+        function toggleNoConoce() {
+            noConoceActivo = !noConoceActivo;
+            document.getElementById('noConoce').checked = noConoceActivo;
+            document.getElementById('noConoceBlock').classList.toggle('activo', noConoceActivo);
+            ['seccionDatos', 'seccionEvaluacion', 'seccionComentarios'].forEach(id => {
+                document.getElementById(id).classList.toggle('deshabilitado', noConoceActivo);
+            });
+        }
+
+        // Formateo RUT
+        function formatearRut(input) {
+            input.addEventListener('input', function (e) {
+                let value = e.target.value.replace(/[^0-9kK]/g, '');
+                if (value.length > 1) {
+                    const dv = value.slice(-1).toUpperCase();
+                    const num = value.slice(0, -1).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                    e.target.value = `${num}-${dv}`;
+                } else { e.target.value = value; }
+            });
+        }
+
+        formatearRut(document.getElementById('evalRut'));
+        formatearRut(document.getElementById('evalRutEmpresa'));
+
+
+
+        // Validación
+        function validarCampo(id, errorId, condicion, mensaje) {
+            const input = document.getElementById(id);
+            const error = document.getElementById(errorId);
+            if (!condicion(input.value)) { input.classList.add('error'); error.textContent = mensaje; return false; }
+            input.classList.remove('error'); error.textContent = ''; return true;
+        }
+
+        function validarRadio(name, errorId, mensaje) {
+            const seleccionado = document.querySelector(`input[name="${name}"]:checked`);
+            const error = document.getElementById(errorId);
+            if (!seleccionado) { error.textContent = mensaje; return false; }
+            error.textContent = ''; return true;
+        }
+
+        function validarFormulario() {
+            if (noConoceActivo) return true;
+            let valido = true;
+            valido &= validarCampo('evalNombre', 'err-evalNombre', v => v.trim().length >= 3, 'Ingresa tu nombre completo.');
+            valido &= validarCampo('evalRut', 'err-evalRut', v => /^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$/.test(v), 'Ingresa un RUT válido.');
+            valido &= validarCampo('evalEmpresa', 'err-evalEmpresa', v => v.trim().length >= 2, 'Ingresa el nombre de la empresa.');
+            valido &= validarCampo('periodoDesde', 'err-periodoDesde', v => v !== '', 'Selecciona la fecha de inicio.');
+            valido &= validarCampo('periodoHasta', 'err-periodoHasta', v => v !== '', 'Selecciona la fecha de término.');
+            valido &= validarRadio('puntualidad', 'err-puntualidad', 'Selecciona una calificación.');
+            valido &= validarRadio('desempeno', 'err-desempeno', 'Selecciona una calificación.');
+            valido &= validarRadio('confiabilidad', 'err-confiabilidad', 'Selecciona una calificación.');
+            return !!valido;
+        }
+
+        function mostrarMsg(texto) {
+            const msg = document.getElementById('msgGlobal');
+            msg.textContent = texto;
+            msg.classList.add('visible');
+            msg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function ocultarMsg() { document.getElementById('msgGlobal').classList.remove('visible'); }
+
+        document.getElementById('formEvaluacion').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            ocultarMsg();
+            if (!validarFormulario()) { mostrarMsg('Completa todos los campos requeridos antes de continuar.'); return; }
+
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            btn.textContent = 'Enviando...';
+
+            const datos = {
+                token,
+                no_conoce: noConoceActivo,
+                evaluador: noConoceActivo ? null : {
+                    nombre: document.getElementById('evalNombre').value.trim(),
+                    rut: document.getElementById('evalRut').value.trim(),
+                    empresa: document.getElementById('evalEmpresa').value.trim(),
+                    rut_empresa: document.getElementById('evalRutEmpresa').value.trim(),
+                    periodo_desde: document.getElementById('periodoDesde').value,
+                    periodo_hasta: document.getElementById('periodoHasta').value
+                },
+                evaluacion: noConoceActivo ? null : {
+                    puntualidad: {
+                        calificacion: parseInt(document.querySelector('input[name="puntualidad"]:checked')?.value),
+                        comentario: document.getElementById('puntComentario').value.trim()
+                    },
+                    desempeno: {
+                        calificacion: parseInt(document.querySelector('input[name="desempeno"]:checked')?.value),
+                        comentario: document.getElementById('desComentario').value.trim()
+                    },
+                    confiabilidad: {
+                        calificacion: parseInt(document.querySelector('input[name="confiabilidad"]:checked')?.value),
+                        comentario: document.getElementById('conComentario').value.trim()
+                    }
+                },
+                fecha_completado: new Date().toISOString(),
+                otros_comentarios: noConoceActivo ? null : document.getElementById('otrosComentarios').value.trim()
+            };
+
+            try {
+                const response = await fetch('TU_WEBHOOK_N8N_URL_PROCESAR_EVALUACION', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datos)
+                });
+                if (!response.ok) throw new Error();
+                document.getElementById('formWrapper').style.display = 'none';
+                if (noConoceActivo) document.getElementById('successDesc').textContent = 'Tu respuesta ha sido registrada.';
+                document.getElementById('successState').classList.add('visible');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (err) {
+                mostrarMsg('Ha ocurrido un error al enviar la evaluación. Intenta nuevamente.');
+                btn.disabled = false;
+                btn.textContent = 'Enviar evaluación';
+            }
+        });
+
+        cargarDatos();
+    </script>
+
+</body>
+</html>
