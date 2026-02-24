@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitar Referencias — Huella Laboral</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --azul: #0E2A47;
+            --azul-hover: #0a1f35;
+            --verde: #2FBF71;
+            --texto: #2E2E2E;
+            --subtitulo: #6B7280;
+            --fondo: #FFFFFF;
+            --fondo-gris: #F7F8FA;
+            --borde: #E5E7EB;
+            --error: #EF4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--fondo-gris);
+            color: var(--texto);
+            font-size: 16px;
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        /* NAV */
+        nav {
+            background: var(--fondo);
+            border-bottom: 1px solid var(--borde);
+            padding: 0 48px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--azul);
+            letter-spacing: -0.3px;
+        }
+
+        .nav-back {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--subtitulo);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.15s;
+        }
+
+        .nav-back:hover { color: var(--azul); }
+
+        /* LAYOUT */
+        .page-wrapper {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 48px 24px 80px;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--subtitulo);
+            margin-bottom: 8px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--azul);
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+
+        .page-desc {
+            font-size: 15px;
+            color: var(--subtitulo);
+            line-height: 1.6;
+        }
+
+        /* FORM CARD */
+        .form-card {
+            background: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .form-card-header {
+            padding: 20px 28px;
+            border-bottom: 1px solid var(--borde);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .form-card-number {
+            width: 24px;
+            height: 24px;
+            background: var(--azul);
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .form-card-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--azul);
+        }
+
+        .form-card-body {
+            padding: 28px;
+        }
+
+        /* ACORDEÓN OPCIONAL */
+        .form-card.colapsable .form-card-header {
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.15s;
+        }
+
+        .form-card.colapsable .form-card-header:hover {
+            background: var(--fondo-gris);
+        }
+
+        .form-card-chevron {
+            margin-left: auto;
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .form-card.expandido .form-card-chevron {
+            transform: rotate(180deg);
+        }
+
+        .form-card.colapsable .form-card-body {
+            max-height: 0;
+            overflow: hidden;
+            padding: 0 28px;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        }
+
+        .form-card.colapsable.expandido .form-card-body {
+            max-height: 2000px;
+            padding: 28px;
+        }
+
+        /* FORM FIELDS */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .form-row.single { grid-template-columns: 1fr; }
+
+        .form-group { display: flex; flex-direction: column; }
+
+        .form-group:last-child { margin-bottom: 0; }
+
+        label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--texto);
+            margin-bottom: 6px;
+        }
+
+        .label-optional {
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--subtitulo);
+            margin-left: 4px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"] {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            color: var(--texto);
+            background: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 10px 14px;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            width: 100%;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--azul);
+            box-shadow: 0 0 0 3px rgba(14, 42, 71, 0.08);
+        }
+
+        input.error {
+            border-color: var(--error);
+        }
+
+        input.error:focus {
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
+        }
+
+        .field-error {
+            font-size: 12px;
+            color: var(--error);
+            margin-top: 4px;
+        }
+
+        /* EMPLEADORES */
+        .empleador-block {
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .empleador-block:last-of-type { margin-bottom: 0; }
+
+        .empleador-header {
+            background: var(--fondo-gris);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--borde);
+        }
+
+        .empleador-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--azul);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .btn-remove {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--error);
+            background: transparent;
+            border: 1px solid var(--error);
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .btn-remove:hover {
+            background: var(--error);
+            color: white;
+        }
+
+        .empleador-body { padding: 20px; }
+
+        /* AVISO CORREO */
+        .aviso-warning {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            background: #FFFBEB;
+            border: 1px solid #FCD34D;
+            border-radius: 4px;
+            padding: 9px 12px;
+            margin-top: 6px;
+        }
+
+        .aviso-warning-text {
+            font-size: 12px;
+            font-weight: 500;
+            color: #92400E;
+            line-height: 1.5;
+        }
+
+        /* SELECT PERSONALIZADO */
+        .select-wrapper {
+            position: relative;
+        }
+
+        .select-wrapper::after {
+            content: '';
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 6px solid var(--azul);
+            pointer-events: none;
+        }
+
+        select {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            color: var(--texto);
+            background-color: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 10px 40px 10px 14px;
+            width: 100%;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            cursor: pointer;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            box-shadow: none;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--azul);
+            box-shadow: 0 0 0 3px rgba(14, 42, 71, 0.08);
+        }
+
+        select option { color: var(--texto); }
+        select option[value=""] { color: var(--subtitulo); }
+
+        /* BOTÓN AGREGAR */
+        .btn-add {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--azul);
+            background: transparent;
+            border: 1px dashed var(--azul);
+            border-radius: 4px;
+            padding: 12px 20px;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+            transition: background 0.15s;
+        }
+
+        .btn-add:hover { background: rgba(14, 42, 71, 0.04); }
+
+        .btn-add-icon {
+            width: 20px;
+            height: 20px;
+            background: var(--azul);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        /* CONSENTIMIENTO */
+        .consent-block {
+            background: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 24px 28px;
+            margin-bottom: 16px;
+        }
+
+        .consent-check {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .consent-check input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            border: 1px solid var(--borde);
+            border-radius: 3px;
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-top: 2px;
+            accent-color: var(--azul);
+        }
+
+        .consent-text {
+            font-size: 13px;
+            color: var(--texto);
+            line-height: 1.6;
+        }
+
+        .consent-text strong { color: var(--azul); }
+
+        .consent-disclaimer {
+            font-size: 12px;
+            color: var(--subtitulo);
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--borde);
+            line-height: 1.6;
+        }
+
+        /* SUBMIT */
+        .btn-submit {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            color: white;
+            background: var(--azul);
+            border: 2px solid var(--azul);
+            border-radius: 4px;
+            padding: 14px 32px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.15s;
+        }
+
+        .btn-submit:hover { background: var(--azul-hover); border-color: var(--azul-hover); }
+
+        .btn-submit:disabled {
+            background: var(--subtitulo);
+            border-color: var(--subtitulo);
+            cursor: not-allowed;
+        }
+
+        /* MENSAJES */
+        .msg {
+            padding: 14px 18px;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .msg.error {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #b91c1c;
+        }
+
+        .msg.success {
+            background: rgba(47, 191, 113, 0.08);
+            border: 1px solid rgba(47, 191, 113, 0.3);
+            color: #166534;
+        }
+
+        .msg.visible { display: block; }
+
+        /* SUCCESS STATE */
+        .success-state {
+            display: none;
+            text-align: center;
+            padding: 64px 24px;
+        }
+
+        .success-state.visible { display: block; }
+
+        .success-icon {
+            width: 64px;
+            height: 64px;
+            background: rgba(47, 191, 113, 0.12);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+
+        .success-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--azul);
+            margin-bottom: 12px;
+        }
+
+        .success-desc {
+            font-size: 15px;
+            color: var(--subtitulo);
+            line-height: 1.6;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        /* UPLOAD */
+        .upload-area {
+            border: 1px dashed var(--borde);
+            border-radius: 4px;
+            transition: border-color 0.15s, background 0.15s;
+        }
+
+        .upload-area:hover {
+            border-color: var(--azul);
+            background: rgba(14, 42, 71, 0.02);
+        }
+
+        .upload-area.drag-over {
+            border-color: var(--azul);
+            background: rgba(14, 42, 71, 0.04);
+        }
+
+        .upload-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 36px 24px;
+            cursor: pointer;
+        }
+
+        .upload-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--azul);
+        }
+
+        .upload-hint {
+            font-size: 12px;
+            color: var(--subtitulo);
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 600px) {
+            nav { padding: 0 20px; }
+            .page-wrapper { padding: 32px 16px 64px; }
+            .form-card-body { padding: 20px; }
+            .form-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">
+            <img src="Huella_Laboral.png" alt="Huella Laboral" style="height:36px; width:auto;">
+        </a>
+        <a href="index.html" class="nav-back">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 4L6 8l4 4"/>
+            </svg>
+            Volver al inicio
+        </a>
+    </nav>
+
+    <div class="page-wrapper">
+
+        <!-- Header -->
+        <div class="page-header">
+            <div class="page-label">Trabajadores</div>
+            <h1 class="page-title">Bienvenido a Huella Laboral</h1>
+            <p class="page-desc">El siguiente formulario ayudará a acreditar tu experiencia laboral, para que puedas usarla a tu favor en postulaciones laborales.</p>
+            <p style="font-size:14px; color:var(--subtitulo); margin-top:12px; line-height:1.6;">Completa tus datos y agrega al menos un ex empleador. Si deseas respaldar tu trayectoria adjunta documentos. Para finalizar presiona Enviar solicitud.</p>
+        </div>
+
+        <!-- Mensaje global -->
+        <div id="msgGlobal" class="msg"></div>
+
+        <!-- Formulario -->
+        <form id="formTrabajador" novalidate>
+
+            <!-- SECCIÓN 1: Datos del trabajador -->
+            <div class="form-card">
+                <div class="form-card-header">
+                    <div class="form-card-number">1</div>
+                    <span class="form-card-title">Tus datos</span>
+                </div>
+                <div class="form-card-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="nombre">Nombre completo</label>
+                            <input type="text" id="nombre" name="nombre" placeholder="Juan Pérez González" autocomplete="name">
+                            <span class="field-error" id="err-nombre"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="rut">RUT</label>
+                            <input type="text" id="rut" name="rut" placeholder="12.345.678-9" autocomplete="off">
+                            <span class="field-error" id="err-rut"></span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="email">Correo electrónico</label>
+                            <input type="email" id="email" name="email" placeholder="nombre@correo.cl" autocomplete="email">
+                            <span class="field-error" id="err-email"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="whatsapp">WhatsApp <span class="label-optional">(opcional)</span></label>
+                            <input type="tel" id="whatsapp" name="whatsapp" placeholder="+56 9 1234 5678" autocomplete="tel">
+                        </div>
+                    </div>
+                    <div class="form-row single">
+                        <div class="form-group">
+                            <label for="comuna">Comuna <span class="label-optional">(opcional)</span></label>
+                            <input type="text" id="comuna" name="comuna" placeholder="Ej: Santiago, Providencia, Las Condes">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 2: Empleadores -->
+            <div class="form-card">
+                <div class="form-card-header">
+                    <div class="form-card-number">2</div>
+                    <span class="form-card-title">Ex empleadores que evaluarán tu desempeño</span>
+                </div>
+                <div class="form-card-body">
+                    <div id="empleadoresContainer">
+                        <!-- Se cargan dinámicamente -->
+                    </div>
+                    <button type="button" class="btn-add" onclick="agregarEmpleador()">
+                        <span class="btn-add-icon">+</span>
+                        Agregar otro empleador
+                    </button>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 3: Certificado -->
+            <div class="form-card colapsable" id="seccionCertificado">
+                <div class="form-card-header" onclick="toggleSeccion('seccionCertificado')">
+                    <div class="form-card-number">3</div>
+                    <span class="form-card-title">Certificado de cotizaciones previsionales</span>
+                    <span style="font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--subtitulo); background:var(--fondo-gris); border:1px solid var(--borde); border-radius:2px; padding:2px 7px; margin-left:8px;">Opcional</span>
+                    <svg class="form-card-chevron" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 7.5L10 12.5L15 7.5"/>
+                    </svg>
+                </div>
+                <div class="form-card-body">
+                    <p style="font-size:14px; color:var(--subtitulo); margin-bottom:20px; line-height:1.6;">Adjunta tu certificado de cotizaciones previsionales de los últimos 4 años para respaldar tu historial laboral. Formatos aceptados: PDF, JPG, PNG.</p>
+                    <div class="upload-area" id="uploadArea">
+                        <input type="file" id="certificado" accept=".pdf,.jpg,.jpeg,.png" style="display:none;">
+                        <label for="certificado" class="upload-label">
+                            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 22H24a4 4 0 0 0 0-8h-1a7 7 0 1 0-13 4"/>
+                                <path d="M16 22V14M13 17l3-3 3 3"/>
+                            </svg>
+                            <span class="upload-text">Haz clic para seleccionar el archivo</span>
+                            <span class="upload-hint">o arrastra y suelta aquí</span>
+                        </label>
+                    </div>
+                    <div id="fileSelected" style="display:none; margin-top:12px;">
+                        <div style="display:flex; align-items:center; justify-content:space-between; background:var(--fondo-gris); border:1px solid var(--borde); border-radius:4px; padding:12px 16px;">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#0E2A47" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M13 2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7z"/>
+                                    <path d="M13 2v5h5"/>
+                                </svg>
+                                <span id="fileName" style="font-size:14px; font-weight:500; color:var(--texto);"></span>
+                                <span id="fileSize" style="font-size:12px; color:var(--subtitulo);"></span>
+                            </div>
+                            <button type="button" onclick="eliminarArchivo()" class="btn-remove">Eliminar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 4: Causal de salida y finiquito -->
+            <div class="form-card colapsable" id="seccionFiniquito">
+                <div class="form-card-header" onclick="toggleSeccion('seccionFiniquito')">
+                    <div class="form-card-number">4</div>
+                    <span class="form-card-title">Causal de salida y finiquito</span>
+                    <span style="font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--subtitulo); background:var(--fondo-gris); border:1px solid var(--borde); border-radius:2px; padding:2px 7px; margin-left:8px;">Opcional</span>
+                    <svg class="form-card-chevron" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 7.5L10 12.5L15 7.5"/>
+                    </svg>
+                </div>
+                <div class="form-card-body">
+                    <p style="font-size:14px; color:var(--subtitulo); margin-bottom:20px; line-height:1.6;">Adjunta tu finiquito e indica la causal de término de tu último contrato para que posibles empleadores puedan conocerla.</p>
+                    <div class="form-row single" style="margin-bottom:20px;">
+                        <div class="form-group">
+                            <label for="causalSalida">Causal de término de contrato</label>
+                            <div class="select-wrapper">
+                                <select id="causalSalida" name="causalSalida">
+                                    <option value="">Selecciona una opción</option>
+                                    <option value="mutuo_acuerdo">Mutuo acuerdo de las partes</option>
+                                    <option value="necesidades_empresa">Necesidades de la empresa</option>
+                                    <option value="renuncia">Renuncia del trabajador</option>
+                                    <option value="vencimiento_plazo">Vencimiento del plazo convenido</option>
+                                    <option value="conclusion_trabajo">Conclusión del trabajo o servicio</option>
+                                    <option value="caso_fortuito">Caso fortuito o fuerza mayor</option>
+                                    <option value="otro">Otro</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="upload-area" id="uploadAreaFiniquito">
+                        <input type="file" id="finiquito" accept=".pdf" style="display:none;">
+                        <label for="finiquito" class="upload-label">
+                            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 22H24a4 4 0 0 0 0-8h-1a7 7 0 1 0-13 4"/>
+                                <path d="M16 22V14M13 17l3-3 3 3"/>
+                            </svg>
+                            <span class="upload-text">Adjuntar último finiquito (PDF)</span>
+                            <span class="upload-hint">o arrastra y suelta aquí</span>
+                        </label>
+                    </div>
+                    <div id="finiquitoSelected" style="display:none; margin-top:12px;">
+                        <div style="display:flex; align-items:center; justify-content:space-between; background:var(--fondo-gris); border:1px solid var(--borde); border-radius:4px; padding:12px 16px;">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#0E2A47" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M13 2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7z"/>
+                                    <path d="M13 2v5h5"/>
+                                </svg>
+                                <span id="finiquitoName" style="font-size:14px; font-weight:500; color:var(--texto);"></span>
+                                <span id="finiquitoSize" style="font-size:12px; color:var(--subtitulo);"></span>
+                            </div>
+                            <button type="button" onclick="eliminarFiniquito()" class="btn-remove">Eliminar</button>
+                        </div>
+                    </div>
+                    <p style="font-size:12px; color:var(--subtitulo); margin-top:14px; line-height:1.6; padding:12px; background:var(--fondo-gris); border-radius:4px;">Si adjuntas tu último finiquito, se utilizará solamente la información para validar la causal de término de contrato, para conocimiento de posibles empleadores.</p>
+                </div>
+            </div>
+
+            <!-- CONSENTIMIENTO -->
+            <div class="consent-block">
+                <label class="consent-check">
+                    <input type="checkbox" id="consentimiento" name="consentimiento">
+                    <span class="consent-text">
+                        Autorizo a <strong>Huella Laboral</strong> a utilizar mis datos personales y compartirlos con los empleadores indicados con el fin exclusivo de obtener referencias laborales verificadas. Autorizo a que las evaluaciones de mi desempeño y documentación entregada, formen parte de mi perfil en Huella Laboral, y puedan ser revisadas por empleadores que utilicen el portal en búsqueda de candidatos. He leído y acepto los <a href="terminos.html" style="color:var(--azul); font-weight:500;">Términos y Condiciones</a>.
+                    </span>
+                </label>
+                <p class="consent-disclaimer">
+                    Tus datos serán tratados conforme a la Ley N° 19.628 de Protección de la Vida Privada. Huella Laboral actúa como intermediario neutral y no comercializa información personal. Puedes revocar este consentimiento en cualquier momento.
+                </p>
+            </div>
+
+            <button type="submit" class="btn-submit" id="btnSubmit">Enviar solicitud</button>
+
+        </form>
+
+        <!-- Estado de éxito -->
+        <div class="success-state" id="successState">
+            <div class="success-icon">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="#2FBF71" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 16L12 22L26 10"/>
+                </svg>
+            </div>
+            <h2 class="success-title">Solicitud enviada correctamente</h2>
+            <p class="success-desc">Cada ex empleador recibirá un correo con un enlace único para completar tu evaluación. Te notificaremos cuando esté lista.</p>
+        </div>
+
+    </div>
+
+    <script>
+        // ============================================
+        // FUNCIONES DE VALIDACIÓN
+        // ============================================
+        
+        /**
+         * Formatea RUT chileno: agrega puntos y guión
+         * Ejemplo: 12345678-9 → 12.345.678-9
+         */
+        function formatearRut(rut) {
+            // Remover todo excepto números y K
+            rut = rut.replace(/[^0-9kK]/g, '').toUpperCase();
+            
+            if (rut.length <= 1) return rut;
+            
+            // Separar dígito verificador
+            const dv = rut.slice(-1);
+            let numero = rut.slice(0, -1);
+            
+            // Agregar puntos cada 3 dígitos
+            numero = numero.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            
+            return `${numero}-${dv}`;
+        }
+        
+        /**
+         * Valida RUT chileno usando algoritmo módulo 11
+         * Retorna true si el RUT es válido
+         */
+        function validarRutChileno(rut) {
+            // Limpiar formato
+            rut = rut.replace(/\./g, '').replace(/-/g, '').toUpperCase();
+            
+            if (rut.length < 2) return false;
+            
+            // Separar número y dígito verificador
+            const numero = rut.slice(0, -1);
+            const dvIngresado = rut.slice(-1);
+            
+            // Validar que el número sea válido
+            if (!/^\d+$/.test(numero)) return false;
+            
+            // Calcular dígito verificador esperado
+            let suma = 0;
+            let multiplicador = 2;
+            
+            for (let i = numero.length - 1; i >= 0; i--) {
+                suma += parseInt(numero[i]) * multiplicador;
+                multiplicador = multiplicador === 7 ? 2 : multiplicador + 1;
+            }
+            
+            const resto = suma % 11;
+            const dvEsperado = resto === 0 ? '0' : resto === 1 ? 'K' : String(11 - resto);
+            
+            return dvIngresado === dvEsperado;
+        }
+        
+        /**
+         * Valida formato de email según RFC 5322 simplificado
+         * Retorna true si el email es válido
+         */
+        function validarEmail(email) {
+            const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            return regex.test(email);
+        }
+        
+        /**
+         * Muestra mensaje de error debajo de un input
+         */
+        function mostrarErrorInput(inputId, mensaje) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            
+            // Remover mensaje anterior si existe
+            const errorPrevio = input.parentElement.querySelector('.error-mensaje');
+            if (errorPrevio) errorPrevio.remove();
+            
+            // Agregar borde rojo
+            input.style.borderColor = '#dc2626';
+            
+            // Crear y agregar mensaje de error
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-mensaje';
+            errorDiv.style.cssText = 'color:#dc2626; font-size:12px; margin-top:4px;';
+            errorDiv.textContent = mensaje;
+            input.parentElement.appendChild(errorDiv);
+        }
+        
+        /**
+         * Limpia mensaje de error de un input
+         */
+        function limpiarErrorInput(inputId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            
+            input.style.borderColor = '';
+            const errorMsg = input.parentElement.querySelector('.error-mensaje');
+            if (errorMsg) errorMsg.remove();
+        }
+        
+        // ============================================
+        // LÓGICA DEL FORMULARIO
+        // ============================================
+        
+        let empleadorCount = 0;
+
+        // Toggle acordeón
+        function toggleSeccion(id) {
+            const seccion = document.getElementById(id);
+            seccion.classList.toggle('expandido');
+        }
+
+        // Cargar 1 empleador por defecto al inicio
+        document.addEventListener('DOMContentLoaded', function () {
+            agregarEmpleador();
+        });
+
+        function agregarEmpleador() {
+            empleadorCount++;
+            const container = document.getElementById('empleadoresContainer');
+
+            const bloque = document.createElement('div');
+            bloque.className = 'empleador-block';
+            bloque.id = `empleador-${empleadorCount}`;
+
+            const id = empleadorCount;
+
+            bloque.innerHTML = `
+                <div class="empleador-header">
+                    <span class="empleador-title">Empleador ${id}</span>
+                    ${id > 1 ? `<button type="button" class="btn-remove" onclick="eliminarEmpleador(${id})">Eliminar</button>` : ''}
+                </div>
+                <div class="empleador-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="emp_empresa_${id}">Nombre de la empresa</label>
+                            <input type="text" id="emp_empresa_${id}" name="emp_empresa[]" placeholder="Empresa S.A.">
+                            <span class="field-error" id="err-emp_empresa_${id}"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="emp_jefe_${id}">Nombre del jefe directo</label>
+                            <input type="text" id="emp_jefe_${id}" name="emp_jefe[]" placeholder="María García">
+                            <span class="field-error" id="err-emp_jefe_${id}"></span>
+                        </div>
+                    </div>
+                    <div class="form-row single">
+                        <div class="form-group">
+                            <label for="emp_email_${id}">Correo del jefe directo</label>
+                            <input type="email" id="emp_email_${id}" name="emp_email[]" placeholder="jefe@empresa.cl">
+                            <span class="field-error" id="err-emp_email_${id}"></span>
+                            <span style="font-size:12px; font-weight:500; color:var(--error); margin-top:5px; display:block;">Si no usas un correo corporativo, la validación quedará sujeta a confirmación.</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(bloque);
+            renumerarEmpleadores();
+        }
+
+        function eliminarEmpleador(id) {
+            const el = document.getElementById(`empleador-${id}`);
+            if (el) {
+                el.remove();
+                renumerarEmpleadores();
+            }
+        }
+
+        function renumerarEmpleadores() {
+            const bloques = document.querySelectorAll('.empleador-block');
+            bloques.forEach((bloque, index) => {
+                const titulo = bloque.querySelector('.empleador-title');
+                if (titulo) titulo.textContent = `Empleador ${index + 1}`;
+            });
+        }
+
+        // ============================================
+        // EVENT LISTENERS PARA VALIDACIÓN EN TIEMPO REAL
+        // ============================================
+        
+        // Formateo y validación de RUT del trabajador
+        const rutInput = document.getElementById('rut');
+        rutInput.addEventListener('input', function (e) {
+            e.target.value = formatearRut(e.target.value);
+        });
+        
+        rutInput.addEventListener('blur', function (e) {
+            limpiarErrorInput('rut');
+            const rut = e.target.value;
+            if (rut && !validarRutChileno(rut)) {
+                mostrarErrorInput('rut', 'RUT inválido. Verifica el dígito verificador.');
+            }
+        });
+        
+        // Validación de email del trabajador
+        document.getElementById('email').addEventListener('blur', function (e) {
+            limpiarErrorInput('email');
+            const email = e.target.value;
+            if (email && !validarEmail(email)) {
+                mostrarErrorInput('email', 'Email inválido. Usa formato: usuario@dominio.cl');
+            }
+        });
+        
+        // Delegación de eventos para validar empleadores dinámicos
+        document.getElementById('empleadoresContainer').addEventListener('blur', function(e) {
+            if (e.target.matches('input[name="emp_rut[]"]')) {
+                const id = e.target.id;
+                limpiarErrorInput(id);
+                const rut = e.target.value;
+                if (rut && !validarRutChileno(rut)) {
+                    mostrarErrorInput(id, 'RUT inválido');
+                }
+            }
+            
+            if (e.target.matches('input[name="emp_email[]"]') || e.target.matches('input[name="emp_rut_evaluador[]"]')) {
+                const id = e.target.id;
+                limpiarErrorInput(id);
+                const email = e.target.value;
+                if (email && !validarEmail(email)) {
+                    mostrarErrorInput(id, 'Email inválido');
+                }
+            }
+        }, true);
+        
+        // Formatear RUTs de empleadores dinámicamente
+        document.getElementById('empleadoresContainer').addEventListener('input', function(e) {
+            if (e.target.matches('input[name="emp_rut[]"]') || e.target.matches('input[name="emp_rut_empresa[]"]')) {
+                e.target.value = formatearRut(e.target.value);
+            }
+        }, true);
+
+        // Validación
+        function validarCampo(id, errorId, condicion, mensaje) {
+            const input = document.getElementById(id);
+            const error = document.getElementById(errorId);
+            if (!input || !error) return true;
+            if (!condicion(input.value)) {
+                input.classList.add('error');
+                error.textContent = mensaje;
+                return false;
+            }
+            input.classList.remove('error');
+            error.textContent = '';
+            return true;
+        }
+
+        function validarFormulario() {
+            let valido = true;
+
+            // Validar nombre
+            valido &= validarCampo('nombre', 'err-nombre',
+                v => v.trim().length >= 3,
+                'Ingresa tu nombre completo.');
+
+            // Validar RUT con algoritmo módulo 11
+            valido &= validarCampo('rut', 'err-rut',
+                v => validarRutChileno(v),
+                'RUT inválido. Verifica el dígito verificador.');
+
+            // Validar email
+            valido &= validarCampo('email', 'err-email',
+                v => validarEmail(v),
+                'Ingresa un correo electrónico válido.');
+
+            // Validar empleadores
+            const bloques = document.querySelectorAll('.empleador-block');
+            if (bloques.length === 0) {
+                mostrarMsg('error', 'Debes agregar al menos un empleador.');
+                valido = false;
+            }
+            
+            bloques.forEach(bloque => {
+                const nombreInput = bloque.querySelector('input[name="emp_nombre[]"]');
+                const rutInput = bloque.querySelector('input[name="emp_rut[]"]');
+                const emailInput = bloque.querySelector('input[name="emp_email[]"]');
+                const empresaInput = bloque.querySelector('input[name="emp_empresa[]"]');
+                const rutEmpresaInput = bloque.querySelector('input[name="emp_rut_empresa[]"]');
+                const cargoInput = bloque.querySelector('input[name="emp_cargo[]"]');
+                const tiempoInput = bloque.querySelector('select[name="emp_tiempo[]"]');
+
+                if (nombreInput?.id) valido &= validarCampo(nombreInput.id, `err-${nombreInput.id}`,
+                    v => v.trim().length >= 2, 'Ingresa el nombre del evaluador.');
+
+                if (rutInput?.id) valido &= validarCampo(rutInput.id, `err-${rutInput.id}`,
+                    v => validarRutChileno(v), 'RUT inválido.');
+
+                if (emailInput?.id) valido &= validarCampo(emailInput.id, `err-${emailInput.id}`,
+                    v => validarEmail(v), 'Email inválido.');
+
+                if (empresaInput?.id) valido &= validarCampo(empresaInput.id, `err-${empresaInput.id}`,
+                    v => v.trim().length >= 2, 'Ingresa el nombre de la empresa.');
+
+                if (rutEmpresaInput?.id) valido &= validarCampo(rutEmpresaInput.id, `err-${rutEmpresaInput.id}`,
+                    v => validarRutChileno(v), 'RUT de empresa inválido.');
+
+                if (cargoInput?.id) valido &= validarCampo(cargoInput.id, `err-${cargoInput.id}`,
+                    v => v.trim().length >= 2, 'Ingresa el cargo del evaluador.');
+
+                if (tiempoInput?.id) valido &= validarCampo(tiempoInput.id, `err-${tiempoInput.id}`,
+                    v => v.trim().length > 0, 'Selecciona el tiempo de trabajo.');
+            });
+
+            // Validar consentimiento
+            const consent = document.getElementById('consentimiento');
+            if (!consent.checked) {
+                mostrarMsg('error', 'Debes aceptar el consentimiento para continuar.');
+                valido = false;
+            }
+
+            return !!valido;
+        }
+
+        function mostrarMsg(tipo, texto) {
+            const msg = document.getElementById('msgGlobal');
+            msg.textContent = texto;
+            msg.className = `msg ${tipo} visible`;
+            msg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function ocultarMsg() {
+            const msg = document.getElementById('msgGlobal');
+            msg.className = 'msg';
+        }
+
+        // Recopilar datos
+        async function recopilarDatos() {
+            const empleadores = [];
+            document.querySelectorAll('.empleador-block').forEach(bloque => {
+                empleadores.push({
+                    nombre: bloque.querySelector('input[name="emp_jefe[]"]')?.value || '',
+                    rut: bloque.querySelector('input[name="emp_rut[]"]')?.value || '',
+                    email: bloque.querySelector('input[name="emp_email[]"]')?.value || '',
+                    empresa: bloque.querySelector('input[name="emp_empresa[]"]')?.value || '',
+                    rut_empresa: bloque.querySelector('input[name="emp_rut_empresa[]"]')?.value || '',
+                    cargo: bloque.querySelector('input[name="emp_cargo[]"]')?.value || '',
+                    tiempo_trabajo: bloque.querySelector('select[name="emp_tiempo[]"]')?.value || ''
+                });
+            });
+
+            // Convertir archivos a base64
+            const certificadoFile = certificadoInput.files[0];
+            const finiquitoFile = finiquitoInput.files[0];
+            
+            let certificado_base64 = null;
+            let finiquito_base64 = null;
+            
+            if (certificadoFile) {
+                certificado_base64 = await fileToBase64(certificadoFile);
+            }
+            
+            if (finiquitoFile) {
+                finiquito_base64 = await fileToBase64(finiquitoFile);
+            }
+
+            return {
+                trabajador: {
+                    nombre: document.getElementById('nombre').value.trim(),
+                    rut: document.getElementById('rut').value.trim(),
+                    email: document.getElementById('email').value.trim(),
+                    whatsapp: document.getElementById('whatsapp').value.trim(),
+                    comuna: document.getElementById('comuna').value.trim()
+                },
+                empleadores: empleadores,
+                certificado_base64: certificado_base64,
+                finiquito_base64: finiquito_base64,
+                causal_salida: document.getElementById('causalSalida').value || null,
+                fecha_solicitud: new Date().toISOString()
+            };
+        }
+        
+        // Función helper para convertir archivo a base64
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Manejo de archivo certificado
+        const uploadArea = document.getElementById('uploadArea');
+        const certificadoInput = document.getElementById('certificado');
+
+        certificadoInput.addEventListener('change', function () {
+            mostrarArchivo(this.files[0]);
+        });
+
+        uploadArea.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+
+        uploadArea.addEventListener('dragleave', function () {
+            uploadArea.classList.remove('drag-over');
+        });
+
+        uploadArea.addEventListener('drop', function (e) {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file) mostrarArchivo(file);
+        });
+
+        function mostrarArchivo(file) {
+            if (!file) return;
+            const extensiones = ['pdf', 'jpg', 'jpeg', 'png'];
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (!extensiones.includes(ext)) {
+                mostrarMsg('error', 'Formato no válido. Solo se aceptan PDF, JPG y PNG.');
+                return;
+            }
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = `(${(file.size / 1024).toFixed(0)} KB)`;
+            document.getElementById('fileSelected').style.display = 'block';
+            uploadArea.style.display = 'none';
+        }
+
+        function eliminarArchivo() {
+            certificadoInput.value = '';
+            document.getElementById('fileSelected').style.display = 'none';
+            uploadArea.style.display = 'block';
+        }
+
+        // Manejo de finiquito
+        const uploadAreaFiniquito = document.getElementById('uploadAreaFiniquito');
+        const finiquitoInput = document.getElementById('finiquito');
+
+        finiquitoInput.addEventListener('change', function () { mostrarFiniquito(this.files[0]); });
+
+        uploadAreaFiniquito.addEventListener('dragover', e => { e.preventDefault(); uploadAreaFiniquito.classList.add('drag-over'); });
+        uploadAreaFiniquito.addEventListener('dragleave', () => uploadAreaFiniquito.classList.remove('drag-over'));
+        uploadAreaFiniquito.addEventListener('drop', e => {
+            e.preventDefault();
+            uploadAreaFiniquito.classList.remove('drag-over');
+            if (e.dataTransfer.files[0]) mostrarFiniquito(e.dataTransfer.files[0]);
+        });
+
+        function mostrarFiniquito(file) {
+            if (!file) return;
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (ext !== 'pdf') {
+                mostrarMsg('error', 'El finiquito debe ser en formato PDF.');
+                return;
+            }
+            document.getElementById('finiquitoName').textContent = file.name;
+            document.getElementById('finiquitoSize').textContent = `(${(file.size / 1024).toFixed(0)} KB)`;
+            document.getElementById('finiquitoSelected').style.display = 'block';
+            uploadAreaFiniquito.style.display = 'none';
+        }
+
+        function eliminarFiniquito() {
+            finiquitoInput.value = '';
+            document.getElementById('finiquitoSelected').style.display = 'none';
+            uploadAreaFiniquito.style.display = 'block';
+        }
+
+        // Submit
+        document.getElementById('formTrabajador').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            ocultarMsg();
+
+            if (!validarFormulario()) return;
+
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            btn.textContent = 'Enviando...';
+
+            try {
+                const datos = await recopilarDatos();
+
+                // Llamar a la Edge Function crear-solicitud
+                const response = await fetch('https://dxblzmxcmaerycvdgfpy.supabase.co/functions/v1/crear-solicitud', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
+                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c'
+                    },
+                    body: JSON.stringify(datos)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || result.error) {
+                    throw new Error(result.error || 'Error al enviar la solicitud');
+                }
+
+                // Ocultar formulario y mostrar éxito
+                document.getElementById('formTrabajador').style.display = 'none';
+                document.getElementById('successState').classList.add('visible');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            } catch (err) {
+                console.error('Error:', err);
+                mostrarMsg('error', 'Ha ocurrido un error al enviar la solicitud. Intenta nuevamente.');
+                btn.disabled = false;
+                btn.textContent = 'Enviar solicitud';
+            }
+        });
+    </script>
+
+</body>
+</html>
