@@ -872,23 +872,28 @@
 <div class="modal-overlay" id="modalCandidato">
     <div class="modal">
         <div class="modal-header">
-            <span class="modal-title">Agregar candidato</span>
+            <span class="modal-title">Invitar candidato</span>
             <button class="btn-close-modal" onclick="cerrarModalCandidato()">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </button>
         </div>
         <div class="modal-body">
             <div class="modal-form-group">
-                <label class="modal-label" for="candRut">RUT del trabajador</label>
+                <label class="modal-label" for="candEmail">Email del candidato</label>
+                <input type="email" class="modal-input" id="candEmail" placeholder="candidato@correo.cl">
+            </div>
+            <div class="modal-form-group">
+                <label class="modal-label" for="candRut">RUT del candidato</label>
                 <input type="text" class="modal-input" id="candRut" placeholder="12.345.678-9" maxlength="12">
             </div>
             <p style="font-size:13px; color:var(--subtitulo); margin-top:12px;">
-                Buscaremos al trabajador en nuestra base de datos y agregaremos sus evaluaciones a este proceso.
+                Si el candidato ya tiene evaluaciones en Huella Laboral, se agregará directamente. 
+                Si no, le enviaremos una invitación para completar su perfil.
             </p>
         </div>
         <div class="modal-footer">
             <button class="btn-outline" onclick="cerrarModalCandidato()">Cancelar</button>
-            <button class="btn-primary" onclick="agregarCandidato()">Agregar candidato</button>
+            <button class="btn-primary" onclick="agregarCandidato()">Invitar candidato</button>
         </div>
     </div>
 </div>
@@ -1557,10 +1562,11 @@ Promedio: ${data.promedios.total?.promedio?.toFixed(1) || '—'}
     }
 
     async function agregarCandidato() {
+        const email = document.getElementById('candEmail').value.trim();
         const rut = document.getElementById('candRut').value.trim();
         
-        if (!rut) {
-            alert('Ingresa un RUT');
+        if (!email || !rut) {
+            alert('Ingresa email y RUT del candidato');
             return;
         }
         
@@ -1570,16 +1576,16 @@ Promedio: ${data.promedios.total?.promedio?.toFixed(1) || '—'}
         }
 
         try {
-            const token = localStorage.getItem('hl_token');
             const response = await fetch('https://dxblzmxcmaerycvdgfpy.supabase.co/functions/v1/agregar-candidato', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c'
                 },
                 body: JSON.stringify({ 
                     proceso_id: procesoActual.id,
+                    email: email,
                     rut: rut
                 })
             });
@@ -1591,9 +1597,17 @@ Promedio: ${data.promedios.total?.promedio?.toFixed(1) || '—'}
                 return;
             }
 
+            // Mostrar mensaje según el tipo
+            if (result.tipo === 'existente') {
+                alert('✓ Candidato agregado al proceso (ya tenía evaluaciones en el sistema)');
+            } else {
+                alert('✓ Invitación enviada a ' + email + '. El candidato aparecerá cuando complete su perfil.');
+            }
+
             // Recargar candidatos del proceso
             verCandidatos(procesoActual.id);
             cerrarModalCandidato();
+            document.getElementById('candEmail').value = '';
             document.getElementById('candRut').value = '';
 
         } catch (error) {
