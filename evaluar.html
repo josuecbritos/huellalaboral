@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluar Trabajador — Huella Laboral</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --azul: #0E2A47;
+            --azul-hover: #0a1f35;
+            --verde: #2FBF71;
+            --texto: #2E2E2E;
+            --subtitulo: #6B7280;
+            --fondo: #FFFFFF;
+            --fondo-gris: #F7F8FA;
+            --borde: #E5E7EB;
+            --error: #EF4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--fondo-gris);
+            color: var(--texto);
+            font-size: 16px;
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        nav {
+            background: var(--fondo);
+            border-bottom: 1px solid var(--borde);
+            padding: 0 48px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .page-wrapper { max-width: 680px; margin: 0 auto; padding: 48px 24px 80px; }
+
+        /* TRABAJADOR CARD */
+        .trabajador-card {
+            background: var(--azul);
+            border-radius: 4px;
+            padding: 24px 28px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .trabajador-avatar {
+            width: 48px; height: 48px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .trabajador-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 4px; }
+        .trabajador-nombre { font-size: 18px; font-weight: 700; color: white; margin-bottom: 2px; }
+        .trabajador-rut { font-size: 13px; color: rgba(255,255,255,0.7); }
+
+        /* OPCIONES DE RECHAZO */
+        .rechazo-block {
+            background: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+        }
+
+        .rechazo-opciones { display: flex; flex-direction: column; gap: 10px; margin-bottom: 0; }
+
+        .rechazo-opcion {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .rechazo-opcion input[type="checkbox"] {
+            width: 18px; height: 18px;
+            accent-color: var(--azul);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .rechazo-opcion-text { font-size: 14px; font-weight: 500; color: var(--texto); }
+
+        .rechazo-aviso {
+            font-size: 12px;
+            color: var(--subtitulo);
+            padding-top: 10px;
+            margin-top: 10px;
+            border-top: 1px solid var(--borde);
+            line-height: 1.5;
+            display: none;
+        }
+
+        /* FORM CARD */
+        .form-card {
+            background: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            transition: opacity 0.2s;
+        }
+
+        .form-card.deshabilitado { opacity: 0.4; pointer-events: none; }
+        .consent-leyenda, .btn-submit { pointer-events: auto !important; opacity: 1 !important; }
+
+        .form-card-header {
+            padding: 20px 28px;
+            border-bottom: 1px solid var(--borde);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .form-card-number {
+            width: 24px; height: 24px;
+            background: var(--azul);
+            color: white;
+            font-size: 12px; font-weight: 700;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .form-card-title { font-size: 15px; font-weight: 700; color: var(--azul); }
+        .badge-opcional { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--subtitulo); background: var(--fondo-gris); border: 1px solid var(--borde); border-radius: 2px; padding: 2px 7px; margin-left: 4px; }
+        .form-card-body { padding: 28px; }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+        .form-row.single { grid-template-columns: 1fr; }
+        .form-row:last-child { margin-bottom: 0; }
+        .form-group { display: flex; flex-direction: column; }
+
+        label { font-size: 13px; font-weight: 500; color: var(--texto); margin-bottom: 6px; }
+
+        input[type="text"], input[type="email"] {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px; color: var(--texto);
+            background: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 10px 14px;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            width: 100%;
+        }
+
+        input:focus { outline: none; border-color: var(--azul); box-shadow: 0 0 0 3px rgba(14,42,71,0.08); }
+        input.error { border-color: var(--error); }
+        .field-error { font-size: 12px; color: var(--error); margin-top: 4px; }
+
+        /* SELECT */
+        .select-wrapper { position: relative; }
+
+        .select-wrapper::after {
+            content: '';
+            position: absolute;
+            right: 14px; top: 50%;
+            transform: translateY(-50%);
+            width: 0; height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 6px solid var(--azul);
+            pointer-events: none;
+        }
+
+        select {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px; color: var(--texto);
+            background-color: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 10px 40px 10px 14px;
+            width: 100%;
+            appearance: none; -webkit-appearance: none; -moz-appearance: none;
+            cursor: pointer;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            box-shadow: none;
+        }
+
+        select:focus { outline: none; border-color: var(--azul); box-shadow: 0 0 0 3px rgba(14,42,71,0.08); }
+        select.error { border-color: var(--error); }
+
+        /* ATRIBUTOS */
+        .atributo-block {
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .atributo-block:last-child { margin-bottom: 0; }
+
+        .atributo-header { background: var(--fondo-gris); padding: 14px 20px; border-bottom: 1px solid var(--borde); }
+        .atributo-nombre { font-size: 14px; font-weight: 700; color: var(--azul); margin-bottom: 2px; }
+        .atributo-desc { font-size: 12px; color: var(--subtitulo); }
+        .atributo-body { padding: 16px 20px; }
+
+        /* ESCALA */
+        .escala-opciones { display: flex; gap: 8px; }
+        .escala-opcion { flex: 1; position: relative; }
+        .escala-opcion input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+
+        .escala-opcion label {
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            padding: 10px 4px;
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+            margin: 0;
+        }
+
+        .escala-opcion label:hover { border-color: var(--azul); background: rgba(14,42,71,0.03); }
+        .escala-opcion input:checked + label { border-color: var(--azul); background: var(--azul); }
+
+        .escala-numero { font-size: 16px; font-weight: 700; color: var(--azul); }
+        .escala-opcion input:checked + label .escala-numero { color: white; }
+        .escala-texto { font-size: 10px; color: var(--subtitulo); text-align: center; line-height: 1.3; }
+        .escala-opcion input:checked + label .escala-texto { color: rgba(255,255,255,0.8); }
+        .escala-error { font-size: 12px; color: var(--error); margin-top: 8px; }
+
+        textarea {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px; color: var(--texto);
+            background: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 10px 14px;
+            width: 100%; resize: vertical; min-height: 80px;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            line-height: 1.5;
+        }
+
+        textarea:focus { outline: none; border-color: var(--azul); box-shadow: 0 0 0 3px rgba(14,42,71,0.08); }
+
+        /* CONSENTIMIENTO EVALUADOR */
+        .consent-block {
+            background: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 24px 28px;
+            margin-bottom: 16px;
+        }
+
+        .consent-check {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .consent-check input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            border: 1px solid var(--borde);
+            border-radius: 3px;
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-top: 2px;
+            accent-color: var(--azul);
+        }
+
+        .consent-text {
+            font-size: 14px;
+            color: var(--texto);
+            line-height: 1.6;
+        }
+
+        .consent-text strong { color: var(--azul); }
+
+        /* LEYENDA TRABAJADOR */
+        .consent-leyenda {
+            background: rgba(47,191,113,0.08);
+            border: 1px solid rgba(47,191,113,0.3);
+            border-radius: 4px;
+            padding: 14px 18px;
+            margin-bottom: 16px;
+            display: flex; align-items: center; gap: 12px;
+        }
+
+        .consent-leyenda-text { font-size: 13px; color: #166534; line-height: 1.5; }
+
+        /* SUBMIT */
+        .btn-submit {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px; font-weight: 500;
+            color: white; background: var(--azul);
+            border: 2px solid var(--azul);
+            border-radius: 4px; padding: 14px 32px;
+            cursor: pointer; width: 100%;
+            transition: background 0.15s;
+        }
+
+        .btn-submit:hover { background: var(--azul-hover); border-color: var(--azul-hover); }
+        .btn-submit:disabled { background: var(--subtitulo); border-color: var(--subtitulo); cursor: not-allowed; }
+
+        .msg { padding: 14px 18px; border-radius: 4px; font-size: 14px; margin-bottom: 16px; display: none; }
+        .msg.error { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); color: #b91c1c; }
+        .msg.visible { display: block; }
+
+        .full-state { display: none; text-align: center; padding: 64px 24px; }
+        .full-state.visible { display: block; }
+
+        .state-icon { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
+        .state-title { font-size: 22px; font-weight: 700; color: var(--azul); margin-bottom: 12px; }
+        .state-desc { font-size: 15px; color: var(--subtitulo); line-height: 1.6; max-width: 400px; margin: 0 auto; }
+
+        @media (max-width: 600px) {
+            nav { padding: 0 20px; }
+            .page-wrapper { padding: 32px 16px 64px; }
+            .form-card-body { padding: 20px; }
+            .form-row { grid-template-columns: 1fr; }
+            .escala-texto { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">
+            <img src="Huella_Laboral.png" alt="Huella Laboral" style="height:36px; width:auto;">
+        </a>
+    </nav>
+
+    <div class="page-wrapper">
+
+        <div class="full-state" id="tokenError">
+            <div class="state-icon" style="background:rgba(239,68,68,0.08);">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round">
+                    <path d="M10 10l12 12M22 10L10 22"/>
+                </svg>
+            </div>
+            <div class="state-title">Enlace no válido</div>
+            <p class="state-desc">Este enlace de evaluación no es válido o ya fue utilizado. Si crees que es un error, contacta a quien te lo envió.</p>
+        </div>
+
+        <div id="formWrapper" style="display:none;">
+
+            <div class="trabajador-card">
+                <div class="trabajador-avatar">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="8" r="4"/>
+                        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="trabajador-label">Solicitud de evaluación</div>
+                    <div class="trabajador-nombre" id="trabajadorNombre">Cargando...</div>
+                    <div class="trabajador-rut" id="trabajadorRut"></div>
+                </div>
+            </div>
+
+            <p style="font-size:16px; font-weight:500; color:var(--texto); margin-bottom:12px; line-height:1.5;"><span id="trabajadorNombreIntro">Cargando...</span> te ha solicitado una evaluación de desempeño. Esta información ayudará a validar su experiencia laboral ante futuros empleadores.</p>
+
+            <p style="font-size:14px; color:var(--subtitulo); margin-bottom:24px; line-height:1.6;">Llena tus datos y evalúa al trabajador. Si no conoces al trabajador o no deseas contestar, selecciona una de las opciones al inicio del formulario. Luego haz clic en Enviar evaluación.</p>
+
+            <div id="msgGlobal" class="msg error"></div>
+
+            <form id="formEvaluacion" novalidate>
+
+                <!-- OPCIONES DE RECHAZO -->
+                <div class="rechazo-block">
+                    <div class="rechazo-opciones">
+                        <label class="rechazo-opcion">
+                            <input type="checkbox" id="noConoce" onchange="handleRechazo('noConoce')">
+                            <span class="rechazo-opcion-text">No conozco o no he trabajado con esta persona</span>
+                        </label>
+                        <label class="rechazo-opcion">
+                            <input type="checkbox" id="noDesea" onchange="handleRechazo('noDesea')">
+                            <span class="rechazo-opcion-text">No deseo realizar esta evaluación</span>
+                        </label>
+                    </div>
+                    <div class="rechazo-aviso" id="rechazoAviso">
+                        Al seleccionar esta opción el formulario quedará deshabilitado. Solo podrás enviar esta respuesta.
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 1: Datos del evaluador -->
+                <div class="form-card" id="seccionDatos">
+                    <div class="form-card-header">
+                        <div class="form-card-number">1</div>
+                        <span class="form-card-title">Tus datos</span>
+                    </div>
+                    <div class="form-card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="evalNombre">Nombre completo</label>
+                                <input type="text" id="evalNombre" placeholder="María García López">
+                                <span class="field-error" id="err-evalNombre"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="evalRut">RUT</label>
+                                <input type="text" id="evalRut" placeholder="12.345.678-9">
+                                <span class="field-error" id="err-evalRut"></span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="evalEmpresa">Nombre de la empresa</label>
+                                <input type="text" id="evalEmpresa" placeholder="Empresa S.A.">
+                                <span class="field-error" id="err-evalEmpresa"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="evalRutEmpresa">RUT empresa <span style="font-size:11px; font-weight:400; color:var(--subtitulo);">(opcional)</span></label>
+                                <input type="text" id="evalRutEmpresa" placeholder="76.543.210-K">
+                                <span class="field-error" id="err-evalRutEmpresa"></span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="evalCargo">Cargo</label>
+                                <input type="text" id="evalCargo" placeholder="Ej: Gerente, Jefe de área, Supervisor">
+                                <span class="field-error" id="err-evalCargo"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="tiempoTrabajo">Tiempo del solicitante en la empresa</label>
+                                <div class="select-wrapper">
+                                    <select id="tiempoTrabajo">
+                                        <option value="">Selecciona una opción</option>
+                                        <option value="menos_1">Menos de 1 año</option>
+                                        <option value="1_2">1 a 2 años</option>
+                                        <option value="2_3">2 a 3 años</option>
+                                        <option value="3_4">3 a 4 años</option>
+                                        <option value="4_mas">4 años o más</option>
+                                    </select>
+                                </div>
+                                <span class="field-error" id="err-tiempoTrabajo"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 2: Evaluación -->
+                <div class="form-card" id="seccionEvaluacion">
+                    <div class="form-card-header">
+                        <div class="form-card-number">2</div>
+                        <span class="form-card-title">Evaluación de desempeño</span>
+                    </div>
+                    <div class="form-card-body">
+
+                        <!-- Puntualidad -->
+                        <div class="atributo-block">
+                            <div class="atributo-header">
+                                <div class="atributo-nombre">Puntualidad y asistencia</div>
+                                <div class="atributo-desc">Cumplimiento de horarios, asistencia y compromisos de tiempo</div>
+                            </div>
+                            <div class="atributo-body">
+                                <div class="escala-opciones">
+                                    <div class="escala-opcion"><input type="radio" name="puntualidad" id="punt1" value="1"><label for="punt1"><span class="escala-numero">1</span><span class="escala-texto">Insuficiente</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="puntualidad" id="punt2" value="2"><label for="punt2"><span class="escala-numero">2</span><span class="escala-texto">Regular</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="puntualidad" id="punt3" value="3"><label for="punt3"><span class="escala-numero">3</span><span class="escala-texto">Suficiente</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="puntualidad" id="punt4" value="4"><label for="punt4"><span class="escala-numero">4</span><span class="escala-texto">Bueno</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="puntualidad" id="punt5" value="5"><label for="punt5"><span class="escala-numero">5</span><span class="escala-texto">Muy bueno</span></label></div>
+                                </div>
+                                <div class="escala-error" id="err-puntualidad"></div>
+                            </div>
+                        </div>
+
+                        <!-- Desempeño -->
+                        <div class="atributo-block">
+                            <div class="atributo-header">
+                                <div class="atributo-nombre">Desempeño</div>
+                                <div class="atributo-desc">Calidad del trabajo, cumplimiento de objetivos y resultados obtenidos</div>
+                            </div>
+                            <div class="atributo-body">
+                                <div class="escala-opciones">
+                                    <div class="escala-opcion"><input type="radio" name="desempeno" id="des1" value="1"><label for="des1"><span class="escala-numero">1</span><span class="escala-texto">Insuficiente</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="desempeno" id="des2" value="2"><label for="des2"><span class="escala-numero">2</span><span class="escala-texto">Regular</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="desempeno" id="des3" value="3"><label for="des3"><span class="escala-numero">3</span><span class="escala-texto">Suficiente</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="desempeno" id="des4" value="4"><label for="des4"><span class="escala-numero">4</span><span class="escala-texto">Bueno</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="desempeno" id="des5" value="5"><label for="des5"><span class="escala-numero">5</span><span class="escala-texto">Muy bueno</span></label></div>
+                                </div>
+                                <div class="escala-error" id="err-desempeno"></div>
+                            </div>
+                        </div>
+
+                        <!-- Relaciones interpersonales -->
+                        <div class="atributo-block">
+                            <div class="atributo-header">
+                                <div class="atributo-nombre">Relaciones interpersonales</div>
+                                <div class="atributo-desc">Trato con pares, superiores y capacidad de trabajo en equipo</div>
+                            </div>
+                            <div class="atributo-body">
+                                <div class="escala-opciones">
+                                    <div class="escala-opcion"><input type="radio" name="relaciones" id="rel1" value="1"><label for="rel1"><span class="escala-numero">1</span><span class="escala-texto">Insuficiente</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="relaciones" id="rel2" value="2"><label for="rel2"><span class="escala-numero">2</span><span class="escala-texto">Regular</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="relaciones" id="rel3" value="3"><label for="rel3"><span class="escala-numero">3</span><span class="escala-texto">Suficiente</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="relaciones" id="rel4" value="4"><label for="rel4"><span class="escala-numero">4</span><span class="escala-texto">Bueno</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="relaciones" id="rel5" value="5"><label for="rel5"><span class="escala-numero">5</span><span class="escala-texto">Muy bueno</span></label></div>
+                                </div>
+                                <div class="escala-error" id="err-relaciones"></div>
+                            </div>
+                        </div>
+
+                        <!-- Confiabilidad -->
+                        <div class="atributo-block">
+                            <div class="atributo-header">
+                                <div class="atributo-nombre">Confiabilidad</div>
+                                <div class="atributo-desc">Honestidad, responsabilidad y cumplimiento de compromisos</div>
+                            </div>
+                            <div class="atributo-body">
+                                <div class="escala-opciones">
+                                    <div class="escala-opcion"><input type="radio" name="confiabilidad" id="con1" value="1"><label for="con1"><span class="escala-numero">1</span><span class="escala-texto">Insuficiente</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="confiabilidad" id="con2" value="2"><label for="con2"><span class="escala-numero">2</span><span class="escala-texto">Regular</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="confiabilidad" id="con3" value="3"><label for="con3"><span class="escala-numero">3</span><span class="escala-texto">Suficiente</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="confiabilidad" id="con4" value="4"><label for="con4"><span class="escala-numero">4</span><span class="escala-texto">Bueno</span></label></div>
+                                    <div class="escala-opcion"><input type="radio" name="confiabilidad" id="con5" value="5"><label for="con5"><span class="escala-numero">5</span><span class="escala-texto">Muy bueno</span></label></div>
+                                </div>
+                                <div class="escala-error" id="err-confiabilidad"></div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 3: Comentarios adicionales -->
+                <div class="form-card" id="seccionComentarios">
+                    <div class="form-card-header">
+                        <div class="form-card-number">3</div>
+                        <span class="form-card-title">Comentarios adicionales</span>
+                        <span class="badge-opcional">Opcional</span>
+                    </div>
+                    <div class="form-card-body">
+                        <div class="form-group">
+                            <textarea id="otrosComentarios" placeholder="Información adicional que consideres relevante sobre el desempeño o experiencia laboral de esta persona..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONSENTIMIENTO DEL EVALUADOR -->
+                <div class="consent-block">
+                    <label class="consent-check">
+                        <input type="checkbox" id="consentimientoEval">
+                        <span class="consent-text">Autorizo a <strong>Huella Laboral</strong> a que mi evaluación de desempeño pueda ser vista por usuarios de la plataforma.</span>
+                    </label>
+                </div>
+
+                <!-- LEYENDA TRABAJADOR -->
+                <div class="consent-leyenda">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#2FBF71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                        <path d="M9 12l2 2 4-4"/>
+                        <path d="M10 2a8 8 0 1 0 0 16A8 8 0 0 0 10 2z"/>
+                    </svg>
+                    <p class="consent-leyenda-text">El trabajador ha dado su consentimiento para ser evaluado y autoriza el uso de sus datos con fines de certificación laboral.</p>
+                </div>
+
+                <button type="submit" class="btn-submit" id="btnSubmit">Enviar evaluación</button>
+
+            </form>
+        </div>
+
+        <!-- Éxito -->
+        <div class="full-state" id="successState">
+            <div class="state-icon" style="background:rgba(47,191,113,0.12);">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="#2FBF71" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 16L12 22L26 10"/>
+                </svg>
+            </div>
+            <h2 class="state-title">Evaluación enviada correctamente</h2>
+            <p class="state-desc" id="successDesc">Tu evaluación ha sido registrada. El trabajador será notificado cuando todas las evaluaciones estén completas.</p>
+        </div>
+
+    </div>
+
+    <script>
+        // ============================================
+        // FUNCIONES DE VALIDACIÓN
+        // ============================================
+        
+        /**
+         * Formatea RUT chileno: agrega puntos y guión
+         */
+        function formatearRutText(rut) {
+            rut = rut.replace(/[^0-9kK]/g, '').toUpperCase();
+            if (rut.length <= 1) return rut;
+            const dv = rut.slice(-1);
+            let numero = rut.slice(0, -1);
+            numero = numero.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return `${numero}-${dv}`;
+        }
+        
+        /**
+         * Valida RUT chileno usando algoritmo módulo 11
+         */
+        function validarRutChileno(rut) {
+            rut = rut.replace(/\./g, '').replace(/-/g, '').toUpperCase();
+            if (rut.length < 2) return false;
+            const numero = rut.slice(0, -1);
+            const dvIngresado = rut.slice(-1);
+            if (!/^\d+$/.test(numero)) return false;
+            
+            let suma = 0;
+            let multiplicador = 2;
+            for (let i = numero.length - 1; i >= 0; i--) {
+                suma += parseInt(numero[i]) * multiplicador;
+                multiplicador = multiplicador === 7 ? 2 : multiplicador + 1;
+            }
+            const resto = suma % 11;
+            const dvEsperado = resto === 0 ? '0' : resto === 1 ? 'K' : String(11 - resto);
+            return dvIngresado === dvEsperado;
+        }
+        
+        /**
+         * Valida formato de email
+         */
+        function validarEmail(email) {
+            const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            return regex.test(email);
+        }
+        
+        /**
+         * Muestra mensaje de error debajo de un input
+         */
+        function mostrarErrorInput(inputId, mensaje) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            const errorPrevio = input.parentElement.querySelector('.error-mensaje');
+            if (errorPrevio) errorPrevio.remove();
+            input.style.borderColor = '#dc2626';
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-mensaje';
+            errorDiv.style.cssText = 'color:#dc2626; font-size:12px; margin-top:4px;';
+            errorDiv.textContent = mensaje;
+            input.parentElement.appendChild(errorDiv);
+        }
+        
+        /**
+         * Limpia mensaje de error de un input
+         */
+        function limpiarErrorInput(inputId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            
+            // Limpiar estilo inline del input
+            input.style.borderColor = '';
+            input.classList.remove('error');
+            
+            // Limpiar mensaje inline creado dinámicamente
+            const errorMsg = input.parentElement.querySelector('.error-mensaje');
+            if (errorMsg) errorMsg.remove();
+            
+            // Limpiar span de error del formulario (ej: err-evalRutEmpresa)
+            const errorSpan = document.getElementById(`err-${inputId}`);
+            if (errorSpan) errorSpan.textContent = '';
+        }
+        
+        // ============================================
+        // LÓGICA DEL FORMULARIO
+        // ============================================
+        
+        async function cargarDatos() {
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');
+            if (!token) { 
+                document.getElementById('tokenError').classList.add('visible'); 
+                return; 
+            }
+            
+            try {
+                const response = await fetch(`https://dxblzmxcmaerycvdgfpy.supabase.co/functions/v1/obtener-evaluacion?token=${token}`, {
+                    headers: {
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
+                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c'
+                    }
+                });
+                
+                if (!response.ok) throw new Error();
+                
+                const data = await response.json();
+                
+                if (!data || data.error) { 
+                    document.getElementById('tokenError').classList.add('visible'); 
+                    return; 
+                }
+                
+                document.getElementById('trabajadorNombre').textContent = data.trabajador_nombre || '';
+                document.getElementById('trabajadorNombreIntro').textContent = data.trabajador_nombre || '';
+                document.getElementById('trabajadorRut').textContent = data.trabajador_rut || '';
+                document.getElementById('formWrapper').style.display = 'block';
+                
+            } catch (err) { 
+                console.error('Error:', err);
+                document.getElementById('tokenError').classList.add('visible'); 
+            }
+        }
+
+        let rechazoActivo = null;
+
+        function handleRechazo(opcion) {
+            const otra = opcion === 'noConoce' ? 'noDesea' : 'noConoce';
+            const cb = document.getElementById(opcion);
+            const otroCb = document.getElementById(otra);
+
+            if (cb.checked) {
+                otroCb.checked = false;
+                rechazoActivo = opcion;
+            } else {
+                rechazoActivo = null;
+            }
+
+            const activo = rechazoActivo !== null;
+            document.getElementById('rechazoAviso').style.display = activo ? 'block' : 'none';
+            ['seccionDatos', 'seccionEvaluacion', 'seccionComentarios'].forEach(id => {
+                document.getElementById(id).classList.toggle('deshabilitado', activo);
+            });
+            // El consentimiento también se deshabilita con rechazo
+            const consentBlock = document.querySelector('.consent-block');
+            consentBlock.style.opacity = activo ? '0.4' : '1';
+            consentBlock.style.pointerEvents = activo ? 'none' : 'auto';
+            if (activo) document.getElementById('consentimientoEval').checked = false;
+            // El botón, el consentimiento y la leyenda nunca se deshabilitan
+            document.getElementById('btnSubmit').disabled = false;
+        }
+
+        // ============================================
+        // VALIDACIONES EN TIEMPO REAL
+        // ============================================
+        
+        // Esperar a que el DOM cargue completamente
+        document.addEventListener('DOMContentLoaded', function() {
+            // Formateo de RUTs
+            ['evalRut', 'evalRutEmpresa'].forEach(id => {
+                const input = document.getElementById(id);
+                if (!input) return;
+                input.addEventListener('input', (e) => {
+                    e.target.value = formatearRutText(e.target.value);
+                });
+                input.addEventListener('blur', (e) => {
+                    limpiarErrorInput(id);
+                    if (e.target.value && !validarRutChileno(e.target.value)) {
+                        mostrarErrorInput(id, 'RUT inválido. Verifica el dígito verificador.');
+                    }
+                });
+            });
+            
+            // Validación de email
+            const emailInput = document.getElementById('evalEmail');
+            if (emailInput) {
+                emailInput.addEventListener('blur', (e) => {
+                    limpiarErrorInput('evalEmail');
+                    if (e.target.value && !validarEmail(e.target.value)) {
+                        mostrarErrorInput('evalEmail', 'Email inválido. Usa formato: usuario@dominio.cl');
+                    }
+                });
+            }
+        });
+        
+        // ============================================
+        // FUNCIONES DE VALIDACIÓN DE FORMULARIO
+        // ============================================
+        
+        function validarCampo(id, errorId, fn, msg) {
+            const el = document.getElementById(id);
+            const err = document.getElementById(errorId);
+            if (!fn(el.value)) { el.classList.add('error'); err.textContent = msg; return false; }
+            el.classList.remove('error'); err.textContent = ''; return true;
+        }
+
+        function validarSelect(id, errorId, msg) {
+            const el = document.getElementById(id);
+            const err = document.getElementById(errorId);
+            if (!el.value) { el.classList.add('error'); err.textContent = msg; return false; }
+            el.classList.remove('error'); err.textContent = ''; return true;
+        }
+
+        function validarRadio(name, errorId, msg) {
+            const sel = document.querySelector(`input[name="${name}"]:checked`);
+            const err = document.getElementById(errorId);
+            if (!sel) { err.textContent = msg; return false; }
+            err.textContent = ''; return true;
+        }
+
+        function validarFormulario() {
+            if (rechazoActivo) return true;
+            let v = true;
+            v &= validarCampo('evalNombre', 'err-evalNombre', x => x.trim().length >= 3, 'Ingresa tu nombre completo.');
+            v &= validarCampo('evalRut', 'err-evalRut', validarRutChileno, 'RUT inválido. Verifica el dígito verificador.');
+            // RUT empresa es opcional - solo validar si tiene contenido
+            const rutEmpresaInput = document.getElementById('evalRutEmpresa');
+            if (rutEmpresaInput && rutEmpresaInput.value.trim()) {
+                v &= validarCampo('evalRutEmpresa', 'err-evalRutEmpresa', validarRutChileno, 'RUT de empresa inválido.');
+            }
+            v &= validarCampo('evalEmpresa', 'err-evalEmpresa', x => x.trim().length >= 2, 'Ingresa el nombre de la empresa.');
+            v &= validarCampo('evalCargo', 'err-evalCargo', x => x.trim().length >= 2, 'Ingresa tu cargo.');
+            v &= validarSelect('tiempoTrabajo', 'err-tiempoTrabajo', 'Selecciona el tiempo aproximado.');
+            v &= validarRadio('puntualidad', 'err-puntualidad', 'Selecciona una calificación.');
+            v &= validarRadio('desempeno', 'err-desempeno', 'Selecciona una calificación.');
+            v &= validarRadio('relaciones', 'err-relaciones', 'Selecciona una calificación.');
+            v &= validarRadio('confiabilidad', 'err-confiabilidad', 'Selecciona una calificación.');
+            if (!rechazoActivo && !document.getElementById('consentimientoEval').checked) {
+                mostrarMsg('Debes autorizar que tu evaluación pueda ser vista para continuar.');
+                v = false;
+            }
+            return !!v;
+        }
+
+        function mostrarMsg(texto) {
+            const msg = document.getElementById('msgGlobal');
+            msg.textContent = texto;
+            msg.classList.add('visible');
+            msg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function ocultarMsg() { document.getElementById('msgGlobal').classList.remove('visible'); }
+
+        document.getElementById('formEvaluacion').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            ocultarMsg();
+            if (!validarFormulario()) { mostrarMsg('Completa todos los campos requeridos antes de continuar.'); return; }
+
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            btn.textContent = 'Enviando...';
+
+            const datos = {
+                token: null,
+                rechazo: rechazoActivo,
+                evaluador: rechazoActivo ? null : {
+                    nombre: document.getElementById('evalNombre').value.trim(),
+                    rut: document.getElementById('evalRut').value.trim(),
+                    empresa: document.getElementById('evalEmpresa').value.trim(),
+                    rut_empresa: document.getElementById('evalRutEmpresa').value.trim(),
+                    cargo: document.getElementById('evalCargo').value.trim(),
+                    tiempo_trabajo: document.getElementById('tiempoTrabajo').value
+                },
+                evaluacion: rechazoActivo ? null : {
+                    puntualidad: parseInt(document.querySelector('input[name="puntualidad"]:checked')?.value),
+                    desempeno: parseInt(document.querySelector('input[name="desempeno"]:checked')?.value),
+                    relaciones: parseInt(document.querySelector('input[name="relaciones"]:checked')?.value),
+                    confiabilidad: parseInt(document.querySelector('input[name="confiabilidad"]:checked')?.value),
+                    comentarios: document.getElementById('otrosComentarios').value.trim()
+                },
+                fecha_completado: new Date().toISOString()
+            };
+
+            try {
+                const params = new URLSearchParams(window.location.search);
+                datos.token = params.get('token');
+                
+                const response = await fetch('https://dxblzmxcmaerycvdgfpy.supabase.co/functions/v1/guardar-evaluacion', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
+                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c'
+                    },
+                    body: JSON.stringify(datos)
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok || result.error) {
+                    throw new Error(result.error || 'Error al guardar');
+                }
+                
+                document.getElementById('formWrapper').style.display = 'none';
+                if (rechazoActivo) document.getElementById('successDesc').textContent = 'Tu respuesta ha sido registrada.';
+                document.getElementById('successState').classList.add('visible');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+            } catch (err) {
+                console.error('Error:', err);
+                mostrarMsg('Ha ocurrido un error al enviar la evaluación. Intenta nuevamente.');
+                btn.disabled = false;
+                btn.textContent = 'Enviar evaluación';
+            }
+        });
+
+        cargarDatos();
+    </script>
+
+</body>
+</html>

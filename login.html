@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Reclutadores — Huella Laboral</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --azul: #0E2A47;
+            --azul-hover: #0a1f35;
+            --verde: #2FBF71;
+            --texto: #2E2E2E;
+            --subtitulo: #6B7280;
+            --fondo: #FFFFFF;
+            --fondo-gris: #F7F8FA;
+            --borde: #E5E7EB;
+            --error: #EF4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--fondo-gris);
+            color: var(--texto);
+            font-size: 16px;
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* NAV */
+        nav {
+            background: var(--fondo);
+            border-bottom: 1px solid var(--borde);
+            padding: 0 48px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-text { font-size: 18px; font-weight: 700; color: var(--azul); letter-spacing: -0.3px; }
+
+        .nav-back {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--subtitulo);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.15s;
+        }
+
+        .nav-back:hover { color: var(--azul); }
+
+        /* LAYOUT */
+        .page-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 24px;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        /* HEADER */
+        .login-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--azul);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .login-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--subtitulo);
+            margin-bottom: 8px;
+        }
+
+        .login-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--azul);
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+
+        .login-desc {
+            font-size: 14px;
+            color: var(--subtitulo);
+            line-height: 1.6;
+        }
+
+        /* FORM CARD */
+        .login-card {
+            background: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 32px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 16px;
+        }
+
+        .form-group:last-of-type { margin-bottom: 0; }
+
+        label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--texto);
+            margin-bottom: 6px;
+        }
+
+        input[type="email"],
+        input[type="password"],
+        input[type="text"] {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            color: var(--texto);
+            background: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 10px 14px;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            width: 100%;
+            height: 42px;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--azul);
+            box-shadow: 0 0 0 3px rgba(14,42,71,0.08);
+        }
+
+        input.error { border-color: var(--error); }
+
+        .field-error {
+            font-size: 12px;
+            color: var(--error);
+            margin-top: 4px;
+        }
+
+        /* PASSWORD FIELD */
+        .password-wrapper {
+            position: relative;
+            height: 42px;
+        }
+
+        .password-wrapper input {
+            padding-right: 44px;
+            height: 42px !important;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 8px;
+            top: 7px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            color: var(--subtitulo);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.15s;
+            line-height: 0;
+        }
+
+        .toggle-password:hover { color: var(--azul); }
+        
+        .toggle-password svg {
+            display: block;
+        }
+
+        /* DIVIDER */
+        .form-divider { margin: 24px 0; }
+
+        /* SUBMIT */
+        .btn-submit {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            color: white;
+            background: var(--azul);
+            border: 2px solid var(--azul);
+            border-radius: 4px;
+            padding: 12px 32px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.15s;
+        }
+
+        .btn-submit:hover { background: var(--azul-hover); border-color: var(--azul-hover); }
+        .btn-submit:disabled { background: var(--subtitulo); border-color: var(--subtitulo); cursor: not-allowed; }
+
+        /* MENSAJE ERROR */
+        .msg-error {
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 4px;
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #b91c1c;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .msg-error.visible { display: block; }
+
+        /* FOOTER DEL CARD */
+        .login-footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 13px;
+            color: var(--subtitulo);
+        }
+
+        /* FOOTER PAGINA */
+        footer {
+            background: var(--fondo);
+            border-top: 1px solid var(--borde);
+            padding: 20px 48px;
+            text-align: center;
+        }
+
+        .footer-copy { font-size: 12px; color: var(--subtitulo); }
+
+        @media (max-width: 480px) {
+            nav { padding: 0 20px; }
+            .login-card { padding: 24px 20px; }
+            footer { padding: 20px 24px; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">
+            <img src="Huella_Laboral.png" alt="Huella Laboral" style="height:36px; width:auto;">
+        </a>
+        <a href="index.html" class="nav-back">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 4L6 8l4 4"/>
+            </svg>
+            Volver al inicio
+        </a>
+    </nav>
+
+    <div class="page-wrapper">
+        <div class="login-container">
+
+            <div class="login-header">
+                <div class="login-icon">
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/>
+                        <path d="M6 24c0-5 3.6-8 8-8"/>
+                        <rect x="16" y="18" width="8" height="6" rx="1"/>
+                        <path d="M18 18v-2a2 2 0 0 1 4 0v2"/>
+                    </svg>
+                </div>
+                <div class="login-label">Reclutadores</div>
+                <h1 class="login-title">Acceso al panel</h1>
+                <p class="login-desc">Ingresa tus credenciales para acceder a la gestión de procesos y resultados.</p>
+            </div>
+
+            <div class="login-card">
+                <div id="msgError" class="msg-error">Correo o contraseña incorrectos. Verifica tus datos e intenta nuevamente.</div>
+
+                <form id="formLogin" novalidate>
+                    <div class="form-group">
+                        <label for="email">Correo electrónico</label>
+                        <input type="email" id="email" placeholder="nombre@empresa.cl" autocomplete="email">
+                        <span class="field-error" id="err-email"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Contraseña</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="password" placeholder="Ingresa tu contraseña" autocomplete="current-password">
+                            <button type="button" class="toggle-password" id="togglePassword" aria-label="Mostrar contraseña">
+                                <svg id="iconShow" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 9s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z"/>
+                                    <circle cx="9" cy="9" r="2.5"/>
+                                </svg>
+                                <svg id="iconHide" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                                    <path d="M1 9s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z"/>
+                                    <circle cx="9" cy="9" r="2.5"/>
+                                    <line x1="2" y1="2" x2="16" y2="16"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <span class="field-error" id="err-password"></span>
+                    </div>
+
+                    <div class="form-divider"></div>
+
+                    <button type="submit" class="btn-submit" id="btnSubmit">Ingresar</button>
+                </form>
+            </div>
+
+            <div class="login-footer">
+                Si no tienes acceso, solicítalo a tu administrador.
+            </div>
+
+        </div>
+    </div>
+
+    <footer>
+        <span class="footer-copy">© 2026 Huella Laboral. La confianza, certificada.</span>
+    </footer>
+
+    <script>
+        // Toggle mostrar/ocultar contraseña
+        document.getElementById('togglePassword').addEventListener('click', function () {
+            const input = document.getElementById('password');
+            const iconShow = document.getElementById('iconShow');
+            const iconHide = document.getElementById('iconHide');
+            if (input.type === 'password') {
+                input.type = 'text';
+                iconShow.style.display = 'none';
+                iconHide.style.display = 'block';
+            } else {
+                input.type = 'password';
+                iconShow.style.display = 'block';
+                iconHide.style.display = 'none';
+            }
+        });
+
+        // Validación
+        function validarCampo(id, errorId, condicion, mensaje) {
+            const input = document.getElementById(id);
+            const error = document.getElementById(errorId);
+            if (!condicion(input.value)) {
+                input.classList.add('error');
+                error.textContent = mensaje;
+                return false;
+            }
+            input.classList.remove('error');
+            error.textContent = '';
+            return true;
+        }
+
+        function validarFormulario() {
+            let valido = true;
+            valido &= validarCampo('email', 'err-email',
+                v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+                'Ingresa un correo electrónico válido.');
+            valido &= validarCampo('password', 'err-password',
+                v => v.trim().length >= 1,
+                'Ingresa tu contraseña.');
+            return !!valido;
+        }
+
+        // Submit
+        document.getElementById('formLogin').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            document.getElementById('msgError').classList.remove('visible');
+
+            if (!validarFormulario()) return;
+
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            btn.textContent = 'Verificando...';
+
+            const datos = {
+                email: document.getElementById('email').value.trim(),
+                password: document.getElementById('password').value
+            };
+
+            // ADMIN HARDCODED - Solo para ti
+            if (datos.email === 'admin@huellalaboral.cl' && datos.password === 'Admin2024!') {
+                localStorage.setItem('hl_token', 'ADMIN_TOKEN');
+                localStorage.setItem('hl_usuario', JSON.stringify({
+                    nombre: 'Administrador',
+                    email: 'admin@huellalaboral.cl',
+                    rol: 'admin'
+                }));
+                
+                // Pequeño delay para asegurar que localStorage se guarde
+                setTimeout(() => {
+                    window.location.href = 'admin.html';
+                }, 100);
+                return;
+            }
+
+            try {
+                // Intentar login con Supabase Auth
+                const response = await fetch('https://dxblzmxcmaerycvdgfpy.supabase.co/auth/v1/token?grant_type=password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c'
+                    },
+                    body: JSON.stringify({
+                        email: datos.email,
+                        password: datos.password
+                    })
+                });
+
+                const authData = await response.json();
+
+                if (!response.ok || authData.error) {
+                    document.getElementById('msgError').classList.add('visible');
+                    btn.disabled = false;
+                    btn.textContent = 'Ingresar';
+                    return;
+                }
+
+                // Obtener datos del usuario desde la tabla usuarios
+                const userResponse = await fetch('https://dxblzmxcmaerycvdgfpy.supabase.co/rest/v1/usuarios?id=eq.' + authData.user.id, {
+                    headers: {
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
+                        'Authorization': 'Bearer ' + authData.access_token
+                    }
+                });
+
+                const usuarios = await userResponse.json();
+                const usuario = usuarios[0];
+
+                if (!usuario || !usuario.activo) {
+                    document.getElementById('msgError').textContent = 'Usuario inactivo. Contacta al administrador.';
+                    document.getElementById('msgError').classList.add('visible');
+                    btn.disabled = false;
+                    btn.textContent = 'Ingresar';
+                    return;
+                }
+
+                // Guardar token y datos del usuario
+                localStorage.setItem('hl_token', authData.access_token);
+                localStorage.setItem('hl_usuario', JSON.stringify({
+                    id: usuario.id,
+                    nombre: usuario.nombre,
+                    email: usuario.email,
+                    empresa: usuario.empresa,
+                    rol: 'reclutador'
+                }));
+
+                window.location.href = 'dashboard.html';
+
+            } catch (err) {
+                console.error('Error:', err);
+                document.getElementById('msgError').classList.add('visible');
+                btn.disabled = false;
+                btn.textContent = 'Ingresar';
+            }
+        });
+
+        // Si ya hay sesión activa, redirigir al dashboard
+        if (localStorage.getItem('hl_token')) {
+            window.location.href = 'dashboard.html';
+        }
+    </script>
+
+</body>
+</html>

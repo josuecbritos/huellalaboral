@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrador - Huella Laboral</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --azul: #0E2A47;
+            --verde: #2FBF71;
+            --texto: #1F2937;
+            --subtitulo: #6B7280;
+            --borde: #E5E7EB;
+            --fondo: #FFFFFF;
+            --fondo-gris: #F9FAFB;
+            --error: #dc2626;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--fondo-gris);
+            color: var(--texto);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .logo {
+            width: 180px;
+        }
+
+        .btn-logout {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--subtitulo);
+            background: transparent;
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: border-color 0.15s;
+        }
+
+        .btn-logout:hover {
+            border-color: var(--subtitulo);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--azul);
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            font-size: 15px;
+            color: var(--subtitulo);
+        }
+
+        /* Stats */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 20px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--subtitulo);
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--azul);
+        }
+
+        /* Action Bar */
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .action-bar h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--azul);
+        }
+
+        .btn-primary {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            background: var(--azul);
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: opacity 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        /* Table */
+        .table-container {
+            background: white;
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--fondo-gris);
+        }
+
+        th {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--subtitulo);
+            text-align: left;
+            padding: 12px 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            font-size: 14px;
+            padding: 16px;
+            border-top: 1px solid var(--borde);
+        }
+
+        tbody tr:hover {
+            background: var(--fondo-gris);
+        }
+
+        .td-name {
+            font-weight: 600;
+            color: var(--texto);
+        }
+
+        .td-email {
+            color: var(--subtitulo);
+            font-size: 13px;
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .badge-activo {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-inactivo {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .btn-action {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--azul);
+            background: transparent;
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 6px 12px;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+            margin-right: 8px;
+        }
+
+        .btn-action:hover {
+            border-color: var(--azul);
+            background: rgba(14,42,71,0.05);
+        }
+
+        .btn-action.danger {
+            color: var(--error);
+        }
+
+        .btn-action.danger:hover {
+            border-color: var(--error);
+            background: rgba(220,38,38,0.05);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal.visible {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid var(--borde);
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--azul);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--borde);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .btn-secondary {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--texto);
+            background: white;
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .btn-secondary:hover {
+            background: var(--fondo-gris);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--texto);
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            padding: 10px 12px;
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            transition: border-color 0.15s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--azul);
+        }
+
+        .field-error {
+            font-size: 12px;
+            color: var(--error);
+            margin-top: 4px;
+            display: none;
+        }
+
+        .field-error.visible {
+            display: block;
+        }
+
+        .msg {
+            padding: 14px 18px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .msg.visible {
+            display: block;
+        }
+
+        .msg.error {
+            background: #fef2f2;
+            color: var(--error);
+            border: 1px solid #fecaca;
+        }
+
+        .msg.success {
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: var(--subtitulo);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--texto);
+            margin-bottom: 4px;
+        }
+
+        .empty-state-desc {
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <img src="logo_huella_laboral.png" alt="Huella Laboral" class="logo">
+                <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+            </div>
+            <h1>Panel de Administración</h1>
+            <p>Gestiona los usuarios reclutadores del sistema</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Total Reclutadores</div>
+                <div class="stat-value" id="statTotal">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Activos</div>
+                <div class="stat-value" id="statActivos">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Inactivos</div>
+                <div class="stat-value" id="statInactivos">0</div>
+            </div>
+        </div>
+
+        <div class="msg" id="msgGlobal"></div>
+
+        <!-- Action Bar -->
+        <div class="action-bar">
+            <h2>Usuarios Reclutadores</h2>
+            <button class="btn-primary" onclick="abrirModalCrear()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+                Crear Reclutador
+            </button>
+        </div>
+
+        <!-- Tabla -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Empresa</th>
+                        <th>Email</th>
+                        <th>Fecha Creación</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaUsuarios">
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">👥</div>
+                                <div class="empty-state-title">Sin usuarios</div>
+                                <div class="empty-state-desc">Crea el primer reclutador para comenzar.</div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Crear Usuario -->
+    <div class="modal" id="modalCrear">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Crear Nuevo Reclutador</h2>
+            </div>
+            <form id="formCrear">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="nombre">Nombre completo *</label>
+                        <input type="text" id="nombre" placeholder="Ej: Juan Pérez">
+                        <span class="field-error" id="err-nombre"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="empresa">Empresa *</label>
+                        <input type="text" id="empresa" placeholder="Ej: Empresa S.A.">
+                        <span class="field-error" id="err-empresa"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" placeholder="juan@empresa.cl">
+                        <span class="field-error" id="err-email"></span>
+                        <div style="font-size:12px; color:var(--subtitulo); margin-top:6px;">
+                            Se enviará un email con un link para crear su contraseña
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="cerrarModalCrear()">Cancelar</button>
+                    <button type="submit" class="btn-primary" id="btnCrear">Crear Reclutador</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Confirmar Acción -->
+    <div class="modal" id="modalConfirmar">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="confirmarTitulo">Confirmar acción</h2>
+            </div>
+            <div class="modal-body">
+                <p id="confirmarMensaje"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="cerrarModalConfirmar()">Cancelar</button>
+                <button type="button" class="btn-primary" id="btnConfirmar" onclick="ejecutarAccion()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Protección de acceso - Solo admin
+        (function verificarAcceso() {
+            const usuario = JSON.parse(localStorage.getItem('hl_usuario') || '{}');
+            if (usuario.rol !== 'admin') {
+                window.location.href = 'login.html';
+                return;
+            }
+        })();
+
+        // Datos dummy
+        let usuarios = [
+            { id: '1', nombre: 'María González', empresa: 'Tech Solutions', email: 'maria@empresa.cl', fecha: '2024-01-15', activo: true },
+            { id: '2', nombre: 'Carlos Muñoz', empresa: 'Innovate Corp', email: 'carlos@tech.cl', fecha: '2024-02-01', activo: true },
+            { id: '3', nombre: 'Ana Torres', empresa: 'RRHH Consulting', email: 'ana@rrhh.cl', fecha: '2024-02-10', activo: false }
+        ];
+
+        let accionPendiente = null;
+
+        // Funciones de validación
+        function validarEmail(email) {
+            const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            return regex.test(email);
+        }
+
+        function validarCampo(id, errorId, condicion, mensaje) {
+            const input = document.getElementById(id);
+            const error = document.getElementById(errorId);
+            if (!condicion(input.value)) {
+                error.textContent = mensaje;
+                error.classList.add('visible');
+                return false;
+            }
+            error.classList.remove('visible');
+            return true;
+        }
+
+        function validarFormulario() {
+            let valido = true;
+            valido &= validarCampo('nombre', 'err-nombre',
+                v => v.trim().length >= 3,
+                'Ingresa el nombre completo (mínimo 3 caracteres).');
+            valido &= validarCampo('empresa', 'err-empresa',
+                v => v.trim().length >= 2,
+                'Ingresa el nombre de la empresa (mínimo 2 caracteres).');
+            valido &= validarCampo('email', 'err-email',
+                validarEmail,
+                'Ingresa un email válido.');
+            return !!valido;
+        }
+
+        // Render tabla
+        function renderTabla() {
+            const tbody = document.getElementById('tablaUsuarios');
+            
+            if (usuarios.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">👥</div>
+                                <div class="empty-state-title">Sin usuarios</div>
+                                <div class="empty-state-desc">Crea el primer reclutador para comenzar.</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = usuarios.map(u => `
+                <tr>
+                    <td>
+                        <div class="td-name">${u.nombre}</div>
+                    </td>
+                    <td>${u.empresa}</td>
+                    <td>
+                        <div class="td-email">${u.email}</div>
+                    </td>
+                    <td>${new Date(u.created_at).toLocaleDateString('es-CL')}</td>
+                    <td>
+                        <span class="badge ${u.activo ? 'badge-activo' : 'badge-inactivo'}">
+                            ${u.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                    </td>
+                    <td>
+                        ${u.activo 
+                            ? `<button class="btn-action danger" onclick="confirmarDesactivar('${u.id}')">Desactivar</button>`
+                            : `<button class="btn-action" onclick="confirmarActivar('${u.id}')">Activar</button>`
+                        }
+                        <button class="btn-action danger" onclick="confirmarEliminar('${u.id}')">Eliminar</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            actualizarStats();
+        }
+
+        function actualizarStats() {
+            document.getElementById('statTotal').textContent = usuarios.length;
+            document.getElementById('statActivos').textContent = usuarios.filter(u => u.activo).length;
+            document.getElementById('statInactivos').textContent = usuarios.filter(u => !u.activo).length;
+        }
+
+        // Modales
+        function abrirModalCrear() {
+            document.getElementById('modalCrear').classList.add('visible');
+            document.getElementById('formCrear').reset();
+            ['nombre', 'empresa', 'email'].forEach(id => {
+                document.getElementById(`err-${id}`).classList.remove('visible');
+            });
+        }
+
+        function cerrarModalCrear() {
+            document.getElementById('modalCrear').classList.remove('visible');
+        }
+
+        function cerrarModalConfirmar() {
+            document.getElementById('modalConfirmar').classList.remove('visible');
+            accionPendiente = null;
+        }
+
+        function confirmarDesactivar(id) {
+            const usuario = usuarios.find(u => u.id === id);
+            document.getElementById('confirmarTitulo').textContent = 'Desactivar Usuario';
+            document.getElementById('confirmarMensaje').textContent = `¿Estás seguro de desactivar a ${usuario.nombre}? Este usuario no podrá acceder al sistema hasta que lo reactives.`;
+            accionPendiente = { tipo: 'desactivar', id };
+            document.getElementById('modalConfirmar').classList.add('visible');
+        }
+
+        function confirmarActivar(id) {
+            const usuario = usuarios.find(u => u.id === id);
+            document.getElementById('confirmarTitulo').textContent = 'Activar Usuario';
+            document.getElementById('confirmarMensaje').textContent = `¿Estás seguro de activar a ${usuario.nombre}?`;
+            accionPendiente = { tipo: 'activar', id };
+            document.getElementById('modalConfirmar').classList.add('visible');
+        }
+
+        function confirmarEliminar(id) {
+            const usuario = usuarios.find(u => u.id === id);
+            document.getElementById('confirmarTitulo').textContent = 'Eliminar Usuario';
+            document.getElementById('confirmarMensaje').textContent = `¿Estás seguro de eliminar a ${usuario.nombre}? Esta acción no se puede deshacer.`;
+            accionPendiente = { tipo: 'eliminar', id };
+            document.getElementById('modalConfirmar').classList.add('visible');
+        }
+
+        function ejecutarAccion() {
+            if (!accionPendiente) return;
+
+            const { tipo, id } = accionPendiente;
+            const usuario = usuarios.find(u => u.id === id);
+
+            if (tipo === 'desactivar') {
+                usuario.activo = false;
+                mostrarMsg('success', `${usuario.nombre} ha sido desactivado.`);
+            } else if (tipo === 'activar') {
+                usuario.activo = true;
+                mostrarMsg('success', `${usuario.nombre} ha sido activado.`);
+            } else if (tipo === 'eliminar') {
+                usuarios = usuarios.filter(u => u.id !== id);
+                mostrarMsg('success', `${usuario.nombre} ha sido eliminado.`);
+            }
+
+            cerrarModalConfirmar();
+            renderTabla();
+
+            // TODO: En producción, hacer POST a Supabase Edge Function
+        }
+
+        // Crear usuario
+        document.getElementById('formCrear').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (!validarFormulario()) return;
+
+            const btn = document.getElementById('btnCrear');
+            btn.disabled = true;
+            btn.textContent = 'Creando...';
+
+            const nuevoUsuario = {
+                nombre: document.getElementById('nombre').value.trim(),
+                empresa: document.getElementById('empresa').value.trim(),
+                email: document.getElementById('email').value.trim()
+            };
+
+            try {
+                const response = await fetch('https://dxblzmxcmaerycvdgfpy.supabase.co/functions/v1/crear-reclutador', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
+                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c'
+                    },
+                    body: JSON.stringify(nuevoUsuario)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || result.error) {
+                    throw new Error(result.error || 'Error al crear reclutador');
+                }
+
+                cerrarModalCrear();
+                cargarUsuarios(); // Recargar lista
+                mostrarMsg('success', `Reclutador ${nuevoUsuario.nombre} creado. Se le ha enviado un email para crear su contraseña.`);
+                
+                // Limpiar formulario
+                document.getElementById('nombre').value = '';
+                document.getElementById('empresa').value = '';
+                document.getElementById('email').value = '';
+
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarMsg('error', error.message || 'Error al crear reclutador. Intenta nuevamente.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Crear Reclutador';
+            }
+        });
+
+        function mostrarMsg(tipo, texto) {
+            const msg = document.getElementById('msgGlobal');
+            msg.textContent = texto;
+            msg.className = `msg ${tipo} visible`;
+            msg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            setTimeout(() => msg.classList.remove('visible'), 5000);
+        }
+
+        async function cargarUsuarios() {
+            try {
+                const response = await fetch('https://dxblzmxcmaerycvdgfpy.supabase.co/rest/v1/usuarios?select=*&order=created_at.desc', {
+                    headers: {
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
+                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c'
+                    }
+                });
+
+                if (response.ok) {
+                    usuarios = await response.json();
+                    renderTabla();
+                }
+            } catch (error) {
+                console.error('Error cargando usuarios:', error);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('hl_token');
+            localStorage.removeItem('hl_usuario');
+            window.location.href = 'login.html';
+        }
+
+        // Inicializar
+        cargarUsuarios();
+    </script>
+</body>
+</html>
