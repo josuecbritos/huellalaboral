@@ -979,11 +979,11 @@
         const tbody = document.getElementById('tablaProcesos');
         
         try {
-            const token = localStorage.getItem('hl_token');
-            const response = await fetch('https://dxblzmxcmaerycvdgfpy.supabase.co/functions/v1/listar-procesos', {
+            const usuario = JSON.parse(localStorage.getItem('hl_usuario'));
+            const response = await fetch(`https://dxblzmxcmaerycvdgfpy.supabase.co/functions/v1/listar-procesos?user_id=${usuario.id}`, {
                 headers: {
                     'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c'
                 }
             });
 
@@ -1347,33 +1347,10 @@
             }
 
             const data = await response.json();
-            const trabajador = data.trabajador;
-            const promedios = data.promedios;
-            const evaluaciones = data.evaluaciones;
-
-            const promedio = promedios.total?.promedio || 0;
-            const evals = evaluaciones.total || 0;
-
-            contenedor.innerHTML = `
-                <div>
-                    <div style="font-size:13px; color:var(--subtitulo); margin-bottom:12px;">Resultado para <strong>${rut}</strong></div>
-                    <div class="candidato-header" style="border-radius:4px 4px 0 0; margin-bottom:0;">
-                        <div class="candidato-avatar">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="8" r="4"/>
-                                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <div class="candidato-nombre">${trabajador.nombre}</div>
-                            <div class="candidato-meta">${trabajador.rut} — ${evals} evaluación(es) • Promedio: ${promedio > 0 ? promedio.toFixed(1) : '—'}</div>
-                        </div>
-                    </div>
-                    <div style="background:var(--fondo); border:1px solid var(--borde); border-top:none; border-radius:0 0 4px 4px; padding:20px;">
-                        <button class="btn-primary" onclick='mostrarDetalleCandidato(${JSON.stringify(data)})'>Ver evaluaciones completas</button>
-                    </div>
-                </div>`;
-
+            
+            // Mostrar vista completa de resultados usando los datos de la API
+            mostrarResultadosBusqueda(data);
+            
             btn.disabled = false;
             btn.textContent = 'Buscar';
 
@@ -1383,6 +1360,93 @@
             btn.disabled = false;
             btn.textContent = 'Buscar';
         }
+    }
+
+    function mostrarResultadosBusqueda(data) {
+        // Guardar datos del candidato para la vista
+        const trabajador = data.trabajador;
+        const evaluaciones = data.evaluaciones.lista || [];
+        const promedios = data.promedios;
+        const documentos = data.documentos;
+        
+        // Poblar vista de resultados
+        vistaDataActual = 'total';
+        document.getElementById('toggleTotal').classList.add('active');
+        document.getElementById('toggleVerificada').classList.remove('active');
+        
+        document.getElementById('resultadoNombre').textContent = trabajador.nombre;
+        
+        // Datos de documentos validados
+        document.getElementById('certEmpleos').textContent = documentos.cert_empleos !== null ? documentos.cert_empleos : '—';
+        document.getElementById('certPermanencia').textContent = documentos.cert_permanencia !== null ? documentos.cert_permanencia + ' años' : '—';
+        document.getElementById('causalTexto').textContent = documentos.causal_validada || '—';
+        
+        const badgeHtml = documentos.causal_validada
+            ? '<span style="font-size:10px; font-weight:700; color:#166534; background:rgba(47,191,113,0.12); padding:3px 8px; border-radius:2px;">✓ VALIDADA</span>'
+            : '';
+        document.getElementById('causalBadge').innerHTML = badgeHtml;
+
+        const validas = evaluaciones.filter(e => !e.rechazo);
+        const verificadas = validas.filter(e => e.verificada);
+
+        // Guardar datos para toggle
+        candidatoActualData = {
+            candidato: { nombre: trabajador.nombre, rut: trabajador.rut },
+            total: { 
+                evaluaciones: validas, 
+                count: validas.length, 
+                promedios: promedios.total || {},
+                promedioGeneral: promedios.total?.promedio || 0
+            },
+            verificada: { 
+                evaluaciones: verificadas, 
+                count: verificadas.length, 
+                promedios: promedios.verificado || {},
+                promedioGeneral: promedios.verificado?.promedio || 0
+            }
+        };
+
+        // Renderizar vista
+        renderizarVista();
+
+        // Renderizar lista de evaluaciones
+        document.getElementById('listaEvaluaciones').innerHTML = evaluaciones.map(e => `
+            <div class="evaluacion-card">
+                <div class="evaluacion-header">
+                    <div>
+                        <div class="evaluacion-evaluador">
+                            ${e.nombre_evaluador}
+                            ${e.verificada ? '<span style="display:inline-block; margin-left:6px; font-size:10px; font-weight:700; color:#166534; background:rgba(47,191,113,0.12); padding:2px 6px; border-radius:2px;">✓ VERIFICADA</span>' : ''}
+                        </div>
+                        <div class="evaluacion-empresa">${e.empresa_evaluador || '—'} — RUT ${e.rut_evaluador || '—'}</div>
+                    </div>
+                    <div class="evaluacion-fecha">${e.cargo || '—'} (${e.tiempo_trabajo || '—'})</div>
+                </div>
+                <div class="evaluacion-body">
+                    ${e.rechazo
+                        ? '<div class="no-conoce-tag">El evaluador indicó no conocer o no desear evaluar a este candidato.</div>'
+                        : `<div class="eval-atributos">
+                            ${['puntualidad', 'desempeno', 'relaciones', 'confiabilidad'].map(attr => `
+                                <div>
+                                    <div class="eval-atributo-label">${
+                                        attr === 'desempeno' ? 'Desempeño' : 
+                                        attr === 'relaciones' ? 'Relaciones Interpersonales' :
+                                        attr.charAt(0).toUpperCase() + attr.slice(1)
+                                    }</div>
+                                    <div class="eval-score">
+                                        <span class="eval-score-num">${e[attr]}</span>
+                                        <div class="eval-score-bar"><div class="eval-score-fill" style="width:${e[attr] / 5 * 100}%"></div></div>
+                                    </div>
+                                    <div class="eval-score-texto">${escalaTextos[e[attr]]}</div>
+                                </div>`).join('')}
+                           </div>
+                           ${e.comentarios ? `<div class="eval-otros"><div class="eval-otros-label">Comentarios adicionales</div><div class="eval-otros-texto">${e.comentarios}</div></div>` : ''}`
+                    }
+                </div>
+            </div>`).join('');
+
+        // Cambiar a vista de resultados
+        mostrarVista('resultados');
     }
 
     function mostrarDetalleCandidato(data) {
@@ -1458,15 +1522,19 @@ Promedio: ${data.promedios.total?.promedio?.toFixed(1) || '—'}
         if (!cargo) return;
 
         try {
-            const token = localStorage.getItem('hl_token');
+            const usuario = JSON.parse(localStorage.getItem('hl_usuario'));
             const response = await fetch('https://dxblzmxcmaerycvdgfpy.supabase.co/functions/v1/crear-proceso', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c'
                 },
-                body: JSON.stringify({ cargo, descripcion })
+                body: JSON.stringify({ 
+                    user_id: usuario.id,
+                    cargo, 
+                    descripcion 
+                })
             });
 
             const result = await response.json();
