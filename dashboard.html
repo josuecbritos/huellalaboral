@@ -1042,84 +1042,115 @@
     }
 
     // CANDIDATOS - Vista comparativa
-    function verCandidatos(procesoId) {
-        vistaDataProceso = 'total'; // Reset a total al abrir
+    async function verCandidatos(procesoId) {
+        vistaDataProceso = 'total';
         document.getElementById('toggleTotalProceso').classList.add('active');
         document.getElementById('toggleVerificadaProceso').classList.remove('active');
         
         procesoActual = procesos.find(p => p.id === procesoId);
         document.getElementById('procesoNombre').textContent = procesoActual.cargo;
-        document.getElementById('procesoMeta').textContent = `${procesoActual.descripcion} — Creado el ${formatFecha(procesoActual.fecha)}`;
+        document.getElementById('procesoMeta').textContent = `${procesoActual.descripcion || ''} — Creado el ${formatFecha(procesoActual.fecha)}`;
 
-        const candidatos = candidatosPorProceso[procesoId] || [];
-        
-        // Calcular AMBOS promedios (total y verificado) para cada candidato
-        procesoActual.candidatosData = candidatos.map(c => {
-            const evals = (evaluacionesPorCandidato[c.id] || []).filter(e => !e.no_conoce);
-            const evalsVerificadas = evals.filter(e => e.verificada);
-            
-            const data = { ...c, total: {}, verificada: {} };
-            
-            // Promedios totales
-            if (evals.length > 0) {
-                data.total.count = evals.length;
-                data.total.puntualidad = evals.reduce((sum, e) => sum + e.puntualidad.val, 0) / evals.length;
-                data.total.desempeno = evals.reduce((sum, e) => sum + e.desempeno.val, 0) / evals.length;
-                data.total.relaciones = evals.reduce((sum, e) => sum + e.relaciones.val, 0) / evals.length;
-                data.total.confiabilidad = evals.reduce((sum, e) => sum + e.confiabilidad.val, 0) / evals.length;
-                data.total.promedio = (data.total.puntualidad + data.total.desempeno + data.total.relaciones + data.total.confiabilidad) / 4;
-            } else {
-                data.total = { count: 0, puntualidad: null, desempeno: null, relaciones: null, confiabilidad: null, promedio: null };
-            }
-            
-            // Promedios verificados
-            if (evalsVerificadas.length > 0) {
-                data.verificada.count = evalsVerificadas.length;
-                data.verificada.puntualidad = evalsVerificadas.reduce((sum, e) => sum + e.puntualidad.val, 0) / evalsVerificadas.length;
-                data.verificada.desempeno = evalsVerificadas.reduce((sum, e) => sum + e.desempeno.val, 0) / evalsVerificadas.length;
-                data.verificada.relaciones = evalsVerificadas.reduce((sum, e) => sum + e.relaciones.val, 0) / evalsVerificadas.length;
-                data.verificada.confiabilidad = evalsVerificadas.reduce((sum, e) => sum + e.confiabilidad.val, 0) / evalsVerificadas.length;
-                data.verificada.promedio = (data.verificada.puntualidad + data.verificada.desempeno + data.verificada.relaciones + data.verificada.confiabilidad) / 4;
-            } else {
-                data.verificada = { count: 0, puntualidad: null, desempeno: null, relaciones: null, confiabilidad: null, promedio: null };
-            }
-            
-            return data;
-        });
+        // Cargar candidatos del proceso desde la BD
+        try {
+            const response = await fetch(`https://dxblzmxcmaerycvdgfpy.supabase.co/rest/v1/candidatos_proceso?proceso_id=eq.${procesoId}&select=*,trabajadores(*)`, {
+                headers: {
+                    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
+                    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c'
+                }
+            });
 
-        renderizarTablaCandidatos();
-        mostrarVista('candidatos');
+            const candidatosRaw = await response.json();
+            
+            // Transformar a formato esperado
+            const candidatos = candidatosRaw.map(c => {
+                if (c.trabajador_id && c.trabajadores) {
+                    // Candidato con datos completos
+                    return {
+                        id: c.trabajadores.id,
+                        nombre: c.trabajadores.nombre,
+                        rut: c.trabajadores.rut,
+                        email: c.trabajadores.email,
+                        empleadores: 0, // Se calculará después
+                        evaluaciones: 0,
+                        estado: 'En proceso',
+                        pendiente: false
+                    };
+                } else {
+                    // Invitación pendiente
+                    return {
+                        id: c.id,
+                        nombre: '(Invitación pendiente)',
+                        rut: c.rut_invitado,
+                        email: c.email_invitado,
+                        empleadores: 0,
+                        evaluaciones: 0,
+                        estado: 'Invitado',
+                        pendiente: true
+                    };
+                }
+            });
+            
+            // Calcular promedios (solo para candidatos con datos)
+            procesoActual.candidatosData = candidatos.map(c => ({
+                ...c,
+                total: { count: 0, promedio: null },
+                verificada: { count: 0, promedio: null }
+            }));
+
+            renderizarTablaCandidatos();
+            mostrarVista('candidatos');
+            
+        } catch (error) {
+            console.error('Error cargando candidatos:', error);
+            procesoActual.candidatosData = [];
+            renderizarTablaCandidatos();
+            mostrarVista('candidatos');
+        }
     }
 
     function renderizarTablaCandidatos() {
         const candidatosData = procesoActual.candidatosData || [];
         const vista = vistaDataProceso;
         
-        // Ordenar por promedio de la vista actual
-        const candidatosOrdenados = [...candidatosData].sort((a, b) => (b[vista].promedio || 0) - (a[vista].promedio || 0));
+        // Ordenar: invitados al final, luego por promedio
+        const candidatosOrdenados = [...candidatosData].sort((a, b) => {
+            if (a.pendiente && !b.pendiente) return 1;
+            if (!a.pendiente && b.pendiente) return -1;
+            return (b[vista].promedio || 0) - (a[vista].promedio || 0);
+        });
 
         const tbody = document.getElementById('tablaCandidatos');
         tbody.innerHTML = candidatosData.length
             ? candidatosOrdenados.map(c => {
-                const d = c[vista];
-                return `
-                <tr>
-                    <td><div class="td-name">${c.nombre}</div><div class="td-sub">${c.rut}</div></td>
-                    <td><strong style="font-size:18px;color:var(--azul);">${d.promedio ? d.promedio.toFixed(1) : '—'}</strong></td>
-                    <td>${d.puntualidad ? d.puntualidad.toFixed(1) : '—'}</td>
-                    <td>${d.desempeno ? d.desempeno.toFixed(1) : '—'}</td>
-                    <td>${d.relaciones ? d.relaciones.toFixed(1) : '—'}</td>
-                    <td>${d.confiabilidad ? d.confiabilidad.toFixed(1) : '—'}</td>
-                    <td>${d.count} / ${c.empleadores}</td>
-                    <td>${(c.estado === 'Completado' || c.estado === 'En proceso')
-                        ? `<button class="btn-accion" onclick="verResultados(${c.id})">Ver detalle</button>`
-                        : `<span style="font-size:12px;color:var(--subtitulo);">Sin evaluaciones</span>`}
-                    </td>
-                </tr>`;
+                if (c.pendiente) {
+                    // Invitación pendiente
+                    return `
+                    <tr style="opacity:0.6;">
+                        <td><div class="td-name">${c.email}</div><div class="td-sub">${c.rut}</div></td>
+                        <td colspan="6" style="text-align:center;"><span style="font-size:12px; color:var(--subtitulo); background:var(--fondo-gris); padding:4px 12px; border-radius:12px;">⏳ Invitación pendiente</span></td>
+                        <td><span style="font-size:12px;color:var(--subtitulo);">Esperando respuesta</span></td>
+                    </tr>`;
+                } else {
+                    // Candidato con datos
+                    const d = c[vista];
+                    return `
+                    <tr>
+                        <td><div class="td-name">${c.nombre}</div><div class="td-sub">${c.rut}</div></td>
+                        <td><strong style="font-size:18px;color:var(--azul);">${d.promedio ? d.promedio.toFixed(1) : '—'}</strong></td>
+                        <td>${d.puntualidad || '—'}</td>
+                        <td>${d.desempeno || '—'}</td>
+                        <td>${d.relaciones || '—'}</td>
+                        <td>${d.confiabilidad || '—'}</td>
+                        <td>${d.count} / ${c.empleadores}</td>
+                        <td>${c.evaluaciones > 0
+                            ? `<button class="btn-accion" onclick="verResultados('${c.id}')">Ver detalle</button>`
+                            : `<span style="font-size:12px;color:var(--subtitulo);">Sin evaluaciones</span>`}
+                        </td>
+                    </tr>`;
+                }
             }).join('')
             : `<tr><td colspan="8"><div class="empty-state"><div class="empty-state-title">Sin candidatos</div><div class="empty-state-desc">Agrega candidatos a este proceso.</div></div></td></tr>`;
-
-        mostrarVista('candidatos');
     }
 
     function cambiarVistaDataProceso(vista) {
