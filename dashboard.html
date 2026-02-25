@@ -1342,6 +1342,35 @@
         else e.target.value = v;
     });
 
+    // Validación de RUT chileno
+    function validarRutChileno(rut) {
+        // Limpiar formato
+        rut = rut.replace(/\./g, '').replace(/-/g, '').toUpperCase();
+        
+        if (rut.length < 2) return false;
+        
+        // Separar número y dígito verificador
+        const numero = rut.slice(0, -1);
+        const dvIngresado = rut.slice(-1);
+        
+        // Validar que el número sea válido
+        if (!/^\d+$/.test(numero)) return false;
+        
+        // Calcular dígito verificador esperado
+        let suma = 0;
+        let multiplicador = 2;
+        
+        for (let i = numero.length - 1; i >= 0; i--) {
+            suma += parseInt(numero[i]) * multiplicador;
+            multiplicador = multiplicador === 7 ? 2 : multiplicador + 1;
+        }
+        
+        const resto = suma % 11;
+        const dvEsperado = resto === 0 ? '0' : resto === 1 ? 'K' : String(11 - resto);
+        
+        return dvIngresado === dvEsperado;
+    }
+
     async function buscarPorRut() {
         const rut = document.getElementById('rutBusqueda').value.trim();
         const contenedor = document.getElementById('resultadoBusqueda');
@@ -1354,7 +1383,13 @@
         
         // Validar formato RUT
         if (!/^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$/.test(rut)) {
-            contenedor.innerHTML = '<div class="table-card" style="padding:32px; text-align:center;"><div class="empty-state-title">RUT inválido</div><div class="empty-state-desc" style="margin-top:6px;">Ingresa un RUT válido con formato XX.XXX.XXX-X</div></div>';
+            contenedor.innerHTML = '<div class="table-card" style="padding:32px; text-align:center;"><div class="empty-state-title">Formato inválido</div><div class="empty-state-desc" style="margin-top:6px;">Ingresa un RUT con formato XX.XXX.XXX-X</div></div>';
+            return;
+        }
+        
+        // Validar dígito verificador
+        if (!validarRutChileno(rut)) {
+            contenedor.innerHTML = '<div class="table-card" style="padding:32px; text-align:center;"><div class="empty-state-title">RUT inválido</div><div class="empty-state-desc" style="margin-top:6px;">El dígito verificador no es correcto</div></div>';
             return;
         }
 
@@ -1601,12 +1636,25 @@ Promedio: ${data.promedios.total?.promedio?.toFixed(1) || '—'}
             return;
         }
         
+        // Validar formato RUT
+        if (!/^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$/.test(rut)) {
+            alert('Formato de RUT inválido. Usa el formato XX.XXX.XXX-X');
+            return;
+        }
+        
+        // Validar dígito verificador
+        if (!validarRutChileno(rut)) {
+            alert('RUT inválido: el dígito verificador no es correcto');
+            return;
+        }
+        
         if (!procesoActual) {
             alert('No hay proceso seleccionado');
             return;
         }
 
         try {
+            const usuario = JSON.parse(localStorage.getItem('hl_usuario'));
             const response = await fetch('https://dxblzmxcmaerycvdgfpy.supabase.co/functions/v1/agregar-candidato', {
                 method: 'POST',
                 headers: {
@@ -1617,7 +1665,8 @@ Promedio: ${data.promedios.total?.promedio?.toFixed(1) || '—'}
                 body: JSON.stringify({ 
                     proceso_id: procesoActual.id,
                     email: email,
-                    rut: rut
+                    rut: rut,
+                    reclutador_nombre: usuario.nombre || usuario.email
                 })
             });
 
@@ -1630,9 +1679,9 @@ Promedio: ${data.promedios.total?.promedio?.toFixed(1) || '—'}
 
             // Mostrar mensaje según el tipo
             if (result.tipo === 'existente') {
-                alert('✓ Candidato agregado al proceso (ya tenía evaluaciones en el sistema)');
+                alert('✓ ' + result.mensaje);
             } else {
-                alert('✓ Invitación enviada a ' + email + '. El candidato aparecerá cuando complete su perfil.');
+                alert('✓ ' + result.mensaje);
             }
 
             // Recargar candidatos del proceso
