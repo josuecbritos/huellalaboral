@@ -397,7 +397,9 @@
     <div class="container">
         <div class="header">
             <div class="header-top">
-                <img src="Huella_Laboral.png" alt="Huella Laboral" class="logo" style="height: 40px;">
+                <a href="index.html" style="text-decoration: none;">
+                    <img src="Huella_Laboral.png" alt="Huella Laboral" style="height:36px; width:auto;">
+                </a>
                 <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
             </div>
             <h1>Panel de Administración</h1>
@@ -750,7 +752,8 @@
 
                 if (!response.ok || result.error) {
                     // Verificar si es error de usuario ya existente
-                    if (result.error && result.error.includes('already')) {
+                    if ((result.error && (result.error.includes('already') || result.error === 'already_exists')) || 
+                        (result.message && result.message.includes('already'))) {
                         // Buscar si hay un usuario eliminado con este email
                         const checkResponse = await fetch(`https://dxblzmxcmaerycvdgfpy.supabase.co/rest/v1/usuarios?email=eq.${nuevoUsuario.email}&deleted=eq.true`, {
                             headers: {
