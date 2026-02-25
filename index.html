@@ -476,7 +476,7 @@
         </a>
         <div class="nav-links">
             <a href="trabajador.html" class="btn-outline">Soy trabajador</a>
-            <a href="login.html" class="btn-primary">Acceso reclutadores</a>
+            <a href="#" onclick="irAAccesoReclutadores(event)" class="btn-primary">Acceso reclutadores</a>
         </div>
     </nav>
 
@@ -499,7 +499,7 @@
                             </svg>
                         </div>
                     </a>
-                    <a href="login.html" class="acceso-card">
+                    <a href="#" onclick="irAAccesoReclutadores(event)" class="acceso-card">
                         <div class="acceso-info">
                             <div class="acceso-tag">Reclutadores</div>
                             <div class="acceso-title">Acceder al panel de gestión</div>
@@ -670,5 +670,34 @@
         </div>
     </footer>
 
+    <script>
+        function irAAccesoReclutadores(event) {
+            event.preventDefault();
+            
+            // Verificar si hay usuario logueado
+            const usuario = localStorage.getItem('hl_usuario');
+            
+            if (usuario) {
+                try {
+                    const user = JSON.parse(usuario);
+                    // Si es admin, ir a admin.html
+                    if (user.rol === 'admin') {
+                        window.location.href = 'admin.html';
+                        return;
+                    }
+                    // Si es reclutador, ir a dashboard
+                    if (user.rol === 'reclutador') {
+                        window.location.href = 'dashboard.html';
+                        return;
+                    }
+                } catch (e) {
+                    console.error('Error parsing user:', e);
+                }
+            }
+            
+            // Si no hay usuario logueado, ir a login
+            window.location.href = 'login.html';
+        }
+    </script>
 </body>
 </html>
