@@ -658,27 +658,65 @@
             document.getElementById('modalConfirmar').classList.add('visible');
         }
 
-        function ejecutarAccion() {
+        async function ejecutarAccion() {
             if (!accionPendiente) return;
 
             const { tipo, id } = accionPendiente;
             const usuario = usuarios.find(u => u.id === id);
 
-            if (tipo === 'desactivar') {
-                usuario.activo = false;
-                mostrarMsg('success', `${usuario.nombre} ha sido desactivado.`);
-            } else if (tipo === 'activar') {
-                usuario.activo = true;
-                mostrarMsg('success', `${usuario.nombre} ha sido activado.`);
-            } else if (tipo === 'eliminar') {
-                usuarios = usuarios.filter(u => u.id !== id);
-                mostrarMsg('success', `${usuario.nombre} ha sido eliminado.`);
+            try {
+                if (tipo === 'desactivar' || tipo === 'activar') {
+                    // Toggle activo
+                    const nuevoEstado = tipo === 'activar';
+                    const response = await fetch(`https://dxblzmxcmaerycvdgfpy.supabase.co/rest/v1/usuarios?id=eq.${id}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
+                            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify({ activo: nuevoEstado })
+                    });
+
+                    if (response.ok) {
+                        usuario.activo = nuevoEstado;
+                        mostrarMsg('success', `${usuario.nombre} ha sido ${tipo === 'activar' ? 'activado' : 'desactivado'}.`);
+                    } else {
+                        throw new Error('Error al actualizar usuario');
+                    }
+
+                } else if (tipo === 'eliminar') {
+                    // Soft delete
+                    const response = await fetch(`https://dxblzmxcmaerycvdgfpy.supabase.co/rest/v1/usuarios?id=eq.${id}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
+                            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify({ deleted: true })
+                    });
+
+                    if (response.ok) {
+                        usuarios = usuarios.filter(u => u.id !== id);
+                        mostrarMsg('success', `${usuario.nombre} ha sido eliminado.`);
+                    } else {
+                        throw new Error('Error al eliminar usuario');
+                    }
+                }
+
+                cerrarModalConfirmar();
+                renderTabla();
+
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarMsg('error', 'Ocurrió un error al procesar la acción.');
+                cerrarModalConfirmar();
             }
 
-            cerrarModalConfirmar();
-            renderTabla();
-
-            // TODO: En producción, hacer POST a Supabase Edge Function
+            accionPendiente = null;
         }
 
         // Crear usuario
@@ -742,7 +780,7 @@
 
         async function cargarUsuarios() {
             try {
-                const response = await fetch('https://dxblzmxcmaerycvdgfpy.supabase.co/rest/v1/usuarios?select=*&order=created_at.desc', {
+                const response = await fetch('https://dxblzmxcmaerycvdgfpy.supabase.co/rest/v1/usuarios?select=*&deleted=eq.false&order=created_at.desc', {
                     headers: {
                         'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
                         'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c'
