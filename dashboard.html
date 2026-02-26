@@ -1206,28 +1206,56 @@
     }
 
     // RESULTADOS
-    function verResultados(candidatoId) {
-        vistaDataActual = 'total'; // Reset a total al abrir
+    async function verResultados(candidatoId) {
+        vistaDataActual = 'total';
         document.getElementById('toggleTotal').classList.add('active');
         document.getElementById('toggleVerificada').classList.remove('active');
-        
-        const candidato = Object.values(candidatosPorProceso).flat().find(c => c.id === candidatoId);
+
+        // Buscar candidato en procesoActual.candidatosData
+        const candidato = procesoActual.candidatosData.find(c => c.id === candidatoId);
+        if (!candidato) return;
+
+        // Mostrar vista con loading
+        mostrarVista('resultados');
         document.getElementById('resultadoNombre').textContent = candidato.nombre;
-        
-        // Poblar datos de certificado y finiquito validados
-        document.getElementById('certEmpleos').textContent = candidato.cert_empleos !== null ? candidato.cert_empleos : '—';
-        document.getElementById('certPermanencia').textContent = candidato.cert_permanencia !== null ? candidato.cert_permanencia + ' años' : '—';
+        document.getElementById('listaEvaluaciones').innerHTML = '<p style="color:var(--subtitulo); text-align:center; padding:20px;">Cargando evaluaciones...</p>';
+
+        // Llamar a obtener-candidato para traer datos completos
+        const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c';
+        const res = await fetch(`https://dxblzmxcmaerycvdgfpy.supabase.co/functions/v1/obtener-candidato?rut=${encodeURIComponent(candidato.rut)}`, {
+            headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }
+        });
+        const data = await res.json();
+
+        // Poblar datos de documentos validados
+        document.getElementById('certEmpleos').textContent = data.documentos?.cert_empleos !== null && data.documentos?.cert_empleos !== undefined ? data.documentos.cert_empleos : '—';
+        document.getElementById('certPermanencia').textContent = data.documentos?.cert_permanencia !== null && data.documentos?.cert_permanencia !== undefined ? data.documentos.cert_permanencia + ' años' : '—';
         document.getElementById('causalTexto').textContent = candidato.causal_texto || '—';
-        
-        const badgeHtml = candidato.causal_validada === true 
+
+        const badgeHtml = data.documentos?.causal_validada === true
             ? '<span style="font-size:10px; font-weight:700; color:#166534; background:rgba(47,191,113,0.12); padding:3px 8px; border-radius:2px;">✓ VALIDADA</span>'
-            : candidato.causal_validada === false
+            : data.documentos?.causal_validada === false
             ? '<span style="font-size:10px; font-weight:700; color:#dc2626; background:rgba(220,38,38,0.12); padding:3px 8px; border-radius:2px;">✗ NO VALIDADA</span>'
             : '';
         document.getElementById('causalBadge').innerHTML = badgeHtml;
 
-        const evaluaciones = evaluacionesPorCandidato[candidatoId] || [];
-        const validas = evaluaciones.filter(e => !e.no_conoce);
+        // Transformar evaluaciones al formato que espera el renderizado
+        const todasEvals = data.evaluaciones?.lista || [];
+        const transformar = (evals) => evals.map(e => ({
+            evaluador: e.nombre_evaluador || '—',
+            empresa: e.empresa_evaluador || '—',
+            rut: e.rut_evaluador || '—',
+            periodo: e.tiempo_trabajo || '—',
+            verificada: e.verificada || false,
+            no_conoce: e.rechazo || false,
+            puntualidad: { val: e.puntualidad || 0, comentario: '' },
+            desempeno: { val: e.desempeno || 0, comentario: '' },
+            relaciones: { val: e.relaciones || 0, comentario: '' },
+            confiabilidad: { val: e.confiabilidad || 0, comentario: '' },
+            otros: e.comentarios || ''
+        }));
+
+        const validas = transformar(todasEvals.filter(e => !e.rechazo));
         const verificadas = validas.filter(e => e.verificada);
         const atributos = ['puntualidad', 'desempeno', 'relaciones', 'confiabilidad'];
 
@@ -1238,7 +1266,6 @@
             verificada: { evaluaciones: verificadas, count: verificadas.length, promedios: {} }
         };
 
-        // Calcular promedios totales
         if (validas.length) {
             const promedioGral = atributos.reduce((sum, attr) => {
                 const prom = validas.reduce((s, e) => s + e[attr].val, 0) / validas.length;
@@ -1248,7 +1275,6 @@
             candidatoActualData.total.promedioGeneral = promedioGral;
         }
 
-        // Calcular promedios verificados
         if (verificadas.length) {
             const promedioVerif = atributos.reduce((sum, attr) => {
                 const prom = verificadas.reduce((s, e) => s + e[attr].val, 0) / verificadas.length;
@@ -1258,10 +1284,11 @@
             candidatoActualData.verificada.promedioGeneral = promedioVerif;
         }
 
-        // Renderizar vista inicial (total)
         renderizarVista();
 
-        document.getElementById('listaEvaluaciones').innerHTML = evaluaciones.map(e => `
+        // Renderizar lista de evaluaciones (siempre muestra todas, no filtra por vista)
+        document.getElementById('listaEvaluaciones').innerHTML = validas.length
+            ? validas.map(e => `
             <div class="evaluacion-card">
                 <div class="evaluacion-header">
                     <div>
@@ -1280,7 +1307,7 @@
                             ${['puntualidad', 'desempeno', 'relaciones', 'confiabilidad'].map(attr => `
                                 <div>
                                     <div class="eval-atributo-label">${
-                                        attr === 'desempeno' ? 'Desempeño' : 
+                                        attr === 'desempeno' ? 'Desempeño' :
                                         attr === 'relaciones' ? 'Relaciones Interpersonales' :
                                         attr.charAt(0).toUpperCase() + attr.slice(1)
                                     }</div>
@@ -1294,9 +1321,8 @@
                            ${e.otros ? `<div class="eval-otros"><div class="eval-otros-label">Comentarios adicionales</div><div class="eval-otros-texto">${e.otros}</div></div>` : ''}`
                     }
                 </div>
-            </div>`).join('');
-
-        mostrarVista('resultados');
+            </div>`).join('')
+            : '<p style="color:var(--subtitulo); text-align:center; padding:20px;">No hay evaluaciones completadas aún.</p>';
     }
 
     function renderizarVista() {
