@@ -901,11 +901,7 @@
 <script>
     const escalaTextos = { 1: 'Muy mejorable', 2: 'Mejorable', 3: 'Suficiente', 4: 'Bueno', 5: 'Muy bueno' };
 
-    // DATOS DEMO
-    let procesos = [
-        { id: 1, cargo: 'Analista Comercial', descripcion: 'Gerencia de ventas', estado: 'Activo', fecha: '2026-02-01', candidatos: 3 },
-        { id: 2, cargo: 'Ingeniero de Proyectos', descripcion: 'Área de infraestructura', estado: 'Activo', fecha: '2026-01-15', candidatos: 2 },
-    ];
+    let procesos = [];
 
     let candidatosPorProceso = {
         1: [
@@ -959,7 +955,6 @@
         document.getElementById('sidebarEmail').textContent = usuario.email || '';
         
         cargarProcesos();
-        actualizarStats();
     });
 
     // NAVEGACIÓN
@@ -996,6 +991,7 @@
 
             const data = await response.json();
             procesos = data.procesos || [];
+            actualizarStats();
 
             tbody.innerHTML = procesos.length
                 ? procesos.map(p => {
@@ -1051,11 +1047,17 @@
 
             // Total de candidatos únicos (excluyendo invitaciones pendientes)
             const resCandidatos = await fetch(
-                `https://dxblzmxcmaerycvdgfpy.supabase.co/rest/v1/candidatos_proceso?proceso_id=in.(${procesoIds.join(',')})&trabajador_id=not.is.null&select=trabajador_id`,
+                `https://dxblzmxcmaerycvdgfpy.supabase.co/rest/v1/candidatos_proceso?proceso_id=in.(${procesoIds.join(',')})&select=trabajador_id`,
                 { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } }
             );
             const candidatosRaw = await resCandidatos.json();
-            const trabajadorIdsUnicos = [...new Set(candidatosRaw.map(c => c.trabajador_id))];
+            if (!Array.isArray(candidatosRaw)) throw new Error('Error obteniendo candidatos: ' + JSON.stringify(candidatosRaw));
+            
+            const trabajadorIdsUnicos = [...new Set(
+                candidatosRaw
+                    .filter(c => c.trabajador_id !== null)
+                    .map(c => c.trabajador_id)
+            )];
             document.getElementById('statCandidatosEvaluacion').textContent = trabajadorIdsUnicos.length;
 
             // Total de evaluaciones realizadas
@@ -1065,6 +1067,7 @@
                     { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } }
                 );
                 const evalsRaw = await resEvals.json();
+                if (!Array.isArray(evalsRaw)) throw new Error('Error obteniendo evaluaciones: ' + JSON.stringify(evalsRaw));
                 document.getElementById('statCandidatosValidados').textContent = evalsRaw.length;
             } else {
                 document.getElementById('statCandidatosValidados').textContent = 0;
@@ -1650,7 +1653,6 @@ Promedio: ${data.promedios.total?.promedio?.toFixed(1) || '—'}
         
         cerrarModalEliminar();
         cargarProcesos();
-        actualizarStats();
         
         // En producción:
         // fetch('WEBHOOK_ELIMINAR_PROCESO', { 
@@ -1667,7 +1669,6 @@ Promedio: ${data.promedios.total?.promedio?.toFixed(1) || '—'}
         proceso.estado = 'Finalizado';
         
         cargarProcesos();
-        actualizarStats();
         
         // En producción:
         // fetch('WEBHOOK_FINALIZAR_PROCESO', { 
@@ -1709,7 +1710,6 @@ Promedio: ${data.promedios.total?.promedio?.toFixed(1) || '—'}
             }
 
             cargarProcesos();
-            actualizarStats();
             cerrarModalProceso();
             document.getElementById('nuevoProcesoCargo').value = '';
             document.getElementById('nuevoProcesoDesc').value = '';
