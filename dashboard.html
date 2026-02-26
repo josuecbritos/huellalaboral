@@ -1062,22 +1062,22 @@
 
             const candidatosRaw = await response.json();
             
-            // Transformar a formato esperado
-            const candidatos = candidatosRaw.map(c => {
+            // Transformar a formato base
+            const candidatosBase = candidatosRaw.map(c => {
                 if (c.trabajador_id && c.trabajadores) {
-                    // Candidato con datos completos
                     return {
                         id: c.trabajadores.id,
                         nombre: c.trabajadores.nombre,
                         rut: c.trabajadores.rut,
                         email: c.trabajadores.email,
-                        empleadores: 0, // Se calculará después
+                        empleadores: 0,
                         evaluaciones: 0,
                         estado: 'En proceso',
-                        pendiente: false
+                        pendiente: false,
+                        total: { count: 0, promedio: null },
+                        verificada: { count: 0, promedio: null }
                     };
                 } else {
-                    // Invitación pendiente
                     return {
                         id: c.id,
                         nombre: '(Invitación pendiente)',
@@ -1086,17 +1086,47 @@
                         empleadores: 0,
                         evaluaciones: 0,
                         estado: 'Invitado',
-                        pendiente: true
+                        pendiente: true,
+                        total: { count: 0, promedio: null },
+                        verificada: { count: 0, promedio: null }
                     };
                 }
             });
-            
-            // Calcular promedios (solo para candidatos con datos)
-            procesoActual.candidatosData = candidatos.map(c => ({
-                ...c,
-                total: { count: 0, promedio: null },
-                verificada: { count: 0, promedio: null }
+
+            // Enriquecer candidatos con datos reales de evaluaciones
+            const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c';
+            const candidatosEnriquecidos = await Promise.all(candidatosBase.map(async c => {
+                if (c.pendiente || !c.rut) return c;
+                try {
+                    const res = await fetch(`https://dxblzmxcmaerycvdgfpy.supabase.co/functions/v1/obtener-candidato?rut=${encodeURIComponent(c.rut)}`, {
+                        headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }
+                    });
+                    if (!res.ok) return c;
+                    const data = await res.json();
+                    return {
+                        ...c,
+                        evaluaciones: data.evaluaciones?.total || 0,
+                        empleadores: data.evaluaciones?.total || 0,
+                        total: {
+                            count: data.evaluaciones?.total || 0,
+                            promedio: data.promedios?.total?.promedio || null,
+                            puntualidad: data.promedios?.total?.puntualidad || null,
+                            desempeno: data.promedios?.total?.desempeno || null,
+                            relaciones: data.promedios?.total?.relaciones || null,
+                            confiabilidad: data.promedios?.total?.confiabilidad || null,
+                        },
+                        verificada: {
+                            count: data.evaluaciones?.verificadas || 0,
+                            promedio: data.promedios?.verificado?.promedio || null,
+                        }
+                    };
+                } catch (e) {
+                    console.error('Error enriqueciendo candidato:', c.rut, e);
+                    return c;
+                }
             }));
+
+            procesoActual.candidatosData = candidatosEnriquecidos;
 
             renderizarTablaCandidatos();
             mostrarVista('candidatos');
