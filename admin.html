@@ -747,23 +747,17 @@
                         if (deletedUsers && deletedUsers.length > 0) {
                             // Usuario eliminado encontrado - preguntar si quiere reactivar
                             if (confirm(`Este email ya fue usado anteriormente y fue eliminado. ¿Deseas reactivar este usuario?\n\nSe enviará un email para crear/restablecer la contraseña.`)) {
-                                // Reactivar usuario
-                                const reactivateResponse = await fetch(`https://dxblzmxcmaerycvdgfpy.supabase.co/rest/v1/usuarios?id=eq.${deletedUsers[0].id}`, {
-                                    method: 'PATCH',
+                                // Reactivar via gestionar-usuario
+                                const reactivateResponse = await fetch('https://dxblzmxcmaerycvdgfpy.supabase.co/functions/v1/gestionar-usuario', {
+                                    method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json',
                                         'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
-                                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
-                                        'Prefer': 'return=minimal'
+                                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c'
                                     },
-                                    body: JSON.stringify({ 
-                                        deleted: false, 
-                                        activo: true,
-                                        nombre: nuevoUsuario.nombre,
-                                        empresa: nuevoUsuario.empresa
-                                    })
+                                    body: JSON.stringify({ id: deletedUsers[0].id, accion: 'reactivar' })
                                 });
-                                
+
                                 if (reactivateResponse.ok) {
                                     // Enviar email de crear contraseña
                                     await fetch('https://dxblzmxcmaerycvdgfpy.supabase.co/functions/v1/crear-reclutador', {
@@ -778,7 +772,7 @@
                                             reactivate: true 
                                         })
                                     });
-                                    
+
                                     cerrarModalCrear();
                                     cargarUsuarios();
                                     mostrarMsg('success', `Usuario reactivado. Se envió email para crear/restablecer contraseña.`);
