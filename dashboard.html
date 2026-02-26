@@ -1230,7 +1230,7 @@
         // Poblar datos de documentos validados
         document.getElementById('certEmpleos').textContent = data.documentos?.cert_empleos !== null && data.documentos?.cert_empleos !== undefined ? data.documentos.cert_empleos : '—';
         document.getElementById('certPermanencia').textContent = data.documentos?.cert_permanencia !== null && data.documentos?.cert_permanencia !== undefined ? data.documentos.cert_permanencia + ' años' : '—';
-        document.getElementById('causalTexto').textContent = candidato.causal_texto || '—';
+        document.getElementById('causalTexto').textContent = data.documentos?.causal_texto || '—';
 
         const badgeHtml = data.documentos?.causal_validada === true
             ? '<span style="font-size:10px; font-weight:700; color:#166534; background:rgba(47,191,113,0.12); padding:3px 8px; border-radius:2px;">✓ VALIDADA</span>'
