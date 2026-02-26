@@ -1118,6 +1118,10 @@
                         verificada: {
                             count: data.evaluaciones?.verificadas || 0,
                             promedio: data.promedios?.verificado?.promedio || null,
+                            puntualidad: data.promedios?.verificado?.puntualidad || null,
+                            desempeno: data.promedios?.verificado?.desempeno || null,
+                            relaciones: data.promedios?.verificado?.relaciones || null,
+                            confiabilidad: data.promedios?.verificado?.confiabilidad || null,
                         }
                     };
                 } catch (e) {
