@@ -1271,6 +1271,7 @@
                 // Ocultar formulario y mostrar éxito
                 document.getElementById('formTrabajador').style.display = 'none';
                 document.getElementById('successState').classList.add('visible');
+                document.querySelector('.page-header').style.display = 'none';
                 window.scrollTo({ top: 0, behavior: 'smooth' });
 
             } catch (err) {
