@@ -736,11 +736,10 @@
                             <tr>
                                 <th style="cursor:pointer;" onclick="ordenarCandidatos('nombre')">Candidato <span id="sort-nombre"></span></th>
                                 <th style="cursor:pointer;" onclick="ordenarCandidatos('promedio')">Promedio ↓ <span id="sort-promedio"></span></th>
-                                <th>Puntualidad</th>
-                                <th>Desempeño</th>
-                                <th>Relaciones</th>
-                                <th>Confiabilidad</th>
                                 <th>Evaluaciones</th>
+                                <th>Empleos 5 años</th>
+                                <th>Máx. Duración</th>
+                                <th>Causal Término</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -1208,11 +1207,10 @@
                     <tr>
                         <td><div class="td-name">${c.nombre}</div><div class="td-sub">${c.rut}</div></td>
                         <td><strong style="font-size:18px;color:var(--azul);">${d.promedio ? d.promedio.toFixed(1) : '—'}</strong></td>
-                        <td>${d.puntualidad || '—'}</td>
-                        <td>${d.desempeno || '—'}</td>
-                        <td>${d.relaciones || '—'}</td>
-                        <td>${d.confiabilidad || '—'}</td>
                         <td>${d.count} / ${c.empleadores}</td>
+                        <td>${c.cert_empleos !== null && c.cert_empleos !== undefined ? c.cert_empleos : '—'}</td>
+                        <td>${c.cert_permanencia !== null && c.cert_permanencia !== undefined ? c.cert_permanencia + ' años' : '—'}</td>
+                        <td>${c.causal_texto || '—'}</td>
                         <td>${c.evaluaciones > 0
                             ? `<button class="btn-accion" onclick="verResultados('${c.id}')">Ver detalle</button>`
                             : `<span style="font-size:12px;color:var(--subtitulo);">Sin evaluaciones</span>`}
