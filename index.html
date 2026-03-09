@@ -227,13 +227,13 @@
         .acceso-card.primary .acceso-arrow svg { stroke: white; }
 
         /* HERO VISUAL */
-        .hero-visual { display: flex; flex-direction: column; gap: 16px; }
+        .hero-visual { display: flex; flex-direction: column; gap: 16px; align-items: center; }
 
         .stat-card {
             background: white;
             border: 1px solid var(--borde);
             border-radius: 4px;
-            padding: 20px 24px;
+            padding: 14px 18px;
             animation: fadeUp 0.6s ease both;
         }
 
@@ -245,10 +245,52 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
 
         .stat-name { font-size: 13px; font-weight: 500; color: var(--subtitulo); }
+
+        .stat-meta {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--borde);
+        }
+        .stat-meta-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 0 8px;
+            border-right: 1px solid var(--borde);
+        }
+        .stat-meta-item:last-child { border-right: none; }
+        .stat-meta-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: var(--subtitulo);
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            width: 100%;
+        }
+        .stat-meta-val {
+            font-size: 13px;
+            color: var(--texto);
+            text-align: center;
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            width: 100%;
+        }
+        .stat-meta-item:last-child .stat-meta-val {
+            font-size: 12px;
+        }
 
         .stat-badge {
             font-size: 10px;
@@ -262,7 +304,7 @@
         .badge-verified { background: rgba(47,191,113,0.12); color: #1a9955; }
         .badge-pending { background: rgba(14,42,71,0.08); color: var(--azul); }
 
-        .stat-scores { display: flex; gap: 16px; }
+        .stat-scores { display: flex; gap: 10px; }
 
         .stat-score { flex: 1; }
         .stat-score-label { font-size: 11px; color: var(--subtitulo); margin-bottom: 4px; }
@@ -520,22 +562,12 @@
                         <span class="stat-name">María González — Analista Comercial</span>
                         <span class="stat-badge badge-verified">Verificado</span>
                     </div>
-                    <div class="stat-scores">
-                        <div class="stat-score">
-                            <div class="stat-score-label">Puntualidad</div>
-                            <div class="stat-score-bar"><div class="stat-score-fill" style="width:90%"></div></div>
-                            <div class="stat-score-num">4.5</div>
-                        </div>
-                        <div class="stat-score">
-                            <div class="stat-score-label">Desempeño</div>
-                            <div class="stat-score-bar"><div class="stat-score-fill" style="width:80%"></div></div>
-                            <div class="stat-score-num">4.0</div>
-                        </div>
-                        <div class="stat-score">
-                            <div class="stat-score-label">Confiabilidad</div>
-                            <div class="stat-score-bar"><div class="stat-score-fill" style="width:96%"></div></div>
-                            <div class="stat-score-num">4.8</div>
-                        </div>
+                    <div class="stat-meta">
+                        <div class="stat-meta-item"><span class="stat-meta-label">Promedio</span><span class="stat-meta-val">4.4</span></div>
+                        <div class="stat-meta-item"><span class="stat-meta-label">Evaluaciones</span><span class="stat-meta-val">3 / 5</span></div>
+                        <div class="stat-meta-item"><span class="stat-meta-label">Empleos 5 años</span><span class="stat-meta-val">4</span></div>
+                        <div class="stat-meta-item"><span class="stat-meta-label">Máx. duración</span><span class="stat-meta-val">3.5 años</span></div>
+                        <div class="stat-meta-item"><span class="stat-meta-label">Causal término</span><span class="stat-meta-val">Renuncia</span></div>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -543,22 +575,12 @@
                         <span class="stat-name">Carlos Muñoz — Ingeniero de Proyectos</span>
                         <span class="stat-badge badge-verified">Verificado</span>
                     </div>
-                    <div class="stat-scores">
-                        <div class="stat-score">
-                            <div class="stat-score-label">Puntualidad</div>
-                            <div class="stat-score-bar"><div class="stat-score-fill" style="width:100%"></div></div>
-                            <div class="stat-score-num">5.0</div>
-                        </div>
-                        <div class="stat-score">
-                            <div class="stat-score-label">Desempeño</div>
-                            <div class="stat-score-bar"><div class="stat-score-fill" style="width:86%"></div></div>
-                            <div class="stat-score-num">4.3</div>
-                        </div>
-                        <div class="stat-score">
-                            <div class="stat-score-label">Confiabilidad</div>
-                            <div class="stat-score-bar"><div class="stat-score-fill" style="width:74%"></div></div>
-                            <div class="stat-score-num">3.7</div>
-                        </div>
+                    <div class="stat-meta">
+                        <div class="stat-meta-item"><span class="stat-meta-label">Promedio</span><span class="stat-meta-val">4.7</span></div>
+                        <div class="stat-meta-item"><span class="stat-meta-label">Evaluaciones</span><span class="stat-meta-val">4 / 4</span></div>
+                        <div class="stat-meta-item"><span class="stat-meta-label">Empleos 5 años</span><span class="stat-meta-val">2</span></div>
+                        <div class="stat-meta-item"><span class="stat-meta-label">Máx. duración</span><span class="stat-meta-val">4 años</span></div>
+                        <div class="stat-meta-item"><span class="stat-meta-label">Causal término</span><span class="stat-meta-val">Mutuo acuerdo</span></div>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -566,22 +588,12 @@
                         <span class="stat-name">Andrea Soto — Jefe de Operaciones</span>
                         <span class="stat-badge badge-pending">En proceso</span>
                     </div>
-                    <div class="stat-scores">
-                        <div class="stat-score">
-                            <div class="stat-score-label">Puntualidad</div>
-                            <div class="stat-score-bar"><div class="stat-score-fill" style="width:60%"></div></div>
-                            <div class="stat-score-num">3.0</div>
-                        </div>
-                        <div class="stat-score">
-                            <div class="stat-score-label">Desempeño</div>
-                            <div class="stat-score-bar"><div class="stat-score-fill" style="width:76%"></div></div>
-                            <div class="stat-score-num">3.8</div>
-                        </div>
-                        <div class="stat-score">
-                            <div class="stat-score-label">Confiabilidad</div>
-                            <div class="stat-score-bar"><div class="stat-score-fill" style="width:84%"></div></div>
-                            <div class="stat-score-num">4.2</div>
-                        </div>
+                    <div class="stat-meta">
+                        <div class="stat-meta-item"><span class="stat-meta-label">Promedio</span><span class="stat-meta-val">3.6</span></div>
+                        <div class="stat-meta-item"><span class="stat-meta-label">Evaluaciones</span><span class="stat-meta-val">2 / 5</span></div>
+                        <div class="stat-meta-item"><span class="stat-meta-label">Empleos 5 años</span><span class="stat-meta-val">—</span></div>
+                        <div class="stat-meta-item"><span class="stat-meta-label">Máx. duración</span><span class="stat-meta-val">—</span></div>
+                        <div class="stat-meta-item"><span class="stat-meta-label">Causal término</span><span class="stat-meta-val">—</span></div>
                     </div>
                 </div>
             </div>
@@ -667,10 +679,10 @@
         <div class="footer-inner">
             <span class="footer-copy">© 2026 Huella Laboral. Todos los derechos reservados.</span>
         </div>
-        <div style="text-align:center; padding: 8px 0 16px; font-size:12px; color:#9CA3AF;">Si quieres que tu información sea eliminada de Huella Laboral escríbenos a <a href="mailto:contacto@huellalaboral.cl" style="color:#6B7280;">contacto@huellalaboral.cl</a></div>
+        <div style="text-align:center; padding: 8px 0 16px; font-size:12px; color:#9CA3AF;">Si quieres que tu información sea eliminada de Huella Laboral escríbenos a <a href="/cdn-cgi/l/email-protection#177478796376746378577f62727b7b767b76757865767b39747b" style="color:#6B7280;"><span class="__cf_email__" data-cfemail="8fece0e1fbeeecfbe0cfe7faeae3e3eee3eeede0fdeee3a1ece3">[email&#160;protected]</span></a></div>
     </footer>
 
-    <script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
         function irAAccesoReclutadores(event) {
             event.preventDefault();
             
@@ -690,14 +702,4 @@
                         window.location.href = 'dashboard.html';
                         return;
                     }
-                } catch (e) {
-                    console.error('Error parsing user:', e);
-                }
-            }
-            
-            // Si no hay usuario logueado, ir a login
-            window.location.href = 'login.html';
-        }
-    </script>
-</body>
-</html>
+                } catch
