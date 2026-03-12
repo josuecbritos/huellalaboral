@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Evaluación — Huella Laboral</title>
+    <style>
+        :root {
+            --azul: #0E2A47;
+            --verde: #2FBF71;
+            --texto: #1a1a1a;
+            --subtitulo: #6B7280;
+            --borde: #E5E7EB;
+            --fondo: #FFFFFF;
+            --fondo-gris: #F9FAFB;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--fondo-gris);
+            color: var(--texto);
+            min-height: 100vh;
+        }
+
+        /* NAV */
+        nav {
+            background: var(--azul);
+            padding: 0 32px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .nav-logo img {
+            height: 28px;
+            filter: brightness(0) invert(1);
+        }
+
+        /* CONTENEDOR */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        /* ESTADO DE CARGA / ERROR */
+        .estado-msg {
+            text-align: center;
+            padding: 80px 24px;
+        }
+
+        .estado-msg-titulo {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--azul);
+            margin-bottom: 8px;
+        }
+
+        .estado-msg-desc {
+            font-size: 14px;
+            color: var(--subtitulo);
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--borde);
+            border-top-color: var(--azul);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* EN PROCESO */
+        .en-proceso-banner {
+            background: #FFF7ED;
+            border: 1px solid #FED7AA;
+            border-radius: 4px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: #92400E;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* HEADER CANDIDATO */
+        .candidato-header {
+            background: var(--azul);
+            border-radius: 4px;
+            padding: 24px 28px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .candidato-avatar {
+            width: 48px;
+            height: 48px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .candidato-nombre { font-size: 18px; font-weight: 700; color: white; margin-bottom: 2px; }
+        .candidato-meta { font-size: 13px; color: rgba(255,255,255,0.7); }
+
+        .toggle-data {
+            display: inline-flex;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-left: auto;
+        }
+
+        .toggle-data button {
+            background: none;
+            border: none;
+            padding: 6px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.6);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .toggle-data button.active {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        /* DATOS VALIDADOS */
+        .datos-validados {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .dato-card {
+            background: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 20px;
+        }
+
+        .dato-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--subtitulo);
+            margin-bottom: 8px;
+        }
+
+        .dato-valor {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--azul);
+        }
+
+        .dato-valor-sm {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--texto);
+            margin-top: 8px;
+        }
+
+        /* PROMEDIOS */
+        .promedio-general {
+            background: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .promedios-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .promedio-card {
+            background: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 16px 20px;
+        }
+
+        .promedio-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--subtitulo);
+            margin-bottom: 6px;
+        }
+
+        .promedio-valor {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--azul);
+            margin-bottom: 8px;
+        }
+
+        .promedio-barra {
+            height: 4px;
+            background: var(--borde);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .promedio-fill {
+            height: 100%;
+            background: var(--verde);
+            border-radius: 2px;
+            transition: width 0.6s ease;
+        }
+
+        /* EVALUACIONES */
+        .evaluaciones-titulo {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--subtitulo);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+        }
+
+        .evaluacion-card {
+            background: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .evaluacion-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--borde);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .evaluacion-evaluador {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--texto);
+            margin-bottom: 2px;
+        }
+
+        .evaluacion-empresa {
+            font-size: 12px;
+            color: var(--subtitulo);
+        }
+
+        .evaluacion-fecha {
+            font-size: 12px;
+            color: var(--subtitulo);
+            white-space: nowrap;
+        }
+
+        .evaluacion-body {
+            padding: 16px 20px;
+        }
+
+        .eval-atributos {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .eval-atributo-label {
+            font-size: 12px;
+            color: var(--subtitulo);
+            margin-bottom: 4px;
+        }
+
+        .eval-score {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .eval-score-num {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--azul);
+            min-width: 20px;
+        }
+
+        .eval-score-bar {
+            flex: 1;
+            height: 4px;
+            background: var(--borde);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .eval-score-fill {
+            height: 100%;
+            background: var(--verde);
+            border-radius: 2px;
+        }
+
+        .eval-score-texto {
+            font-size: 11px;
+            color: var(--subtitulo);
+            margin-top: 2px;
+        }
+
+        .eval-otros {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--borde);
+        }
+
+        .eval-otros-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--subtitulo);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .eval-otros-texto {
+            font-size: 13px;
+            color: var(--texto);
+            line-height: 1.5;
+        }
+
+        .no-conoce-tag {
+            font-size: 13px;
+            color: var(--subtitulo);
+            font-style: italic;
+        }
+
+        /* FOOTER */
+        footer {
+            text-align: center;
+            padding: 32px 24px;
+            font-size: 12px;
+            color: var(--subtitulo);
+        }
+
+        @media (max-width: 600px) {
+            .datos-validados { grid-template-columns: 1fr; }
+            .promedios-grid { grid-template-columns: 1fr; }
+            .eval-atributos { grid-template-columns: 1fr; }
+            .toggle-data { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="/" class="nav-logo">
+            <img src="Huella_Laboral.png" alt="Huella Laboral">
+        </a>
+    </nav>
+
+    <div class="container">
+
+        <!-- ESTADO CARGA -->
+        <div id="estadoCarga" class="estado-msg">
+            <div class="spinner"></div>
+            <div class="estado-msg-titulo">Cargando tu evaluación...</div>
+        </div>
+
+        <!-- ESTADO ERROR -->
+        <div id="estadoError" class="estado-msg" style="display:none;">
+            <div class="estado-msg-titulo">No se encontró la evaluación</div>
+            <div class="estado-msg-desc">El link puede ser inválido o haber expirado. Si crees que es un error, escríbenos a <a href="mailto:contacto@huellalaboral.cl">contacto@huellalaboral.cl</a>.</div>
+        </div>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <div id="contenido" style="display:none;">
+
+            <!-- Banner en proceso (si no hay evaluaciones aún) -->
+            <div id="bannerEnProceso" class="en-proceso-banner" style="display:none;">
+                ⏳ Tu evaluación está en proceso. Aún no hay resultados disponibles. Vuelve a revisar en unos días.
+            </div>
+
+            <!-- Header trabajador -->
+            <div class="candidato-header">
+                <div class="candidato-avatar">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="8" r="4"/>
+                        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                    </svg>
+                </div>
+                <div style="flex:1;">
+                    <div class="candidato-nombre" id="nombreTrabajador">—</div>
+                    <div class="candidato-meta" id="metaTrabajador">—</div>
+                </div>
+                <div class="toggle-data" id="toggleData" style="display:none;">
+                    <button id="btnTotal" class="active" onclick="cambiarVista('total')">Total</button>
+                    <button id="btnVerificada" onclick="cambiarVista('verificada')">Verificada</button>
+                </div>
+            </div>
+
+            <!-- Datos validados (documentos) -->
+            <div class="datos-validados" id="datosValidados" style="display:none;">
+                <div class="dato-card">
+                    <div class="dato-label">Empleos en últimos 5 años</div>
+                    <div class="dato-valor" id="certEmpleos">—</div>
+                </div>
+                <div class="dato-card">
+                    <div class="dato-label">Mayor permanencia en un empleo</div>
+                    <div class="dato-valor" id="certPermanencia">—</div>
+                </div>
+                <div class="dato-card">
+                    <div class="dato-label">Causal de término</div>
+                    <div class="dato-valor-sm" id="causalTexto">—</div>
+                    <div style="margin-top:8px;" id="causalBadge"></div>
+                </div>
+            </div>
+
+            <!-- Promedio general -->
+            <div class="promedio-general" id="bloquePromedio" style="display:none;">
+                <div style="font-size:13px; font-weight:500; color:var(--subtitulo); margin-bottom:8px;" id="promedioTitulo">Promedio General</div>
+                <div style="font-size:48px; font-weight:700; color:var(--azul); margin-bottom:4px;" id="promedioValor">—</div>
+                <div style="font-size:12px; color:var(--subtitulo);" id="promedioDesc">—</div>
+            </div>
+
+            <!-- Barras por atributo -->
+            <div class="promedios-grid" id="bloqueAtributos" style="display:none;">
+                <div class="promedio-card">
+                    <div class="promedio-label">Puntualidad</div>
+                    <div class="promedio-valor" id="promPuntualidad">—</div>
+                    <div class="promedio-barra"><div class="promedio-fill" id="barraPuntualidad" style="width:0%"></div></div>
+                </div>
+                <div class="promedio-card">
+                    <div class="promedio-label">Desempeño</div>
+                    <div class="promedio-valor" id="promDesempeno">—</div>
+                    <div class="promedio-barra"><div class="promedio-fill" id="barraDesempeno" style="width:0%"></div></div>
+                </div>
+                <div class="promedio-card">
+                    <div class="promedio-label">Relaciones Interpersonales</div>
+                    <div class="promedio-valor" id="promRelaciones">—</div>
+                    <div class="promedio-barra"><div class="promedio-fill" id="barraRelaciones" style="width:0%"></div></div>
+                </div>
+                <div class="promedio-card">
+                    <div class="promedio-label">Confiabilidad</div>
+                    <div class="promedio-valor" id="promConfiabilidad">—</div>
+                    <div class="promedio-barra"><div class="promedio-fill" id="barraConfiabilidad" style="width:0%"></div></div>
+                </div>
+            </div>
+
+            <!-- Lista de evaluaciones -->
+            <div id="bloqueEvaluaciones" style="display:none;">
+                <div class="evaluaciones-titulo" id="evalTitulo">Evaluaciones</div>
+                <div id="listaEvaluaciones"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <footer>
+        Huella Laboral · <a href="mailto:contacto@huellalaboral.cl">contacto@huellalaboral.cl</a>
+        · <a href="mailto:contacto@huellalaboral.cl?subject=Solicitud de eliminación de datos">Solicitar eliminación de mis datos</a>
+    </footer>
+
+    <script>
+        const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c';
+        const SUPABASE_URL = 'https://dxblzmxcmaerycvdgfpy.supabase.co';
+
+        const escalaTextos = { 1: 'Muy bajo', 2: 'Bajo', 3: 'Regular', 4: 'Bueno', 5: 'Excelente' };
+
+        let vistaActual = 'total';
+        let datosGlobales = null;
+
+        async function init() {
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');
+
+            if (!token) {
+                mostrarError();
+                return;
+            }
+
+            try {
+                // Buscar trabajador por token
+                const res = await fetch(
+                    `${SUPABASE_URL}/rest/v1/trabajadores?token_consulta=eq.${encodeURIComponent(token)}&select=id,nombre,rut,email`,
+                    { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } }
+                );
+                const trabajadores = await res.json();
+
+                if (!trabajadores || trabajadores.length === 0) {
+                    mostrarError();
+                    return;
+                }
+
+                const trabajador = trabajadores[0];
+
+                // Obtener evaluaciones completas
+                const resEval = await fetch(
+                    `${SUPABASE_URL}/functions/v1/obtener-candidato?rut=${encodeURIComponent(trabajador.rut)}`,
+                    { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } }
+                );
+                const data = await resEval.json();
+
+                datosGlobales = { trabajador, data };
+                renderizar(trabajador, data, 'total');
+
+            } catch (err) {
+                console.error('Error:', err);
+                mostrarError();
+            }
+        }
+
+        function renderizar(trabajador, data, vista) {
+            document.getElementById('estadoCarga').style.display = 'none';
+            document.getElementById('contenido').style.display = 'block';
+
+            // Nombre y meta
+            document.getElementById('nombreTrabajador').textContent = trabajador.nombre;
+            document.getElementById('metaTrabajador').textContent = trabajador.rut;
+
+            // Datos validados (documentos)
+            const docs = data.documentos;
+            if (docs && (docs.cert_empleos !== null || docs.cert_permanencia !== null || docs.causal_texto)) {
+                document.getElementById('certEmpleos').textContent = docs.cert_empleos ?? '—';
+                document.getElementById('certPermanencia').textContent = docs.cert_permanencia != null ? docs.cert_permanencia + ' años' : '—';
+                document.getElementById('causalTexto').textContent = docs.causal_texto || '—';
+                document.getElementById('causalBadge').innerHTML = docs.causal_validada === true
+                    ? '<span style="font-size:10px; font-weight:700; color:#166534; background:rgba(47,191,113,0.12); padding:3px 8px; border-radius:2px;">✓ VALIDADA</span>'
+                    : docs.causal_validada === false
+                    ? '<span style="font-size:10px; font-weight:700; color:#dc2626; background:rgba(220,38,38,0.12); padding:3px 8px; border-radius:2px;">✗ NO VALIDADA</span>'
+                    : '';
+                document.getElementById('datosValidados').style.display = 'grid';
+            }
+
+            // Evaluaciones
+            const todasEvals = data.evaluaciones?.lista || [];
+            const validas = todasEvals.filter(e => !e.rechazo);
+            const verificadas = validas.filter(e => e.verificada);
+            const evals = vista === 'verificada' ? verificadas : validas;
+
+            if (validas.length === 0) {
+                document.getElementById('bannerEnProceso').style.display = 'flex';
+                return;
+            }
+
+            // Mostrar toggle si hay evaluaciones verificadas
+            if (verificadas.length > 0) {
+                document.getElementById('toggleData').style.display = 'inline-flex';
+            }
+
+            // Promedios
+            const atributos = ['puntualidad', 'desempeno', 'relaciones', 'confiabilidad'];
+            const promedioGral = atributos.reduce((sum, attr) => {
+                return sum + evals.reduce((s, e) => s + (e[attr] || 0), 0) / evals.length;
+            }, 0) / atributos.length;
+
+            document.getElementById('bloquePromedio').style.display = 'block';
+            document.getElementById('promedioTitulo').textContent = vista === 'verificada' ? 'Promedio Verificado' : 'Promedio General';
+            document.getElementById('promedioValor').textContent = evals.length ? promedioGral.toFixed(1) : '—';
+            document.getElementById('promedioDesc').textContent = evals.length
+                ? `Basado en ${evals.length} evaluación${evals.length > 1 ? 'es' : ''}`
+                : '—';
+
+            const labelsAtributos = { puntualidad: 'Puntualidad', desempeno: 'Desempeño', relaciones: 'Relaciones Interpersonales', confiabilidad: 'Confiabilidad' };
+            document.getElementById('bloqueAtributos').style.display = 'grid';
+            atributos.forEach(attr => {
+                const prom = evals.length ? evals.reduce((s, e) => s + (e[attr] || 0), 0) / evals.length : 0;
+                const id = attr.charAt(0).toUpperCase() + attr.slice(1);
+                const el = document.getElementById(`prom${id}`);
+                const barra = document.getElementById(`barra${id}`);
+                if (el) el.textContent = evals.length ? prom.toFixed(1) : '—';
+                if (barra) barra.style.width = evals.length ? `${prom / 5 * 100}%` : '0%';
+            });
+
+            // Lista evaluaciones
+            document.getElementById('bloqueEvaluaciones').style.display = 'block';
+            document.getElementById('evalTitulo').textContent =
+                vista === 'verificada'
+                    ? `Evaluaciones verificadas (${evals.length})`
+                    : `Evaluaciones (${evals.length})`;
+
+            document.getElementById('listaEvaluaciones').innerHTML = evals.map(e => `
+                <div class="evaluacion-card">
+                    <div class="evaluacion-header">
+                        <div>
+                            <div class="evaluacion-evaluador">
+                                ${e.nombre_evaluador || '—'}
+                                ${e.verificada ? '<span style="display:inline-block; margin-left:6px; font-size:10px; font-weight:700; color:#166534; background:rgba(47,191,113,0.12); padding:2px 6px; border-radius:2px;">✓ VERIFICADA</span>' : ''}
+                            </div>
+                            <div class="evaluacion-empresa">${e.empresa_evaluador || '—'} — RUT ${e.rut_evaluador || '—'}</div>
+                        </div>
+                        <div class="evaluacion-fecha">${e.cargo || '—'} (${e.tiempo_trabajo || '—'})</div>
+                    </div>
+                    <div class="evaluacion-body">
+                        ${e.rechazo
+                            ? '<div class="no-conoce-tag">El evaluador indicó no conocer o no desear evaluar a este candidato.</div>'
+                            : `<div class="eval-atributos">
+                                ${atributos.map(attr => `
+                                    <div>
+                                        <div class="eval-atributo-label">${labelsAtributos[attr]}</div>
+                                        <div class="eval-score">
+                                            <span class="eval-score-num">${e[attr] || 0}</span>
+                                            <div class="eval-score-bar"><div class="eval-score-fill" style="width:${(e[attr] || 0) / 5 * 100}%"></div></div>
+                                        </div>
+                                        <div class="eval-score-texto">${escalaTextos[e[attr]] || '—'}</div>
+                                    </div>`).join('')}
+                               </div>
+                               ${e.comentarios ? `<div class="eval-otros"><div class="eval-otros-label">Comentarios adicionales</div><div class="eval-otros-texto">${e.comentarios}</div></div>` : ''}`
+                        }
+                    </div>
+                </div>`).join('') || '<p style="color:var(--subtitulo); text-align:center; padding:20px;">No hay evaluaciones verificadas aún.</p>';
+        }
+
+        function cambiarVista(vista) {
+            vistaActual = vista;
+            document.getElementById('btnTotal').classList.toggle('active', vista === 'total');
+            document.getElementById('btnVerificada').classList.toggle('active', vista === 'verificada');
+
+            if (datosGlobales) {
+                // Limpiar y re-renderizar secciones dinámicas
+                document.getElementById('bloquePromedio').style.display = 'none';
+                document.getElementById('bloqueAtributos').style.display = 'none';
+                document.getElementById('bloqueEvaluaciones').style.display = 'none';
+                renderizar(datosGlobales.trabajador, datosGlobales.data, vista);
+            }
+        }
+
+        function mostrarError() {
+            document.getElementById('estadoCarga').style.display = 'none';
+            document.getElementById('estadoError').style.display = 'block';
+        }
+
+        init();
+    </script>
+
+</body>
+</html>
