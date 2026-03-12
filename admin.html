@@ -731,54 +731,38 @@
                 const result = await response.json();
 
                 if (!response.ok || result.error) {
-                    // Verificar si es error de usuario ya existente
-                    if ((result.error && (result.error.includes('already') || result.error === 'already_exists')) || 
-                        (result.message && result.message.includes('already'))) {
-                        // Buscar si hay un usuario eliminado con este email
-                        const checkResponse = await fetch(`https://dxblzmxcmaerycvdgfpy.supabase.co/rest/v1/usuarios?email=eq.${nuevoUsuario.email}&deleted=eq.true`, {
-                            headers: {
-                                'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
-                                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c'
-                            }
-                        });
-                        
-                        const deletedUsers = await checkResponse.json();
-                        
-                        if (deletedUsers && deletedUsers.length > 0) {
-                            // Usuario eliminado encontrado - preguntar si quiere reactivar
-                            if (confirm(`Este email ya fue usado anteriormente y fue eliminado. ¿Deseas reactivar este usuario?\n\nSe enviará un email para crear/restablecer la contraseña.`)) {
-                                // Reactivar via crear-reclutador — maneja todo el flujo internamente
-                                const reactivateResponse = await fetch('https://dxblzmxcmaerycvdgfpy.supabase.co/functions/v1/crear-reclutador', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
-                                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c'
-                                    },
-                                    body: JSON.stringify(nuevoUsuario)
-                                });
+                    if (result.error === 'deleted_user') {
+                        // Usuario eliminado — confirmar reactivación
+                        if (confirm(`Este email ya fue usado anteriormente y fue eliminado. ¿Deseas reactivar este usuario?\n\nSe enviará un email para crear/restablecer la contraseña.`)) {
+                            // Enviar accion reactivar a crear-reclutador
+                            const reactivateResponse = await fetch('https://dxblzmxcmaerycvdgfpy.supabase.co/functions/v1/crear-reclutador', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
+                                    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c'
+                                },
+                                body: JSON.stringify({ ...nuevoUsuario, confirm_reactivate: true })
+                            });
 
-                                if (reactivateResponse.ok) {
-                                    cerrarModalCrear();
-                                    cargarUsuarios();
-                                    mostrarMsg('success', `Usuario reactivado. Se envió email para crear/restablecer contraseña.`);
-                                    
-                                    // Limpiar formulario
-                                    document.getElementById('nombre').value = '';
-                                    document.getElementById('empresa').value = '';
-                                    document.getElementById('email').value = '';
-                                    return;
-                                } else {
-                                    throw new Error('Error al reactivar usuario');
-                                }
-                            } else {
-                                btn.disabled = false;
-                                btn.textContent = 'Crear Reclutador';
+                            if (reactivateResponse.ok) {
+                                cerrarModalCrear();
+                                cargarUsuarios();
+                                mostrarMsg('success', `Usuario reactivado. Se envió email para crear/restablecer contraseña.`);
+                                document.getElementById('nombre').value = '';
+                                document.getElementById('empresa').value = '';
+                                document.getElementById('email').value = '';
                                 return;
+                            } else {
+                                throw new Error('Error al reactivar usuario');
                             }
                         } else {
-                            throw new Error('Este email ya está en uso');
+                            btn.disabled = false;
+                            btn.textContent = 'Crear Reclutador';
+                            return;
                         }
+                    } else if (result.error === 'already_exists') {
+                        throw new Error('Este email ya está en uso por un usuario activo');
                     } else {
                         throw new Error(result.error || 'Error al crear reclutador');
                     }
