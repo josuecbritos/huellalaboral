@@ -1029,13 +1029,12 @@
     }
 
     async function actualizarStats() {
-        // Procesos: desde variable local que viene de la BD
+        // Procesos: desde variable local
         document.getElementById('statProcesosActivos').textContent = procesos.filter(p => p.estado === 'Activo').length;
         document.getElementById('statProcesosFinalizados').textContent = procesos.filter(p => p.estado === 'Finalizado').length;
 
-        // Candidatos y evaluaciones: consultar BD directamente
+        // Candidatos y evaluaciones: via edge function obtener-stats
         try {
-            const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c';
             const procesoIds = procesos.map(p => p.id);
 
             if (!procesoIds.length) {
@@ -1044,33 +1043,18 @@
                 return;
             }
 
-            // Total de candidatos únicos (excluyendo invitaciones pendientes)
-            const resCandidatos = await fetch(
-                `https://dxblzmxcmaerycvdgfpy.supabase.co/rest/v1/candidatos_proceso?proceso_id=in.(${procesoIds.join(',')})&select=trabajador_id`,
-                { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } }
-            );
-            const candidatosRaw = await resCandidatos.json();
-            if (!Array.isArray(candidatosRaw)) throw new Error('Error obteniendo candidatos: ' + JSON.stringify(candidatosRaw));
-            
-            const trabajadorIdsUnicos = [...new Set(
-                candidatosRaw
-                    .filter(c => c.trabajador_id !== null)
-                    .map(c => c.trabajador_id)
-            )];
-            document.getElementById('statCandidatosEvaluacion').textContent = trabajadorIdsUnicos.length;
-
-            // Total de evaluaciones realizadas
-            if (trabajadorIdsUnicos.length) {
-                const resEvals = await fetch(
-                    `https://dxblzmxcmaerycvdgfpy.supabase.co/rest/v1/evaluaciones?trabajador_id=in.(${trabajadorIdsUnicos.join(',')})&select=id`,
-                    { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } }
-                );
-                const evalsRaw = await resEvals.json();
-                if (!Array.isArray(evalsRaw)) throw new Error('Error obteniendo evaluaciones: ' + JSON.stringify(evalsRaw));
-                document.getElementById('statCandidatosValidados').textContent = evalsRaw.length;
-            } else {
-                document.getElementById('statCandidatosValidados').textContent = 0;
-            }
+            const res = await fetch('https://dxblzmxcmaerycvdgfpy.supabase.co/functions/v1/obtener-stats', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
+                    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c'
+                },
+                body: JSON.stringify({ proceso_ids: procesoIds })
+            });
+            const stats = await res.json();
+            document.getElementById('statCandidatosEvaluacion').textContent = stats.candidatos ?? 0;
+            document.getElementById('statCandidatosValidados').textContent = stats.evaluaciones ?? 0;
         } catch (e) {
             console.error('Error actualizando stats:', e);
         }
@@ -1086,9 +1070,9 @@
         document.getElementById('procesoNombre').textContent = procesoActual.cargo;
         document.getElementById('procesoMeta').textContent = `${procesoActual.descripcion || ''} — Creado el ${formatFecha(procesoActual.fecha)}`;
 
-        // Cargar candidatos del proceso desde la BD
+        // Cargar candidatos del proceso via edge function
         try {
-            const response = await fetch(`https://dxblzmxcmaerycvdgfpy.supabase.co/rest/v1/candidatos_proceso?proceso_id=eq.${procesoId}&select=*,trabajadores(*)`, {
+            const response = await fetch(`https://dxblzmxcmaerycvdgfpy.supabase.co/functions/v1/obtener-proceso?proceso_id=${procesoId}`, {
                 headers: {
                     'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
                     'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c'
