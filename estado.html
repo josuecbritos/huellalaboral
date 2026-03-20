@@ -436,10 +436,66 @@
     </div>
 
     <footer>
-        Huella Laboral · <a href="mailto:contacto@huellalaboral.cl">contacto@huellalaboral.cl</a>
+        Huella Laboral · contacto@huellalaboral.cl
         · <a href="mailto:contacto@huellalaboral.cl?subject=Solicitud de eliminación de datos">Solicitar eliminación de mis datos</a>
     </footer>
 
->
+    <script>
+        const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c';
+        const SUPABASE_URL = 'https://dxblzmxcmaerycvdgfpy.supabase.co';
+
+        async function init() {
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');
+            if (!token) { mostrarError(); return; }
+
+            try {
+                const res = await fetch(
+                    `${SUPABASE_URL}/functions/v1/obtener-estado?token=${encodeURIComponent(token)}`,
+                    { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } }
+                );
+                if (!res.ok) { mostrarError(); return; }
+                const data = await res.json();
+                if (data.error) { mostrarError(); return; }
+
+                document.getElementById('estadoCarga').style.display = 'none';
+                document.getElementById('contenido').style.display = 'block';
+
+                document.getElementById('nombreTrabajador').textContent = data.trabajador.nombre;
+                document.getElementById('metaTrabajador').textContent = data.trabajador.rut;
+
+                document.getElementById('certEmpleos').textContent =
+                    data.documentos?.cert_empleos !== null && data.documentos?.cert_empleos !== undefined
+                    ? data.documentos.cert_empleos : '—';
+                document.getElementById('certPermanencia').textContent =
+                    data.documentos?.cert_permanencia !== null && data.documentos?.cert_permanencia !== undefined
+                    ? data.documentos.cert_permanencia + ' años' : '—';
+                document.getElementById('causalTexto').textContent = data.documentos?.causal_texto || '—';
+                document.getElementById('causalBadge').innerHTML = data.documentos?.causal_validada === true
+                    ? '<span style="font-size:10px; font-weight:700; color:#166534; background:rgba(47,191,113,0.12); padding:3px 8px; border-radius:2px;">✓ VALIDADA</span>'
+                    : data.documentos?.causal_validada === false
+                    ? '<span style="font-size:10px; font-weight:700; color:#dc2626; background:rgba(220,38,38,0.12); padding:3px 8px; border-radius:2px;">✗ NO VALIDADA</span>'
+                    : '';
+
+                const totalEvals = (data.evaluaciones?.lista || []).filter(e => !e.rechazo).length;
+                document.getElementById('evalCount').textContent = totalEvals;
+                document.getElementById('evalDesc').textContent = totalEvals === 1
+                    ? 'evaluación recibida en el sistema.'
+                    : 'evaluaciones recibidas en el sistema.';
+
+            } catch (err) {
+                console.error('Error:', err);
+                mostrarError();
+            }
+        }
+
+        function mostrarError() {
+            document.getElementById('estadoCarga').style.display = 'none';
+            document.getElementById('estadoError').style.display = 'block';
+        }
+
+        init();
+    </script>
+
 </body>
 </html>
