@@ -389,7 +389,7 @@
         <!-- ESTADO ERROR -->
         <div id="estadoError" class="estado-msg" style="display:none;">
             <div class="estado-msg-titulo">No se encontró la evaluación</div>
-            <div class="estado-msg-desc">El link puede ser inválido o haber expirado. Si crees que es un error, escríbenos a <a href="/cdn-cgi/l/email-protection#f5969a9b819496819ab59d80909999949994979a879499db9699"><span class="__cf_email__" data-cfemail="274448495346445348674f52424b4b464b46454855464b09444b">[email&#160;protected]</span></a>.</div>
+            <div class="estado-msg-desc">El link puede ser inválido o haber expirado. Si crees que es un error, escríbenos a contacto@huellalaboral.cl.</div>
         </div>
 
         <!-- CONTENIDO PRINCIPAL -->
@@ -436,66 +436,10 @@
     </div>
 
     <footer>
-        Huella Laboral · <a href="/cdn-cgi/l/email-protection#cba8a4a5bfaaa8bfa48ba3beaea7a7aaa7aaa9a4b9aaa7e5a8a7"><span class="__cf_email__" data-cfemail="aecdc1c0dacfcddac1eec6dbcbc2c2cfc2cfccc1dccfc280cdc2">[email&#160;protected]</span></a>
-        · <a href="/cdn-cgi/l/email-protection#7e1d11100a1f1d0a113e160b1b12121f121f1c110c1f12501d12410d0b1c141b1d0a432d1112171d170a0b1a5e1a1b5e1b12171317101f1d17bdcd105e1a1b5e1a1f0a110d">Solicitar eliminación de mis datos</a>
+        Huella Laboral · <a href="mailto:contacto@huellalaboral.cl">contacto@huellalaboral.cl</a>
+        · <a href="mailto:contacto@huellalaboral.cl?subject=Solicitud de eliminación de datos">Solicitar eliminación de mis datos</a>
     </footer>
 
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-        const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c';
-        const SUPABASE_URL = 'https://dxblzmxcmaerycvdgfpy.supabase.co';
-
-        async function init() {
-            const params = new URLSearchParams(window.location.search);
-            const token = params.get('token');
-            if (!token) { mostrarError(); return; }
-
-            try {
-                const res = await fetch(
-                    `${SUPABASE_URL}/functions/v1/obtener-estado?token=${encodeURIComponent(token)}`,
-                    { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } }
-                );
-                if (!res.ok) { mostrarError(); return; }
-                const data = await res.json();
-                if (data.error) { mostrarError(); return; }
-
-                document.getElementById('estadoCarga').style.display = 'none';
-                document.getElementById('contenido').style.display = 'block';
-
-                document.getElementById('nombreTrabajador').textContent = data.trabajador.nombre;
-                document.getElementById('metaTrabajador').textContent = data.trabajador.rut;
-
-                document.getElementById('certEmpleos').textContent =
-                    data.documentos?.cert_empleos !== null && data.documentos?.cert_empleos !== undefined
-                    ? data.documentos.cert_empleos : '—';
-                document.getElementById('certPermanencia').textContent =
-                    data.documentos?.cert_permanencia !== null && data.documentos?.cert_permanencia !== undefined
-                    ? data.documentos.cert_permanencia + ' años' : '—';
-                document.getElementById('causalTexto').textContent = data.documentos?.causal_texto || '—';
-                document.getElementById('causalBadge').innerHTML = data.documentos?.causal_validada === true
-                    ? '<span style="font-size:10px; font-weight:700; color:#166534; background:rgba(47,191,113,0.12); padding:3px 8px; border-radius:2px;">✓ VALIDADA</span>'
-                    : data.documentos?.causal_validada === false
-                    ? '<span style="font-size:10px; font-weight:700; color:#dc2626; background:rgba(220,38,38,0.12); padding:3px 8px; border-radius:2px;">✗ NO VALIDADA</span>'
-                    : '';
-
-                const totalEvals = (data.evaluaciones?.lista || []).filter(e => !e.rechazo).length;
-                document.getElementById('evalCount').textContent = totalEvals;
-                document.getElementById('evalDesc').textContent = totalEvals === 1
-                    ? 'evaluación recibida en el sistema.'
-                    : 'evaluaciones recibidas en el sistema.';
-
-            } catch (err) {
-                console.error('Error:', err);
-                mostrarError();
-            }
-        }
-
-        function mostrarError() {
-            document.getElementById('estadoCarga').style.display = 'none';
-            document.getElementById('estadoError').style.display = 'block';
-        }
-
-        init();
-    </script>
-
+>
 </body>
 </html>
