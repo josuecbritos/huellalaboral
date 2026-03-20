@@ -395,75 +395,35 @@
                 password: document.getElementById('password').value
             };
 
-            // ADMIN HARDCODED - Solo para ti
-            if (datos.email === 'admin@huellalaboral.cl' && datos.password === 'Admin2024!') {
-                localStorage.setItem('hl_token', 'ADMIN_TOKEN');
-                localStorage.setItem('hl_usuario', JSON.stringify({
-                    nombre: 'Administrador',
-                    email: 'admin@huellalaboral.cl',
-                    rol: 'admin'
-                }));
-                
-                // Pequeño delay para asegurar que localStorage se guarde
-                setTimeout(() => {
-                    window.location.href = 'admin.html';
-                }, 100);
-                return;
-            }
-
             try {
-                // Intentar login con Supabase Auth
-                const response = await fetch('https://dxblzmxcmaerycvdgfpy.supabase.co/auth/v1/token?grant_type=password', {
+                // Autenticar via edge function — sin credenciales en el frontend
+                const response = await fetch('https://dxblzmxcmaerycvdgfpy.supabase.co/functions/v1/autenticar', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c'
-                    },
-                    body: JSON.stringify({
-                        email: datos.email,
-                        password: datos.password
-                    })
-                });
-
-                const authData = await response.json();
-
-                if (!response.ok || authData.error) {
-                    document.getElementById('msgError').classList.add('visible');
-                    btn.disabled = false;
-                    btn.textContent = 'Ingresar';
-                    return;
-                }
-
-                // Obtener datos del usuario desde la tabla usuarios
-                const userResponse = await fetch('https://dxblzmxcmaerycvdgfpy.supabase.co/rest/v1/usuarios?id=eq.' + authData.user.id, {
-                    headers: {
                         'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
-                        'Authorization': 'Bearer ' + authData.access_token
-                    }
+                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c'
+                    },
+                    body: JSON.stringify(datos)
                 });
 
-                const usuarios = await userResponse.json();
-                const usuario = usuarios[0];
+                const result = await response.json();
 
-                if (!usuario || !usuario.activo) {
-                    document.getElementById('msgError').textContent = 'Usuario inactivo. Contacta al administrador.';
-                    document.getElementById('msgError').classList.add('visible');
+                if (!response.ok || result.error) {
+                    const msgEl = document.getElementById('msgError');
+                    msgEl.textContent = result.error || 'Credenciales incorrectas. Intenta nuevamente.';
+                    msgEl.classList.add('visible');
                     btn.disabled = false;
                     btn.textContent = 'Ingresar';
                     return;
                 }
 
                 // Guardar token y datos del usuario
-                localStorage.setItem('hl_token', authData.access_token);
-                localStorage.setItem('hl_usuario', JSON.stringify({
-                    id: usuario.id,
-                    nombre: usuario.nombre,
-                    email: usuario.email,
-                    empresa: usuario.empresa,
-                    rol: 'reclutador'
-                }));
+                localStorage.setItem('hl_token', result.token);
+                localStorage.setItem('hl_usuario', JSON.stringify(result.usuario));
 
-                window.location.href = 'dashboard.html';
+                // Redirigir según rol
+                window.location.href = result.usuario.rol === 'admin' ? 'admin.html' : 'dashboard.html';
 
             } catch (err) {
                 console.error('Error:', err);
