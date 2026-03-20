@@ -1626,37 +1626,46 @@ Promedio: ${data.promedios.total?.promedio?.toFixed(1) || '—'}
         procesoAEliminar = null;
     }
 
-    function eliminarProceso() {
+    async function eliminarProceso() {
         if (!procesoAEliminar) return;
-        
-        // Soft delete: marcar como eliminado (en producción se enviaría al webhook)
-        // Por ahora solo lo quitamos del array para el demo
-        procesos = procesos.filter(p => p.id !== procesoAEliminar.id);
-        
-        cerrarModalEliminar();
-        cargarProcesos();
-        
-        // En producción:
-        // fetch('WEBHOOK_ELIMINAR_PROCESO', { 
-        //   method: 'POST', 
-        //   body: JSON.stringify({ proceso_id: procesoAEliminar.id, eliminado: true })
-        // });
+        try {
+            const res = await fetch('https://dxblzmxcmaerycvdgfpy.supabase.co/functions/v1/gestionar-proceso', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
+                    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c'
+                },
+                body: JSON.stringify({ proceso_id: procesoAEliminar.id, accion: 'eliminar' })
+            });
+            const result = await res.json();
+            if (!res.ok || result.error) throw new Error(result.error || 'Error al eliminar');
+            cerrarModalEliminar();
+            cargarProcesos();
+        } catch (err) {
+            console.error('Error eliminando proceso:', err);
+            alert('Error al eliminar el proceso. Intenta nuevamente.');
+        }
     }
 
-    function finalizarProceso(procesoId) {
-        const proceso = procesos.find(p => p.id === procesoId);
-        if (!proceso) return;
-        
-        // Marcar proceso como finalizado
-        proceso.estado = 'Finalizado';
-        
-        cargarProcesos();
-        
-        // En producción:
-        // fetch('WEBHOOK_FINALIZAR_PROCESO', { 
-        //   method: 'POST', 
-        //   body: JSON.stringify({ proceso_id: procesoId, estado: 'Finalizado' })
-        // });
+    async function finalizarProceso(procesoId) {
+        try {
+            const res = await fetch('https://dxblzmxcmaerycvdgfpy.supabase.co/functions/v1/gestionar-proceso', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
+                    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c'
+                },
+                body: JSON.stringify({ proceso_id: procesoId, accion: 'finalizar' })
+            });
+            const result = await res.json();
+            if (!res.ok || result.error) throw new Error(result.error || 'Error al finalizar');
+            cargarProcesos();
+        } catch (err) {
+            console.error('Error finalizando proceso:', err);
+            alert('Error al finalizar el proceso. Intenta nuevamente.');
+        }
     }
     
     function abrirModalCandidato() { document.getElementById('modalCandidato').classList.add('visible'); }
