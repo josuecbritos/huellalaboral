@@ -938,6 +938,19 @@
     let vistaDataProceso = 'total'; // 'total' o 'verificada' (para tabla comparativa)
     let candidatoActualData = {}; // guarda ambos promedios
 
+    const CAUSAL_LABELS = {
+        'mutuo_acuerdo':       'Mutuo acuerdo de las partes',
+        'necesidades_empresa': 'Necesidades de la empresa',
+        'renuncia':            'Renuncia del trabajador',
+        'vencimiento_plazo':   'Vencimiento del plazo convenido',
+        'conclusion_trabajo':  'Conclusión del trabajo o servicio',
+        'caso_fortuito':       'Caso fortuito o fuerza mayor',
+        'otro':                'Otro'
+    };
+    function formatearCausal(valor) {
+        return CAUSAL_LABELS[valor] || valor || '—';
+    }
+
     // INIT
     document.addEventListener('DOMContentLoaded', () => {
         // Verificar autenticación
@@ -1141,7 +1154,10 @@
                             desempeno: data.promedios?.verificado?.desempeno || null,
                             relaciones: data.promedios?.verificado?.relaciones || null,
                             confiabilidad: data.promedios?.verificado?.confiabilidad || null,
-                        }
+                        },
+                        cert_empleos: data.documentos?.cert_empleos ?? null,
+                        cert_permanencia: data.documentos?.cert_permanencia ?? null,
+                        causal_texto: formatearCausal(data.documentos?.causal_texto),
                     };
                 } catch (e) {
                     console.error('Error enriqueciendo candidato:', c.rut, e);
@@ -1252,7 +1268,7 @@
         // Poblar datos de documentos validados
         document.getElementById('certEmpleos').textContent = data.documentos?.cert_empleos !== null && data.documentos?.cert_empleos !== undefined ? data.documentos.cert_empleos : '—';
         document.getElementById('certPermanencia').textContent = data.documentos?.cert_permanencia !== null && data.documentos?.cert_permanencia !== undefined ? data.documentos.cert_permanencia + ' años' : '—';
-        document.getElementById('causalTexto').textContent = data.documentos?.causal_texto || '—';
+        document.getElementById('causalTexto').textContent = formatearCausal(data.documentos?.causal_texto);
 
         const badgeHtml = data.documentos?.causal_validada === true
             ? '<span style="font-size:10px; font-weight:700; color:#166534; background:rgba(47,191,113,0.12); padding:3px 8px; border-radius:2px;">✓ VALIDADA</span>'
@@ -1528,7 +1544,7 @@
         // Datos de documentos validados
         document.getElementById('certEmpleos').textContent = documentos.cert_empleos !== null ? documentos.cert_empleos : '—';
         document.getElementById('certPermanencia').textContent = documentos.cert_permanencia !== null ? documentos.cert_permanencia + ' años' : '—';
-        document.getElementById('causalTexto').textContent = documentos.causal_validada || '—';
+        document.getElementById('causalTexto').textContent = formatearCausal(documentos.causal_texto);
         
         const badgeHtml = documentos.causal_validada
             ? '<span style="font-size:10px; font-weight:700; color:#166534; background:rgba(47,191,113,0.12); padding:3px 8px; border-radius:2px;">✓ VALIDADA</span>'
