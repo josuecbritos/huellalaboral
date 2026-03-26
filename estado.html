@@ -24,7 +24,6 @@
             min-height: 100vh;
         }
 
-        /* NAV */
         nav {
             background: var(--azul);
             padding: 0 32px;
@@ -45,14 +44,12 @@
             width: auto;
         }
 
-        /* CONTENEDOR */
         .container {
             max-width: 800px;
             margin: 0 auto;
             padding: 40px 24px;
         }
 
-        /* ESTADO DE CARGA / ERROR */
         .estado-msg {
             text-align: center;
             padding: 80px 24px;
@@ -82,21 +79,6 @@
 
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* EN PROCESO */
-        .en-proceso-banner {
-            background: #FFF7ED;
-            border: 1px solid #FED7AA;
-            border-radius: 4px;
-            padding: 16px 20px;
-            margin-bottom: 24px;
-            font-size: 13px;
-            color: #92400E;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        /* HEADER CANDIDATO */
         .candidato-header {
             background: var(--azul);
             border-radius: 4px;
@@ -121,32 +103,6 @@
         .candidato-nombre { font-size: 18px; font-weight: 700; color: white; margin-bottom: 2px; }
         .candidato-meta { font-size: 13px; color: rgba(255,255,255,0.7); }
 
-        .toggle-data {
-            display: inline-flex;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-left: auto;
-        }
-
-        .toggle-data button {
-            background: none;
-            border: none;
-            padding: 6px 14px;
-            font-size: 13px;
-            font-weight: 500;
-            color: rgba(255,255,255,0.6);
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-
-        .toggle-data button.active {
-            background: rgba(255,255,255,0.2);
-            color: white;
-        }
-
-        /* DATOS VALIDADOS */
         .datos-validados {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -174,187 +130,6 @@
             color: var(--azul);
         }
 
-        .dato-valor-sm {
-            font-size: 16px;
-            font-weight: 500;
-            color: var(--texto);
-            margin-top: 8px;
-        }
-
-        /* PROMEDIOS */
-        .promedio-general {
-            background: var(--fondo);
-            border: 1px solid var(--borde);
-            border-radius: 4px;
-            padding: 24px;
-            text-align: center;
-            margin-bottom: 24px;
-        }
-
-        .promedios-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-
-        .promedio-card {
-            background: var(--fondo);
-            border: 1px solid var(--borde);
-            border-radius: 4px;
-            padding: 16px 20px;
-        }
-
-        .promedio-label {
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--subtitulo);
-            margin-bottom: 6px;
-        }
-
-        .promedio-valor {
-            font-size: 22px;
-            font-weight: 700;
-            color: var(--azul);
-            margin-bottom: 8px;
-        }
-
-        .promedio-barra {
-            height: 4px;
-            background: var(--borde);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .promedio-fill {
-            height: 100%;
-            background: var(--verde);
-            border-radius: 2px;
-            transition: width 0.6s ease;
-        }
-
-        /* EVALUACIONES */
-        .evaluaciones-titulo {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--subtitulo);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 12px;
-        }
-
-        .evaluacion-card {
-            background: var(--fondo);
-            border: 1px solid var(--borde);
-            border-radius: 4px;
-            margin-bottom: 12px;
-            overflow: hidden;
-        }
-
-        .evaluacion-header {
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--borde);
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 12px;
-        }
-
-        .evaluacion-evaluador {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--texto);
-            margin-bottom: 2px;
-        }
-
-        .evaluacion-empresa {
-            font-size: 12px;
-            color: var(--subtitulo);
-        }
-
-        .evaluacion-fecha {
-            font-size: 12px;
-            color: var(--subtitulo);
-            white-space: nowrap;
-        }
-
-        .evaluacion-body {
-            padding: 16px 20px;
-        }
-
-        .eval-atributos {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
-        .eval-atributo-label {
-            font-size: 12px;
-            color: var(--subtitulo);
-            margin-bottom: 4px;
-        }
-
-        .eval-score {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .eval-score-num {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--azul);
-            min-width: 20px;
-        }
-
-        .eval-score-bar {
-            flex: 1;
-            height: 4px;
-            background: var(--borde);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .eval-score-fill {
-            height: 100%;
-            background: var(--verde);
-            border-radius: 2px;
-        }
-
-        .eval-score-texto {
-            font-size: 11px;
-            color: var(--subtitulo);
-            margin-top: 2px;
-        }
-
-        .eval-otros {
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid var(--borde);
-        }
-
-        .eval-otros-label {
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--subtitulo);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 4px;
-        }
-
-        .eval-otros-texto {
-            font-size: 13px;
-            color: var(--texto);
-            line-height: 1.5;
-        }
-
-        .no-conoce-tag {
-            font-size: 13px;
-            color: var(--subtitulo);
-            font-style: italic;
-        }
-
-        /* FOOTER */
         footer {
             text-align: center;
             padding: 32px 24px;
@@ -364,9 +139,6 @@
 
         @media (max-width: 600px) {
             .datos-validados { grid-template-columns: 1fr; }
-            .promedios-grid { grid-template-columns: 1fr; }
-            .eval-atributos { grid-template-columns: 1fr; }
-            .toggle-data { display: none; }
         }
     </style>
 </head>
@@ -380,22 +152,18 @@
 
     <div class="container">
 
-        <!-- ESTADO CARGA -->
         <div id="estadoCarga" class="estado-msg">
             <div class="spinner"></div>
             <div class="estado-msg-titulo">Cargando tu evaluación...</div>
         </div>
 
-        <!-- ESTADO ERROR -->
         <div id="estadoError" class="estado-msg" style="display:none;">
             <div class="estado-msg-titulo">No se encontró la evaluación</div>
             <div class="estado-msg-desc">El link puede ser inválido o haber expirado. Si crees que es un error, escríbenos a contacto@huellalaboral.cl.</div>
         </div>
 
-        <!-- CONTENIDO PRINCIPAL -->
         <div id="contenido" style="display:none;">
 
-            <!-- Header trabajador -->
             <div class="candidato-header">
                 <div class="candidato-avatar">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -409,10 +177,13 @@
                 </div>
             </div>
 
-            <!-- Datos validados (documentos) -->
             <div class="datos-validados">
+                <div style="grid-column: 1 / -1; margin-bottom: 4px;">
+                    <div style="font-size:18px; font-weight:700; color:var(--texto);">Resumen trayectoria laboral</div>
+                    <div style="font-size:12px; color:var(--subtitulo); margin-top:4px;">Elaborado con los antecedentes disponibles en Huella Laboral</div>
+                </div>
                 <div class="dato-card">
-                    <div class="dato-label">Empleos en últimos 5 años</div>
+                    <div class="dato-label">Empleos formales en los últimos 5 años</div>
                     <div class="dato-valor" id="certEmpleos">—</div>
                 </div>
                 <div class="dato-card">
@@ -420,13 +191,12 @@
                     <div class="dato-valor" id="certPermanencia">—</div>
                 </div>
                 <div class="dato-card">
-                    <div class="dato-label">Causal de término</div>
-                    <div class="dato-valor-sm" id="causalTexto">—</div>
+                    <div class="dato-label">Última causal de término de contrato</div>
+                    <div class="dato-valor" id="causalTexto">—</div>
                     <div style="margin-top:8px;" id="causalBadge"></div>
                 </div>
             </div>
 
-            <!-- Cantidad de evaluaciones -->
             <div class="dato-card" style="display:flex; align-items:center; gap:20px;">
                 <div style="font-size:40px; font-weight:700; color:var(--azul); min-width:56px;" id="evalCount">0</div>
                 <div style="font-size:14px; color:var(--subtitulo); line-height:1.5;" id="evalDesc">evaluaciones recibidas en el sistema.</div>
@@ -443,6 +213,19 @@
     <script>
         const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c';
         const SUPABASE_URL = 'https://dxblzmxcmaerycvdgfpy.supabase.co';
+
+        const CAUSAL_LABELS = {
+            'mutuo_acuerdo':       'Mutuo acuerdo de las partes',
+            'necesidades_empresa': 'Necesidades de la empresa',
+            'renuncia':            'Renuncia del trabajador',
+            'vencimiento_plazo':   'Vencimiento del plazo convenido',
+            'conclusion_trabajo':  'Conclusión del trabajo o servicio',
+            'caso_fortuito':       'Caso fortuito o fuerza mayor',
+            'otro':                'Otro'
+        };
+        function formatearCausal(valor) {
+            return CAUSAL_LABELS[valor] || valor || '—';
+        }
 
         async function init() {
             const params = new URLSearchParams(window.location.search);
@@ -470,7 +253,7 @@
                 document.getElementById('certPermanencia').textContent =
                     data.documentos?.cert_permanencia !== null && data.documentos?.cert_permanencia !== undefined
                     ? data.documentos.cert_permanencia + ' años' : '—';
-                document.getElementById('causalTexto').textContent = data.documentos?.causal_texto || '—';
+                document.getElementById('causalTexto').textContent = formatearCausal(data.documentos?.causal_texto);
                 document.getElementById('causalBadge').innerHTML = data.documentos?.causal_validada === true
                     ? '<span style="font-size:10px; font-weight:700; color:#166534; background:rgba(47,191,113,0.12); padding:3px 8px; border-radius:2px;">✓ VALIDADA</span>'
                     : data.documentos?.causal_validada === false
