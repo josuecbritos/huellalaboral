@@ -655,7 +655,7 @@
                     </svg>
                 </div>
                 <div class="form-card-body">
-                    <p style="font-size:14px; color:var(--subtitulo); margin-bottom:20px; line-height:1.6;">Adjunta tu certificado de cotizaciones previsionales de los últimos 4 años para respaldar tu historial laboral. Formatos aceptados: PDF, JPG, PNG.</p>
+                    <p style="font-size:14px; color:var(--subtitulo); margin-bottom:20px; line-height:1.6;">Adjunta tu certificado de cotizaciones previsionales de los últimos 4 años para respaldar tu historial laboral. Formatos aceptados: PDF, JPG, PNG · Tamaño máximo: 5MB.</p>
                     <div class="upload-area" id="uploadArea">
                         <input type="file" id="certificado" accept=".pdf,.jpg,.jpeg,.png" style="display:none;">
                         <label for="certificado" class="upload-label">
@@ -694,7 +694,7 @@
                     </svg>
                 </div>
                 <div class="form-card-body">
-                    <p style="font-size:14px; color:var(--subtitulo); margin-bottom:20px; line-height:1.6;">Adjunta tu finiquito e indica la causal de término de tu último contrato para que posibles empleadores puedan conocerla. Formatos aceptados: PDF, JPG, PNG.</p>
+                    <p style="font-size:14px; color:var(--subtitulo); margin-bottom:20px; line-height:1.6;">Adjunta tu finiquito e indica la causal de término de tu último contrato para que posibles empleadores puedan conocerla. Formatos aceptados: PDF, JPG, PNG · Tamaño máximo: 5MB.</p>
                     <div class="form-row single" style="margin-bottom:20px;">
                         <div class="form-group">
                             <label for="causalSalida">Causal de término de contrato</label>
@@ -1251,6 +1251,10 @@
                 mostrarMsg('error', 'Formato no válido. Solo se aceptan PDF, JPG y PNG.');
                 return;
             }
+            if (file.size > 5 * 1024 * 1024) {
+                mostrarMsg('error', 'El archivo supera el tamaño máximo permitido de 5MB.');
+                return;
+            }
             document.getElementById('fileName').textContent = file.name;
             document.getElementById('fileSize').textContent = `(${(file.size / 1024).toFixed(0)} KB)`;
             document.getElementById('fileSelected').style.display = 'block';
@@ -1283,6 +1287,10 @@
             const ext = file.name.split('.').pop().toLowerCase();
             if (!extensiones.includes(ext)) {
                 mostrarMsg('error', 'Formato no válido. Solo se aceptan PDF, JPG y PNG.');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                mostrarMsg('error', 'El archivo supera el tamaño máximo permitido de 5MB.');
                 return;
             }
             document.getElementById('finiquitoName').textContent = file.name;
