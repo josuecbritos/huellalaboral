@@ -951,6 +951,17 @@
         return CAUSAL_LABELS[valor] || valor || '—';
     }
 
+    const TIEMPO_TRABAJO_LABELS = {
+        'menos_1': 'Menos de 1 año',
+        '1_2':     '1 a 2 años',
+        '2_3':     '2 a 3 años',
+        '3_4':     '3 a 4 años',
+        '4_mas':   '4 años o más'
+    };
+    function formatearTiempoTrabajo(valor) {
+        return TIEMPO_TRABAJO_LABELS[valor] || valor || '—';
+    }
+
     // INIT
     document.addEventListener('DOMContentLoaded', () => {
         // Verificar autenticación
@@ -1585,7 +1596,8 @@
                         </div>
                         <div class="evaluacion-empresa">${e.empresa_evaluador || '—'} — RUT ${e.rut_evaluador || '—'}</div>
                     </div>
-                    <div class="evaluacion-fecha">${e.cargo || '—'} (${e.tiempo_trabajo || '—'})</div>
+                    <div class="evaluacion-fecha"><strong>Cargo:</strong> ${e.cargo || '—'}</div>
+                    <div class="evaluacion-fecha"><strong>Tiempo en empresa:</strong> ${formatearTiempoTrabajo(e.tiempo_trabajo)}</div>
                 </div>
                 <div class="evaluacion-body">
                     ${e.rechazo
