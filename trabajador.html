@@ -908,14 +908,14 @@
                 <div class="empleador-body">
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="emp_empresa_${id}">Nombre de la empresa</label>
-                            <input type="text" id="emp_empresa_${id}" name="emp_empresa[]" placeholder="Empresa S.A.">
-                            <span class="field-error" id="err-emp_empresa_${id}"></span>
-                        </div>
-                        <div class="form-group">
                             <label for="emp_jefe_${id}">Nombre del jefe directo</label>
                             <input type="text" id="emp_jefe_${id}" name="emp_jefe[]" placeholder="María García">
                             <span class="field-error" id="err-emp_jefe_${id}"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="emp_empresa_${id}">Nombre de la empresa</label>
+                            <input type="text" id="emp_empresa_${id}" name="emp_empresa[]" placeholder="Empresa S.A.">
+                            <span class="field-error" id="err-emp_empresa_${id}"></span>
                         </div>
                     </div>
                     <div class="form-row single">
@@ -923,7 +923,7 @@
                             <label for="emp_email_${id}">Correo del jefe directo</label>
                             <input type="email" id="emp_email_${id}" name="emp_email[]" placeholder="jefe@empresa.cl">
                             <span class="field-error" id="err-emp_email_${id}"></span>
-                            <span style="font-size:12px; font-weight:500; color:var(--error); margin-top:5px; display:block;">Si no usas un correo corporativo, la validación quedará sujeta a confirmación.</span>
+                            <div style="font-size:12px; font-weight:500; color:#92400E; background:#FFFBEB; border:1px solid #FCD34D; border-radius:3px; padding:4px 8px; margin-top:6px;">Si no usas un correo corporativo, la evaluación quedará sujeta a confirmación.</div>
                         </div>
                     </div>
                 </div>
@@ -953,6 +953,14 @@
         // EVENT LISTENERS PARA VALIDACIÓN EN TIEMPO REAL
         // ============================================
         
+        // Limpiar errores al escribir en campos del trabajador
+        document.getElementById('nombre').addEventListener('input', function() {
+            if (this.value.trim().length >= 3) limpiarErrorInput('nombre');
+        });
+        document.getElementById('email').addEventListener('input', function() {
+            if (validarEmail(this.value.trim())) limpiarErrorInput('email');
+        });
+
         // Formateo y validación de RUT del trabajador
         const rutInput = document.getElementById('rut');
         rutInput.addEventListener('input', function (e) {
@@ -965,6 +973,9 @@
             if (rut && !validarRutChileno(rut)) {
                 mostrarErrorInput('rut', 'RUT inválido. Verifica el dígito verificador.');
             }
+        });
+        rutInput.addEventListener('input', function() {
+            if (validarRutChileno(this.value)) limpiarErrorInput('rut');
         });
         
         // Validación de email del trabajador
@@ -986,36 +997,65 @@
                     mostrarErrorInput(id, 'RUT inválido');
                 }
             }
+            // Validar y limpiar campos de texto al salir
+            if (e.target.matches('input[name="emp_jefe[]"]') || e.target.matches('input[name="emp_empresa[]"]') || e.target.matches('input[name="emp_cargo[]"]')) {
+                const id = e.target.id;
+                limpiarErrorInput(id);
+                if (e.target.value.trim().length < 2 && e.target.value.trim().length > 0) {
+                    mostrarErrorInput(id, 'Ingresa al menos 2 caracteres.');
+                }
+            }
             
             if (e.target.matches('input[name="emp_email[]"]') || e.target.matches('input[name="emp_rut_evaluador[]"]')) {
                 const id = e.target.id;
                 limpiarErrorInput(id);
-                const email = e.target.value;
+                const email = e.target.value.trim().toLowerCase();
                 if (email && !validarEmail(email)) {
                     mostrarErrorInput(id, 'Email inválido');
+                } else if (email) {
+                    const emailTrabajador = document.getElementById('email').value.trim().toLowerCase();
+                    if (email === emailTrabajador) {
+                        mostrarErrorInput(id, 'Este correo es el mismo que el tuyo. No puedes evaluarte a ti mismo.');
+                    } else {
+                        const otrosEmails = Array.from(document.querySelectorAll('input[name="emp_email[]"]'))
+                            .filter(input => input.id !== e.target.id)
+                            .map(input => input.value.trim().toLowerCase())
+                            .filter(v => v.length > 0);
+                        if (otrosEmails.includes(email)) {
+                            mostrarErrorInput(id, 'Este correo ya fue ingresado en otro evaluador.');
+                        }
+                    }
                 }
             }
         }, true);
         
-        // Formatear RUTs de empleadores dinámicamente
+        // Formatear RUTs de empleadores dinámicamente + limpiar errores al escribir
         document.getElementById('empleadoresContainer').addEventListener('input', function(e) {
             if (e.target.matches('input[name="emp_rut[]"]') || e.target.matches('input[name="emp_rut_empresa[]"]')) {
                 e.target.value = formatearRut(e.target.value);
             }
+            // Limpiar error del campo al escribir
+            if (e.target.matches('input[name="emp_jefe[]"]') || e.target.matches('input[name="emp_empresa[]"]') || e.target.matches('input[name="emp_cargo[]"]')) {
+                if (e.target.value.trim().length >= 2) limpiarErrorInput(e.target.id);
+            }
+            if (e.target.matches('input[name="emp_email[]"]')) {
+                const email = e.target.value.trim();
+                if (validarEmail(email)) limpiarErrorInput(e.target.id);
+            }
+            if (e.target.matches('input[name="emp_rut[]"]') || e.target.matches('input[name="emp_rut_empresa[]"]')) {
+                if (validarRutChileno(e.target.value)) limpiarErrorInput(e.target.id);
+            }
         }, true);
 
-        // Validación
+        // Validación unificada — usa el mismo sistema que mostrarErrorInput/limpiarErrorInput
         function validarCampo(id, errorId, condicion, mensaje) {
             const input = document.getElementById(id);
-            const error = document.getElementById(errorId);
-            if (!input || !error) return true;
+            if (!input) return true;
+            limpiarErrorInput(id);
             if (!condicion(input.value)) {
-                input.classList.add('error');
-                error.textContent = mensaje;
+                mostrarErrorInput(id, mensaje);
                 return false;
             }
-            input.classList.remove('error');
-            error.textContent = '';
             return true;
         }
 
@@ -1045,7 +1085,7 @@
             }
             
             bloques.forEach(bloque => {
-                const nombreInput = bloque.querySelector('input[name="emp_nombre[]"]');
+                const nombreInput = bloque.querySelector('input[name="emp_jefe[]"]');
                 const rutInput = bloque.querySelector('input[name="emp_rut[]"]');
                 const emailInput = bloque.querySelector('input[name="emp_email[]"]');
                 const empresaInput = bloque.querySelector('input[name="emp_empresa[]"]');
@@ -1059,8 +1099,24 @@
                 if (rutInput?.id) valido &= validarCampo(rutInput.id, `err-${rutInput.id}`,
                     v => validarRutChileno(v), 'RUT inválido.');
 
-                if (emailInput?.id) valido &= validarCampo(emailInput.id, `err-${emailInput.id}`,
-                    v => validarEmail(v), 'Email inválido.');
+                if (emailInput?.id) {
+                    valido &= validarCampo(emailInput.id, `err-${emailInput.id}`,
+                        v => validarEmail(v), 'Email inválido.');
+                    const emailEval = emailInput.value.trim().toLowerCase();
+                    const emailTrabajador = document.getElementById('email').value.trim().toLowerCase();
+                    if (emailEval && emailEval === emailTrabajador) {
+                        mostrarErrorInput(emailInput.id, 'Este correo es el mismo que el tuyo. No puedes evaluarte a ti mismo.');
+                        valido = false;
+                    }
+                    const otrosEmails = Array.from(document.querySelectorAll('input[name="emp_email[]"]'))
+                        .filter(input => input.id !== emailInput.id)
+                        .map(input => input.value.trim().toLowerCase())
+                        .filter(v => v.length > 0);
+                    if (emailEval && otrosEmails.includes(emailEval)) {
+                        mostrarErrorInput(emailInput.id, 'Este correo ya fue ingresado en otro evaluador.');
+                        valido = false;
+                    }
+                }
 
                 if (empresaInput?.id) valido &= validarCampo(empresaInput.id, `err-${empresaInput.id}`,
                     v => v.trim().length >= 2, 'Ingresa el nombre de la empresa.');
@@ -1086,6 +1142,10 @@
             } else {
                 errConsent.textContent = '';
                 errConsent.style.display = 'none';
+            }
+
+            if (!valido) {
+                mostrarMsg('error', '⚠️ Hay campos con errores. Revísalos antes de continuar.');
             }
 
             return !!valido;
@@ -1283,6 +1343,6 @@
         });
     </script>
 
-    <footer style="text-align:center; padding: 24px; font-size:12px; color:#9CA3AF;">Si quieres que tu información sea eliminada de Huella Laboral escríbenos a <a href="mailto:contacto@huellalaboral.cl" style="color:#6B7280;">contacto@huellalaboral.cl</a></footer>
+                    <footer style="text-align:center; padding: 24px; font-size:12px; color:#9CA3AF;">Si quieres que tu información sea eliminada de Huella Laboral escríbenos a <a href="mailto:contacto@huellalaboral.cl" style="color:#6B7280;">contacto@huellalaboral.cl</a></footer>
 </body>
 </html>
