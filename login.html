@@ -421,6 +421,7 @@
                 // Guardar token y datos del usuario
                 localStorage.setItem('hl_token', result.token);
                 localStorage.setItem('hl_usuario', JSON.stringify(result.usuario));
+                localStorage.setItem('hl_login_at', Date.now().toString());
 
                 // Redirigir según rol
                 window.location.href = result.usuario.rol === 'admin' ? 'admin.html' : 'dashboard.html';
