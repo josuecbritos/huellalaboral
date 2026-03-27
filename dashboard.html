@@ -1295,6 +1295,7 @@
             empresa: e.empresa_evaluador || '—',
             rut: e.rut_evaluador || '—',
             periodo: e.tiempo_trabajo || '—',
+            cargo: e.cargo || '—',
             verificada: e.verificada || false,
             no_conoce: e.rechazo || false,
             puntualidad: { val: e.puntualidad || 0, comentario: '' },
@@ -1347,7 +1348,10 @@
                         </div>
                         <div class="evaluacion-empresa">${e.empresa} — RUT ${e.rut}</div>
                     </div>
-                    <div class="evaluacion-fecha">${e.periodo}</div>
+                    <div>
+                        <div class="evaluacion-fecha"><strong>Cargo:</strong> ${e.cargo}</div>
+                        <div class="evaluacion-fecha"><strong>Tiempo en empresa:</strong> ${formatearTiempoTrabajo(e.periodo)}</div>
+                    </div>
                 </div>
                 <div class="evaluacion-body">
                     ${e.no_conoce
