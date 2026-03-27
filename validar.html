@@ -479,6 +479,19 @@
     </div>
 
     <script>
+        const CAUSAL_LABELS = {
+            'mutuo_acuerdo':       'Mutuo acuerdo de las partes',
+            'necesidades_empresa': 'Necesidades de la empresa',
+            'renuncia':            'Renuncia del trabajador',
+            'vencimiento_plazo':   'Vencimiento del plazo convenido',
+            'conclusion_trabajo':  'Conclusión del trabajo o servicio',
+            'caso_fortuito':       'Caso fortuito o fuerza mayor',
+            'otro':                'Otro'
+        };
+        function formatearCausal(valor) {
+            return CAUSAL_LABELS[valor] || valor || '—';
+        }
+
         let tokenData = null;
         let tieneCertificado = false;
         let tieneFiniquito = false;
@@ -537,7 +550,7 @@
                         Ver Finiquito
                     </a>`;
                     document.getElementById('seccionFiniquito').style.display = 'block';
-                    document.getElementById('causalInformada').textContent = data.causal_salida || '—';
+                    document.getElementById('causalInformada').textContent = formatearCausal(data.causal_salida);
                 }
 
                 docLinksContainer.innerHTML = linksHTML || 'Sin documentos adjuntos';
