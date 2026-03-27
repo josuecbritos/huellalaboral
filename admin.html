@@ -762,7 +762,12 @@
                             return;
                         }
                     } else if (result.error === 'already_exists') {
-                        throw new Error('Este email ya está en uso por un usuario activo');
+                        const errEmail = document.getElementById('err-email');
+                        errEmail.textContent = 'Este email ya está en uso por un usuario activo.';
+                        errEmail.classList.add('visible');
+                        btn.disabled = false;
+                        btn.textContent = 'Crear Reclutador';
+                        return;
                     } else {
                         throw new Error(result.error || 'Error al crear reclutador');
                     }
