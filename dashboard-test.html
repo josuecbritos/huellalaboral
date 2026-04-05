@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Test — Huella Laboral</title>
+    <style>
+        body { font-family: monospace; padding: 40px; background: #f9fafb; }
+        h1 { font-size: 18px; margin-bottom: 24px; }
+        .resultado {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            padding: 20px;
+            margin-top: 16px;
+            white-space: pre-wrap;
+            font-size: 14px;
+        }
+        .ok { border-left: 4px solid #2FBF71; }
+        .error { border-left: 4px solid #ef4444; }
+        .label { font-size: 12px; color: #6b7280; margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+
+    <h1>Prueba de autenticación — Huella Laboral</h1>
+
+    <div class="label">Token en localStorage (hl_token):</div>
+    <div class="resultado" id="tokenInfo">Verificando...</div>
+
+    <div class="label" style="margin-top:24px;">Respuesta de auth-test (con x-user-token):</div>
+    <div class="resultado" id="resultado">Llamando a la edge function...</div>
+
+    <script>
+        const SUPABASE_URL = 'https://dxblzmxcmaerycvdgfpy.supabase.co';
+        const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c';
+
+        async function probar() {
+            // 1. Mostrar qué hay en localStorage
+            const token = localStorage.getItem('hl_token');
+            const usuario = localStorage.getItem('hl_usuario');
+            const loginAt = localStorage.getItem('hl_login_at');
+
+            const tokenEl = document.getElementById('tokenInfo');
+            if (!token) {
+                tokenEl.textContent = '❌ No hay hl_token en localStorage. Debes hacer login primero en login.html';
+                tokenEl.className = 'resultado error';
+                document.getElementById('resultado').textContent = 'No se puede probar sin token.';
+                document.getElementById('resultado').className = 'resultado error';
+                return;
+            }
+
+            tokenEl.textContent = [
+                'hl_token:    ' + token.substring(0, 40) + '...',
+                'hl_usuario:  ' + usuario,
+                'hl_login_at: ' + (loginAt ? new Date(parseInt(loginAt)).toLocaleString('es-CL') : 'no existe'),
+            ].join('\n');
+            tokenEl.className = 'resultado ok';
+
+            // 2. Llamar a auth-test con el nuevo esquema de headers
+            const resultadoEl = document.getElementById('resultado');
+            try {
+                const response = await fetch(`${SUPABASE_URL}/functions/v1/auth-test`, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': ANON_KEY,
+                        'Authorization': `Bearer ${ANON_KEY}`,   // ← no cambia
+                        'x-user-token': token                    // ← nuevo header con JWT real
+                    }
+                });
+
+                const data = await response.json();
+                resultadoEl.textContent = [
+                    'HTTP status: ' + response.status,
+                    '',
+                    JSON.stringify(data, null, 2)
+                ].join('\n');
+                resultadoEl.className = 'resultado ' + (response.ok ? 'ok' : 'error');
+
+            } catch (err) {
+                resultadoEl.textContent = 'Error de red: ' + err.message;
+                resultadoEl.className = 'resultado error';
+            }
+        }
+
+        probar();
+    </script>
+
+</body>
+</html>
