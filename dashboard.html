@@ -1010,6 +1010,7 @@
                 }
             });
 
+            if (response.status === 401) { cerrarSesion(); return; }
             if (!response.ok) throw new Error('Error cargando procesos');
 
             const data = await response.json();
@@ -1102,6 +1103,7 @@
                 }
             });
 
+            if (response.status === 401) { cerrarSesion(); return; }
             const candidatosRaw = await response.json();
             
             const candidatosBase = candidatosRaw.map(c => {
@@ -1264,6 +1266,7 @@
         const res = await fetch(`https://dxblzmxcmaerycvdgfpy.supabase.co/functions/v1/obtener-candidato?rut=${encodeURIComponent(candidato.rut)}`, {
             headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}`, 'x-user-token': localStorage.getItem('hl_token') }
         });
+        if (res.status === 401) { cerrarSesion(); return; }
         const data = await res.json();
 
         document.getElementById('certEmpleos').textContent = data.documentos?.cert_empleos !== null && data.documentos?.cert_empleos !== undefined ? data.documentos.cert_empleos : '—';
@@ -1487,6 +1490,7 @@
             });
 
             if (!response.ok) {
+                if (response.status === 401) { cerrarSesion(); return; }
                 if (response.status === 404) {
                     contenedor.innerHTML = `<div class="table-card" style="padding:32px; text-align:center;"><div class="empty-state-title">Sin resultados</div><div class="empty-state-desc" style="margin-top:6px;">No se encontró ningún trabajador con el RUT <strong>${rut}</strong>.</div></div>`;
                 } else {
