@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de Privacidad — Huella Laboral</title>
+    <style>
+        :root {
+            --azul: #0E2A47;
+            --verde: #2FBF71;
+            --texto: #1a1a1a;
+            --subtitulo: #6B7280;
+            --borde: #E5E7EB;
+            --fondo: #FFFFFF;
+            --fondo-gris: #F9FAFB;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--fondo-gris);
+            color: var(--texto);
+            min-height: 100vh;
+            font-size: 15px;
+            line-height: 1.7;
+        }
+        nav {
+            background: var(--fondo);
+            border-bottom: 1px solid var(--borde);
+            padding: 0 32px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .nav-logo img { height: 36px; width: auto; }
+        .container { max-width: 780px; margin: 0 auto; padding: 48px 24px 64px; }
+        .page-header {
+            background: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 32px 32px 28px;
+            margin-bottom: 32px;
+        }
+        .page-header h1 { font-size: 22px; font-weight: 700; color: var(--azul); }
+        .toc {
+            background: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 24px 28px;
+            margin-bottom: 32px;
+        }
+        .toc-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: var(--subtitulo);
+            margin-bottom: 14px;
+        }
+        .toc ol { padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+        .toc li a { color: var(--azul); text-decoration: none; font-size: 13px; font-weight: 500; }
+        .toc li a:hover { text-decoration: underline; }
+        .section {
+            background: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 28px 32px;
+            margin-bottom: 16px;
+        }
+        .section h2 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--azul);
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--borde);
+            scroll-margin-top: 24px;
+        }
+        .section h3 { font-size: 14px; font-weight: 600; color: var(--texto); margin: 20px 0 10px; }
+        .section p { color: #374151; margin-bottom: 12px; font-size: 14px; }
+        .section p:last-child { margin-bottom: 0; }
+        .section ul, .section ol {
+            padding-left: 20px;
+            margin: 10px 0 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .section li { color: #374151; font-size: 14px; }
+        .tabla-wrapper { overflow-x: auto; margin: 16px 0; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        thead th {
+            background: var(--azul);
+            color: white;
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        tbody td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--borde);
+            vertical-align: top;
+            color: #374151;
+        }
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:nth-child(even) td { background: var(--fondo-gris); }
+        a { color: var(--azul); }
+        .nota {
+            background: rgba(47,191,113,0.08);
+            border-left: 3px solid var(--verde);
+            border-radius: 0 4px 4px 0;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #374151;
+            margin: 16px 0;
+        }
+        footer {
+            text-align: center;
+            padding: 32px 24px;
+            font-size: 12px;
+            color: var(--subtitulo);
+        }
+        footer a { color: var(--subtitulo); }
+        @media (max-width: 600px) {
+            .page-header { padding: 24px 20px; }
+            .section { padding: 20px 18px; }
+            .toc { padding: 18px 18px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <a href="/" class="nav-logo">
+        <img src="Huella_Laboral.png" alt="Huella Laboral">
+    </a>
+</nav>
+
+<div class="container">
+
+    <div class="page-header">
+        <h1>Política de Privacidad</h1>
+    </div>
+
+    <div class="toc">
+        <div class="toc-title">Estructura de la Política</div>
+        <ol>
+            <li><a href="#s1">Identificación del responsable y objeto de la política</a></li>
+            <li><a href="#s2">Qué datos tratamos</a></li>
+            <li><a href="#s3">Cómo obtenemos los datos</a></li>
+            <li><a href="#s4">Finalidades del tratamiento y base de licitud</a></li>
+            <li><a href="#s5">Visibilidad del perfil y comunicaciones a terceros</a></li>
+            <li><a href="#s6">Encargados, proveedores y transferencias internacionales</a></li>
+            <li><a href="#s7">Plazos y criterios de conservación</a></li>
+            <li><a href="#s8">Derechos del titular, revocación y canal de ejercicio</a></li>
+            <li><a href="#s9">Desactivación, cierre, eliminación y bloqueo</a></li>
+            <li><a href="#s10">Seguridad y confidencialidad</a></li>
+            <li><a href="#s11">Cambios a esta política</a></li>
+            <li><a href="#s12">Datos de contacto</a></li>
+        </ol>
+    </div>
+
+    <div class="section" id="s1">
+        <h2>1. Identificación del responsable y objeto de esta Política</h2>
+        <p>La presente Política de Privacidad (la "Política") regula el tratamiento de datos personales efectuado en el contexto de la plataforma digital denominada Huella Laboral (la "Plataforma").</p>
+        <p>Para efectos de esta Política, el responsable del tratamiento es <strong>El Taique SpA</strong>, sociedad constituida conforme a las leyes de la República de Chile, Rol Único Tributario 77.528.531-1, giro Servicios Administrativos y Consultorías, domiciliada en Agustinas 681, Of. 809, Santiago, correo electrónico de contacto general y para materias de privacidad y ejercicio de derechos: <a href="mailto:contacto@huellalaboral.cl">contacto@huellalaboral.cl</a> (el "<strong>Responsable</strong>").</p>
+        <p>Esta Política tiene por objeto informar qué datos personales pueden ser tratados en el contexto de la Plataforma, cómo se obtienen, con qué finalidades se utilizan, a quiénes pueden comunicarse, por cuánto tiempo pueden conservarse, qué derechos corresponden a sus titulares y cómo pueden ejercerse.</p>
+        <p>Asimismo, esta Política regula, entre otras materias, las autorizaciones que puedan requerirse para finalidades específicas, el alcance de la visibilidad del perfil del trabajador frente a reclutadores o futuros empleadores, y las reglas generales aplicables a la desactivación, revocación, eliminación, cancelación o bloqueo de datos, según corresponda.</p>
+        <p>Las disposiciones de esta Política deberán interpretarse de manera armónica con los Términos y Condiciones de la Plataforma y con la legislación chilena aplicable en materia de protección de datos personales.</p>
+    </div>
+
+    <div class="section" id="s2">
+        <h2>2. Qué datos personales podemos tratar</h2>
+        <p>En el contexto de la Plataforma, el Responsable podrá tratar distintas categorías de datos personales, según el rol con que cada persona interactúe y las funcionalidades habilitadas en cada caso.</p>
+        <h3>a) Datos del trabajador</h3>
+        <p>Podrán incluir, entre otros:</p>
+        <ul>
+            <li>Datos de identificación y contacto, tales como nombre, RUT, correo electrónico, número telefónico, comuna u otros antecedentes equivalentes;</li>
+            <li>Antecedentes relativos a su trayectoria laboral o profesional;</li>
+            <li>Datos de contacto e identificación de evaluadores proporcionados por el propio trabajador para solicitar referencias;</li>
+            <li>Referencias laborales incorporadas al perfil conforme a las reglas aplicables;</li>
+            <li>Documentos de respaldo vinculados a su trayectoria laboral, tales como certificados de cotizaciones, finiquitos u otros antecedentes equivalentes; y</li>
+            <li>Datos asociados a solicitudes, revocaciones, desactivaciones, reactivaciones, soporte o ejercicio de derechos.</li>
+        </ul>
+        <h3>b) Datos del evaluador</h3>
+        <p>Podrán incluir, entre otros:</p>
+        <ul>
+            <li>Nombre y datos de contacto;</li>
+            <li>Antecedentes vinculados a su relación laboral o profesional con el trabajador;</li>
+            <li>Datos de vínculo del evaluador con la institución para la que se ejerció el trabajo;</li>
+            <li>Contenido de la referencia emitida; y</li>
+            <li>Datos técnicos u operativos asociados al envío, recepción, validación y trazabilidad de dicha referencia.</li>
+        </ul>
+        <h3>c) Datos del reclutador o futuro empleador</h3>
+        <p>Podrán incluir, entre otros:</p>
+        <ul>
+            <li>Nombre, cargo, organización a la que pertenece y datos de contacto;</li>
+            <li>Antecedentes asociados a su registro, autenticación o validación; y</li>
+            <li>Datos relativos a su uso de la Plataforma, incluyendo accesos y consultas a información del perfil del trabajador.</li>
+        </ul>
+        <h3>d) Datos técnicos y operativos</h3>
+        <p>El Responsable también podrá tratar datos técnicos u operativos razonablemente necesarios para el funcionamiento, seguridad, integridad, trazabilidad y gestión de la Plataforma, incluyendo registros de acceso, validación, envío, recepción, fecha y hora de interacciones, identificadores técnicos y otros antecedentes equivalentes.</p>
+        <h3>e) Alcance de esta sección</h3>
+        <p>Las categorías antes señaladas son referenciales y podrán variar según las funcionalidades habilitadas en la Plataforma, el rol del usuario y las autorizaciones aplicables en cada caso.</p>
+    </div>
+
+    <div class="section" id="s3">
+        <h2>3. Cómo obtenemos los datos personales</h2>
+        <p>El Responsable podrá obtener datos personales a través de las siguientes fuentes, según el rol con que cada persona interactúe en la Plataforma y las funcionalidades habilitadas en cada caso:</p>
+        <h3>a) Datos proporcionados directamente por el titular</h3>
+        <p>Podremos obtener datos personales directamente de la persona a la que se refieren, por ejemplo, cuando el trabajador completa formularios, solicita referencias o incorpora documentos; cuando el evaluador responde una solicitud de referencia; o cuando el reclutador se registra o valida su acceso.</p>
+        <h3>b) Datos proporcionados por otros usuarios</h3>
+        <p>Podremos obtener ciertos datos personales a partir de información proporcionada por otros usuarios, lo que podrá incluir datos de contacto de evaluadores entregados por el trabajador, referencias emitidas por evaluadores, e información del perfil visible para reclutadores.</p>
+        <h3>c) Datos obtenidos a partir de documentos incorporados</h3>
+        <p>Podremos obtener datos personales a partir de documentos de respaldo que el trabajador incorpore a la Plataforma, en la medida en que dicha incorporación se encuentre habilitada y resulte aplicable a la finalidad correspondiente.</p>
+        <h3>d) Datos generados por el uso de la Plataforma</h3>
+        <p>Podremos obtener datos técnicos u operativos generados por la interacción con la Plataforma, tales como registros de acceso, validación, fecha y hora de interacciones e identificadores técnicos necesarios para el funcionamiento y seguridad del servicio.</p>
+    </div>
+
+    <div class="section" id="s4">
+        <h2>4. Finalidades del tratamiento y bases de licitud</h2>
+        <p>El Responsable tratará datos personales únicamente para finalidades determinadas, explícitas y compatibles con la naturaleza de la Plataforma. Como regla general, el tratamiento se efectuará sobre la base de las autorizaciones expresas otorgadas por el titular o, cuando corresponda, en virtud de una autorización o exigencia legal aplicable.</p>
+        <div class="tabla-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Finalidad</th>
+                        <th>Alcance principal</th>
+                        <th>Base de licitud</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>a) Acceso, registro, autenticación y funcionamiento básico</strong></td>
+                        <td>Crear, mantener y operar cuentas, accesos, validaciones e interacciones básicas del servicio</td>
+                        <td>Autorización del titular al activar las funcionalidades correspondientes</td>
+                    </tr>
+                    <tr>
+                        <td><strong>b) Solicitar referencias a evaluadores</strong></td>
+                        <td>Contactar a evaluadores informados por el trabajador para invitarlos a emitir una referencia laboral</td>
+                        <td>Autorización expresa y específica del trabajador</td>
+                    </tr>
+                    <tr>
+                        <td><strong>c) Recibir y gestionar referencias emitidas</strong></td>
+                        <td>Incorporar al sistema las referencias recibidas y gestionarlas dentro de la Plataforma</td>
+                        <td>Autorización expresa y específica; datos del evaluador proporcionados directamente por él</td>
+                    </tr>
+                    <tr>
+                        <td><strong>d) Incorporar documentos de respaldo</strong></td>
+                        <td>Tratar documentos tales como certificados de cotizaciones, finiquitos u otros antecedentes habilitados</td>
+                        <td>Autorización expresa y específica del trabajador</td>
+                    </tr>
+                    <tr>
+                        <td><strong>e) Visibilidad del perfil a reclutadores</strong></td>
+                        <td>Permitir que reclutadores consulten la información del perfil que el trabajador haya hecho visible</td>
+                        <td>Autorización expresa y específica del trabajador</td>
+                    </tr>
+                    <tr>
+                        <td><strong>f) Soporte y ejercicio de derechos</strong></td>
+                        <td>Responder consultas, gestionar revocaciones, desactivaciones y solicitudes de acceso, rectificación o eliminación</td>
+                        <td>Autorización del titular cuando corresponda y cumplimiento de obligaciones legales</td>
+                    </tr>
+                    <tr>
+                        <td><strong>g) Seguridad, trazabilidad y prevención de fraude</strong></td>
+                        <td>Mantener registros técnicos, verificar interacciones y prevenir suplantaciones o usos indebidos</td>
+                        <td>Funcionamiento de la Plataforma y autorizaciones otorgadas, sin perjuicio de obligaciones legales</td>
+                    </tr>
+                    <tr>
+                        <td><strong>h) Cumplir obligaciones legales</strong></td>
+                        <td>Conservar, comunicar o gestionar determinados datos cuando exista una obligación legalmente procedente</td>
+                        <td>Autorización o exigencia legal aplicable</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <h3>4.1. Autorizaciones diferenciadas</h3>
+        <p>Cuando corresponda, las autorizaciones del trabajador se solicitarán de forma diferenciada según la finalidad respectiva. En particular, el Responsable podrá distinguir entre la autorización para contactar evaluadores, incorporar referencias al perfil, incorporar documentos de respaldo y hacer visible información del perfil a reclutadores. Cada autorización puede producir efectos distintos y ser objeto de revocación. La autorización debe constar por escrito y puede revocarse sin efecto retroactivo.</p>
+        <h3>4.2. Alcance de la visibilidad del perfil</h3>
+        <p>La visibilidad del perfil del trabajador se limitará, por regla general, a la información que éste haya hecho visible conforme a las reglas aplicables y a las funcionalidades habilitadas por la Plataforma. Dicha visibilidad no implica acceso irrestricto a documentos de respaldo ni a otros antecedentes fuente, salvo habilitación expresa y autorización aplicable.</p>
+        <h3>4.3. Limitación por finalidad</h3>
+        <p>Los datos personales tratados en el contexto de la Plataforma serán utilizados únicamente para las finalidades informadas y autorizadas en cada caso, en conformidad con el principio de finalidad del artículo 9 de la Ley 19.628.</p>
+    </div>
+
+    <div class="section" id="s5">
+        <h2>5. Visibilidad del perfil y comunicaciones a terceros</h2>
+        <h3>5.1. Visibilidad del perfil del trabajador</h3>
+        <p>La Plataforma podrá permitir que cierta información del perfil del trabajador sea visible para reclutadores o futuros empleadores, siempre que dicha visibilidad se encuentre habilitada por las funcionalidades disponibles y que el trabajador haya otorgado la autorización específica correspondiente.</p>
+        <h3>5.2. Alcance general de esa visibilidad</h3>
+        <p>La visibilidad del perfil podrá comprender antecedentes laborales, referencias incorporadas al perfil y otras informaciones que la Plataforma permita presentar de forma organizada o resumida. Salvo habilitación expresa y autorización del trabajador, la visibilidad no comprenderá documentos de respaldo ni antecedentes fuente.</p>
+        <h3>5.3. Destinatarios de la información visible</h3>
+        <p>La información visible del perfil podrá ser consultada por reclutadores o futuros empleadores que accedan a la Plataforma dentro de procesos reales de búsqueda, evaluación o selección de candidatos. Dichos destinatarios sólo podrán acceder a la información visible y no adquirirán un derecho general a obtener, reutilizar o explotar otros antecedentes subyacentes.</p>
+        <h3>5.4. Comunicaciones de datos en el contexto de la Plataforma</h3>
+        <p>El Responsable no comunicará datos personales del trabajador a terceros para finalidades incompatibles con las informadas en esta Política, salvo autorización específica del titular o habilitación legal aplicable.</p>
+        <h3>5.5. Revocación o desactivación de la visibilidad</h3>
+        <p>El trabajador podrá revocar la autorización relativa a la visibilidad de su perfil o solicitar la desactivación de dicha visibilidad a través de los mecanismos habilitados por el Responsable. La revocación producirá efectos hacia el futuro y no afectará accesos o visualizaciones realizados válidamente con anterioridad.</p>
+    </div>
+
+    <div class="section" id="s6">
+        <h2>6. Encargados, proveedores y transferencias internacionales</h2>
+        <p>Para la operación de la Plataforma, el Responsable podrá apoyarse en proveedores tecnológicos, operativos o de comunicaciones que presten servicios por cuenta suya. Entre dichos proveedores podrán incluirse:</p>
+        <ul>
+            <li>Servicios de infraestructura, disponibilidad, seguridad o gestión de tráfico y DNS;</li>
+            <li>Servicios de alojamiento, despliegue y operación técnica de la Plataforma;</li>
+            <li>Servicios de repositorio y gestión de código;</li>
+            <li>Servicios de correo corporativo y comunicaciones electrónicas;</li>
+            <li>Servicios de envío transaccional de correos; y</li>
+            <li>Servicios de base de datos, backend, almacenamiento y soporte técnico asociado.</li>
+        </ul>
+        <p>A la fecha de esta Política, el Responsable podrá utilizar, entre otros, servicios provistos por <strong>Cloudflare</strong>, <strong>GitHub</strong>, <strong>Vercel</strong>, <strong>Google Workspace</strong>, <strong>Resend</strong> y <strong>Supabase</strong>, conforme a las funciones que cada uno cumpla dentro de la operación de la Plataforma.</p>
+        <p>Algunos de estos proveedores podrán operar, almacenar o procesar datos personales fuera de Chile. En tales casos, el Responsable adoptará medidas razonables para procurar que el tratamiento se realice bajo condiciones de confidencialidad, seguridad y uso limitado a las finalidades informadas en esta Política.</p>
+    </div>
+
+    <div class="section" id="s7">
+        <h2>7. Plazos y criterios de conservación</h2>
+        <p>El Responsable conservará los datos personales sólo durante el tiempo necesario para cumplir las finalidades informadas en esta Política, de acuerdo con la naturaleza de los datos, el rol del usuario, las funcionalidades habilitadas, las autorizaciones otorgadas y las obligaciones legales o contractuales aplicables.</p>
+        <h3>a) Datos asociados al uso y funcionamiento de la Plataforma</h3>
+        <p>Podrán conservarse mientras la cuenta, perfil, acceso o funcionalidad correspondiente se mantenga activa y por el tiempo adicional que resulte razonablemente necesario para dar continuidad al servicio o resguardar la trazabilidad operativa.</p>
+        <h3>b) Datos del perfil del trabajador</h3>
+        <p>Podrán conservarse mientras el perfil del trabajador se mantenga activo en la Plataforma o mientras subsistan las finalidades para las cuales dichos datos fueron incorporados y tratados.</p>
+        <h3>c) Visibilidad del perfil</h3>
+        <p>La visibilidad de la información del perfil frente a reclutadores se mantendrá únicamente mientras se encuentre habilitada y amparada por las autorizaciones aplicables del trabajador. Su revocación produce efectos hacia el futuro.</p>
+        <h3>d) Referencias y documentos de respaldo</h3>
+        <p>Las referencias y documentos de respaldo podrán conservarse mientras resulten necesarios para las finalidades autorizadas. Cuando corresponda una revocación o eliminación, su conservación futura se ajustará a las reglas aplicables, pudiendo mantenerse antecedentes mínimos bloqueados o restringidos.</p>
+        <h3>e) Solicitudes de soporte y ejercicio de derechos</h3>
+        <p>Los datos asociados a consultas, reclamos, revocaciones o solicitudes de ejercicio de derechos podrán conservarse durante el tiempo necesario para gestionar la solicitud y atender eventuales controversias relacionadas con ella.</p>
+        <h3>f) Seguridad y controversias</h3>
+        <p>Ciertos datos técnicos o de trazabilidad podrán conservarse, de forma restringida, durante el tiempo estrictamente necesario para prevenir fraude, resolver controversias o resguardar la integridad del servicio.</p>
+        <h3>g) Obligación legal o requerimiento de autoridad</h3>
+        <p>Cuando exista una obligación legal o un requerimiento de autoridad competente, el Responsable podrá conservar determinados datos por el tiempo y con el alcance necesario para cumplir dicha obligación.</p>
+        <h3>h) Eliminación, cancelación o bloqueo</h3>
+        <p>Cuando ya no sea necesario conservar determinados datos para las finalidades informadas, o cuando proceda una solicitud del titular en los términos de la normativa aplicable, el Responsable podrá eliminar, cancelar o bloquear los datos personales, según corresponda.</p>
+    </div>
+
+    <div class="section" id="s8">
+        <h2>8. Derechos del titular, revocación y canal de ejercicio</h2>
+        <p>El titular de los datos personales podrá ejercer los derechos que le reconoce la normativa aplicable respecto del tratamiento de sus datos en el contexto de la Plataforma, incluyendo solicitar información sobre los datos tratados, requerir su rectificación cuando sean erróneos o incompletos, y exigir su cancelación, eliminación o bloqueo en los casos legalmente procedentes.</p>
+        <h3>8.1. Ejercicio de derechos</h3>
+        <p>El titular podrá ejercer sus derechos mediante solicitud dirigida a: <a href="mailto:contacto@huellalaboral.cl">contacto@huellalaboral.cl</a>. La solicitud deberá identificar razonablemente al solicitante y precisar el derecho que se ejerce, los datos o tratamiento involucrados y el resultado solicitado.</p>
+        <h3>8.2. Revocación de autorizaciones</h3>
+        <p>Cuando el tratamiento se funde en una autorización otorgada por el titular, éste podrá revocarla por escrito a través de los mecanismos habilitados por el Responsable. La revocación podrá referirse a una o más finalidades específicas, incluyendo la solicitud de referencias a evaluadores, la incorporación de referencias o documentos al perfil, y la visibilidad del perfil para reclutadores. Cada revocación producirá efectos hacia el futuro y no afectará tratamientos realizados válidamente con anterioridad.</p>
+        <h3>8.3. Alcance y límites del ejercicio de derechos</h3>
+        <p>El ejercicio de derechos y la revocación de autorizaciones se tramitarán conforme a la normativa aplicable. Cuando una solicitud de cancelación o eliminación no permita suprimir de inmediato todos los datos involucrados, el Responsable podrá proceder a su bloqueo, restricción o conservación mínima para finalidades compatibles con esta Política.</p>
+        <h3>8.4. Desactivación y visibilidad del perfil</h3>
+        <p>El trabajador podrá solicitar la desactivación o despublicación de su perfil y la revocación de la visibilidad de determinada información frente a reclutadores, a través de los mecanismos habilitados por el Responsable. La desactivación producirá efectos hacia el futuro.</p>
+    </div>
+
+    <div class="section" id="s9">
+        <h2>9. Desactivación, cierre, eliminación y bloqueo</h2>
+        <p>El titular podrá solicitar la desactivación o despublicación de su perfil, el cierre de su cuenta o acceso y, cuando corresponda, la eliminación, cancelación o bloqueo de sus datos personales.</p>
+        <h3>9.1. Desactivación o despublicación inicial</h3>
+        <p>Recibida una solicitud de esta naturaleza, el Responsable podrá adoptar como medida inicial la despublicación o desactivación del perfil mientras tramita la solicitud respectiva.</p>
+        <h3>9.2. Efectos de la desactivación o cierre</h3>
+        <p>La desactivación del perfil o el cierre de la cuenta impedirá nuevas visualizaciones, interacciones o usos futuros asociados a la funcionalidad afectada, sin perjuicio de la conservación restringida de ciertos antecedentes en los casos legalmente procedentes.</p>
+        <h3>9.3. Eliminación, cancelación o bloqueo de datos</h3>
+        <p>La eliminación, cancelación o bloqueo de datos personales se efectuará cuando resulte procedente conforme a la normativa aplicable. Cuando no proceda la eliminación inmediata o total, el Responsable podrá mantener ciertos antecedentes mínimos en estado de bloqueo o con acceso restringido exclusivamente para finalidades tales como: acreditar el historial operativo, cumplir obligaciones legales, atender requerimientos de autoridad, prevenir fraude, resolver controversias o resguardar una eventual reactivación segura.</p>
+        <h3>9.4. Revocación y efectos no retroactivos</h3>
+        <p>Cuando la solicitud involucre la revocación de una autorización previamente otorgada, dicha revocación producirá efectos hacia el futuro y no afectará tratamientos, accesos o visualizaciones realizados válidamente con anterioridad.</p>
+        <h3>9.5. Reactivación</h3>
+        <p>En caso de solicitarse la reactivación de un perfil o cuenta previamente desactivado, el Responsable podrá requerir antecedentes adicionales razonables para verificar la identidad o legitimación del solicitante antes de proceder.</p>
+    </div>
+
+    <div class="section" id="s10">
+        <h2>10. Seguridad y confidencialidad</h2>
+        <p>El Responsable adoptará medidas razonables de carácter técnico, organizativo y operativo para resguardar la confidencialidad, integridad, disponibilidad y seguridad de los datos personales tratados en el contexto de la Plataforma. Dichas medidas podrán incluir:</p>
+        <ul>
+            <li>Controles de acceso y autenticación;</li>
+            <li>Restricciones de acceso según perfil o necesidad funcional;</li>
+            <li>Registros y medidas de trazabilidad operativa;</li>
+            <li>Resguardos de seguridad en los sistemas, servicios e infraestructura utilizados; y</li>
+            <li>Procedimientos razonables para la gestión de incidentes, contingencias o usos indebidos detectados.</li>
+        </ul>
+        <p>El acceso a los datos personales se limitará a las personas, áreas o proveedores que necesiten conocerlos para cumplir las finalidades informadas. Sin perjuicio de los resguardos adoptados, el Responsable no puede garantizar que los sistemas sean absolutamente invulnerables a contingencias técnicas o ataques fuera de su control razonable.</p>
+    </div>
+
+    <div class="section" id="s11">
+        <h2>11. Cambios a esta Política</h2>
+        <p>El Responsable podrá modificar o actualizar esta Política de Privacidad cuando ello sea necesario por cambios legales, técnicos, operativos o funcionales relacionados con la Plataforma o con el tratamiento de datos personales efectuado en su contexto. Las modificaciones relevantes serán informadas por medios razonables.</p>
+        <p>Cuando una modificación implique nuevas finalidades de tratamiento o cambios sustanciales en el alcance del tratamiento, el Responsable solicitará la autorización del titular a través de los mecanismos habilitados para ello antes de aplicar esos cambios.</p>
+        <p>La versión vigente de esta Política será la que se encuentre publicada en la Plataforma, con indicación de su fecha de entrada en vigencia o última actualización.</p>
+    </div>
+
+    <div class="section" id="s12">
+        <h2>12. Datos de contacto</h2>
+        <p>Para consultas generales relativas a la Plataforma, el titular podrá contactarse a: <a href="mailto:contacto@huellalaboral.cl">contacto@huellalaboral.cl</a>.</p>
+        <p>Para materias de privacidad, ejercicio de derechos, revocación de autorizaciones, solicitudes de desactivación, eliminación, cancelación o bloqueo de datos, el canal principal de contacto será: <a href="mailto:contacto@huellalaboral.cl">contacto@huellalaboral.cl</a>.</p>
+        <p>El Responsable podrá habilitar en el futuro canales adicionales de contacto o gestión para estas materias, los que serán informados a través de la Plataforma o de los medios que correspondan.</p>
+        <div class="nota">
+            <strong>Solicitud de eliminación de datos:</strong> Si deseas solicitar la eliminación de tus datos personales, escríbenos a <a href="mailto:contacto@huellalaboral.cl?subject=Solicitud de eliminacion de datos">contacto@huellalaboral.cl</a> con el asunto &ldquo;Solicitud de eliminación de datos&rdquo;.
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    &copy; 2026 Huella Laboral. Todos los derechos reservados.
+    &nbsp;&middot;&nbsp; <a href="mailto:contacto@huellalaboral.cl">contacto@huellalaboral.cl</a>
+</footer>
+
+</body>
+</html>
