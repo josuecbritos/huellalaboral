@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Términos y Condiciones — Huella Laboral</title>
+    <style>
+        :root {
+            --azul: #0E2A47;
+            --verde: #2FBF71;
+            --texto: #1a1a1a;
+            --subtitulo: #6B7280;
+            --borde: #E5E7EB;
+            --fondo: #FFFFFF;
+            --fondo-gris: #F9FAFB;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--fondo-gris);
+            color: var(--texto);
+            min-height: 100vh;
+            font-size: 15px;
+            line-height: 1.7;
+        }
+        nav {
+            background: var(--fondo);
+            border-bottom: 1px solid var(--borde);
+            padding: 0 32px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .nav-logo img { height: 36px; width: auto; }
+        .container { max-width: 780px; margin: 0 auto; padding: 48px 24px 64px; }
+        .page-header {
+            background: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 32px 32px 28px;
+            margin-bottom: 32px;
+        }
+        .page-header h1 { font-size: 22px; font-weight: 700; color: var(--azul); }
+        .toc {
+            background: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 24px 28px;
+            margin-bottom: 32px;
+        }
+        .toc-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: var(--subtitulo);
+            margin-bottom: 14px;
+        }
+        .toc ol { padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+        .toc li a { color: var(--azul); text-decoration: none; font-size: 13px; font-weight: 500; }
+        .toc li a:hover { text-decoration: underline; }
+        .toc-anexos { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--borde); }
+        .toc-anexos-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--subtitulo); margin-bottom: 10px; }
+        .section {
+            background: var(--fondo);
+            border: 1px solid var(--borde);
+            border-radius: 4px;
+            padding: 28px 32px;
+            margin-bottom: 16px;
+        }
+        .section h2 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--azul);
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--borde);
+            scroll-margin-top: 24px;
+        }
+        .section h3 { font-size: 14px; font-weight: 600; color: var(--texto); margin: 20px 0 10px; scroll-margin-top: 24px; }
+        .section p { color: #374151; margin-bottom: 12px; font-size: 14px; }
+        .section p:last-child { margin-bottom: 0; }
+        .section ul, .section ol {
+            padding-left: 20px;
+            margin: 10px 0 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .section li { color: #374151; font-size: 14px; }
+        .anexo-header {
+            background: var(--azul);
+            border-radius: 4px;
+            padding: 20px 28px;
+            margin: 32px 0 0;
+        }
+        .anexo-header h2 { font-size: 14px; font-weight: 700; color: white; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 4px; scroll-margin-top: 24px; }
+        .anexo-header p { font-size: 13px; color: rgba(255,255,255,0.7); }
+        a { color: var(--azul); }
+        footer {
+            text-align: center;
+            padding: 32px 24px;
+            font-size: 12px;
+            color: var(--subtitulo);
+        }
+        footer a { color: var(--subtitulo); }
+        @media (max-width: 600px) {
+            .page-header { padding: 24px 20px; }
+            .section { padding: 20px 18px; }
+            .toc { padding: 18px 18px; }
+        }
+        .nav-back {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--subtitulo);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.15s;
+        }
+        .nav-back:hover { color: var(--azul); }
+        .nav-back {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--subtitulo);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.15s;
+        }
+        .nav-back:hover { color: var(--azul); }
+    </style>
+</head>
+<body>
+
+<nav style="justify-content:space-between;">
+    <a href="/" class="nav-logo">
+        <img src="Huella_Laboral.png" alt="Huella Laboral">
+    </a>
+        <a href="index.html" class="nav-back">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 4L6 8l4 4"/>
+            </svg>
+            Volver al inicio
+        </a>
+    </nav>
+
+<div class="container">
+
+    <div class="page-header">
+        <h1>Términos y Condiciones de Uso</h1>
+    </div>
+
+    <div class="toc">
+        <div class="toc-title">Estructura del documento</div>
+        <ol>
+            <li><a href="#s1">Identificación del titular del servicio</a></li>
+            <li><a href="#s2">Objeto de estos Términos y Condiciones</a></li>
+            <li><a href="#s3">Naturaleza del servicio</a></li>
+            <li><a href="#s4">Aceptación de los T&amp;C</a></li>
+            <li><a href="#s5">Usuarios y roles</a></li>
+            <li><a href="#s6">Condiciones generales de acceso y uso</a></li>
+            <li><a href="#s7">Registro, autenticación y verificación</a></li>
+            <li><a href="#s8">Información, contenidos y documentos</a></li>
+            <li><a href="#s9">Perfil del trabajador y alcance de visualización</a></li>
+            <li><a href="#s10">Propiedad intelectual y licencia limitada de uso</a></li>
+            <li><a href="#s11">Protección de datos personales</a></li>
+            <li><a href="#s12">Comunicaciones electrónicas</a></li>
+            <li><a href="#s13">Medidas ante abuso, incumplimiento o controversia</a></li>
+            <li><a href="#s14">Disponibilidad del servicio y limitación de responsabilidad</a></li>
+            <li><a href="#s15">Desactivación, cierre y eliminación</a></li>
+            <li><a href="#s16">Modificaciones a los T&amp;C</a></li>
+            <li><a href="#s17">Gratuidad actual y eventuales servicios futuros</a></li>
+            <li><a href="#s18">Ley aplicable y competencia</a></li>
+        </ol>
+        <div class="toc-anexos">
+            <div class="toc-anexos-title">Anexos</div>
+            <ol>
+                <li><a href="#anexo1">Anexo I — Condiciones específicas para el Trabajador</a></li>
+                <li><a href="#anexo2">Anexo II — Condiciones específicas para el Evaluador</a></li>
+                <li><a href="#anexo3">Anexo III — Condiciones específicas para Reclutadores o Futuros Empleadores</a></li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Sección 1 -->
+    <div class="section" id="s1">
+        <h2>1. Identificación del titular del servicio</h2>
+        <p>La plataforma digital denominada <strong>Huella Laboral</strong> (la "<strong>Plataforma</strong>") es ofrecida al público y operada por <strong>El Taique SpA</strong>, sociedad constituida conforme a las leyes de la República de Chile, Rol Único Tributario <strong>77.528.531-1</strong>, domiciliada en <strong>Agustinas 681, Of. 809, Santiago</strong>. Para efectos de estos Términos y Condiciones, El Taique SpA será el proveedor y responsable del servicio (el "<strong>Proveedor</strong>").</p>
+        <p>Los canales de contacto del Proveedor son: correo electrónico general y para materias de privacidad y ejercicio de derechos: <a href="mailto:contacto@huellalaboral.cl">contacto@huellalaboral.cl</a>.</p>
+    </div>
+
+    <!-- Sección 2 -->
+    <div class="section" id="s2">
+        <h2>2. Objeto de estos Términos y Condiciones</h2>
+        <p>Los presentes Términos y Condiciones (los "<strong>T&amp;C</strong>") son las condiciones generales de contratación que regulan el acceso, registro y uso de la Plataforma por parte de sus distintos usuarios, incluyendo, según corresponda:</p>
+        <ol type="a">
+            <li>Trabajadores</li>
+            <li>Evaluadores</li>
+            <li>Reclutadores o futuros empleadores</li>
+        </ol>
+        <p>La Plataforma ofrece una herramienta digital destinada a facilitar la solicitud, recepción, organización y visualización de referencias laborales, así como la incorporación y presentación de ciertos antecedentes y documentos vinculados a la trayectoria laboral del trabajador, todo ello de acuerdo con las funcionalidades habilitadas, el rol de cada usuario y las autorizaciones otorgadas en cada caso.</p>
+    </div>
+
+    <!-- Sección 3 -->
+    <div class="section" id="s3">
+        <h2>3. Naturaleza del servicio</h2>
+        <p>El Proveedor actúa como un tercero intermediario tecnológico y organizacional que facilita la interacción entre usuarios para la solicitud, recepción, registro, organización y visualización de cierta información vinculada a la trayectoria laboral de un trabajador.</p>
+        <p>Salvo indicación expresa en contrario, el Proveedor:</p>
+        <ol type="a">
+            <li>No actúa como agencia de empleo, empresa de reclutamiento, headhunter ni representante de ningún usuario;</li>
+            <li>No garantiza la contratación, recomendación, idoneidad o desempeño futuro de persona alguna;</li>
+            <li>No garantiza la verdad material absoluta de toda información ingresada, remitida o emitida por usuarios o terceros; y</li>
+            <li>Podrá aplicar medidas razonables de trazabilidad, gestión, validación formal y verificación básica de acuerdo con las funcionalidades habilitadas en la Plataforma.</li>
+        </ol>
+    </div>
+
+    <!-- Sección 4 -->
+    <div class="section" id="s4">
+        <h2>4. Aceptación de los T&amp;C</h2>
+        <p>Cuando el acceso, registro o uso de una funcionalidad de la Plataforma requiera la aceptación de estos Términos y Condiciones, el usuario deberá manifestar su consentimiento de manera previa, expresa e inequívoca, a través de los mecanismos habilitados para ello.</p>
+        <p>La sola visita o navegación general por el sitio web no implica, por sí sola, aceptación de estos Términos y Condiciones ni genera obligación de contratar.</p>
+        <p>El Proveedor pondrá estos Términos y Condiciones a disposición del usuario en forma previa, clara, comprensible y susceptible de ser almacenada o impresa, y podrá remitir confirmación o copia por medios electrónicos cuando corresponda.</p>
+    </div>
+
+    <!-- Sección 5 -->
+    <div class="section" id="s5">
+        <h2>5. Usuarios y roles</h2>
+        <p>Para efectos de estos Términos y Condiciones, los usuarios de la Plataforma podrán tener alguno de los siguientes roles, según corresponda:</p>
+        <p><strong>a) Trabajador:</strong> persona que, a través de la Plataforma, solicita referencias laborales respecto de su propia trayectoria laboral y, en su caso, incorpora antecedentes o documentos para conformar su perfil.</p>
+        <p><strong>b) Evaluador:</strong> persona natural que habiendo trabajado con el trabajador en una relación de dependencia o verticalidad, a solicitud del trabajador y a través de los medios habilitados por la Plataforma, entrega una referencia laboral.</p>
+        <p><strong>c) Reclutador o Futuro Empleador:</strong> persona que accede a la Plataforma, por sí o en representación de una organización, para revisar, dentro de un proceso real de búsqueda, evaluación o selección de candidatos, la información que el trabajador haya hecho visible conforme a las reglas aplicables.</p>
+        <p>Las reglas específicas aplicables a cada rol se contienen en los Anexos I, II y III, los que forman parte integrante de estos Términos y Condiciones.</p>
+    </div>
+
+    <!-- Sección 6 -->
+    <div class="section" id="s6">
+        <h2>6. Condiciones generales de acceso y uso</h2>
+        <p>Todo usuario deberá utilizar la Plataforma de buena fe, conforme a la ley, a estos Términos y Condiciones y a la finalidad propia del servicio.</p>
+        <p>Queda especialmente prohibido:</p>
+        <ol type="a">
+            <li>Utilizar la Plataforma para fines ilícitos, fraudulentos, injuriosos, abusivos o contrarios a la buena fe;</li>
+            <li>Suplantar identidad o proporcionar antecedentes falsos, alterados o manifiestamente engañosos;</li>
+            <li>Interferir, vulnerar o intentar vulnerar la seguridad, integridad o disponibilidad de la Plataforma;</li>
+            <li>Acceder, copiar, descargar, extraer, reutilizar, comercializar o explotar información obtenida desde la Plataforma fuera de las finalidades autorizadas;</li>
+            <li>Ingresar, transmitir o solicitar datos que resulten innecesarios, excesivos o ajenos a la finalidad del servicio; y</li>
+            <li>Utilizar la Plataforma para crear bases de datos paralelas o para otros fines no autorizados por el Proveedor o por estos Términos y Condiciones.</li>
+        </ol>
+    </div>
+
+    <!-- Sección 7 -->
+    <div class="section" id="s7">
+        <h2>7. Registro, autenticación y verificación</h2>
+        <p>El Proveedor podrá establecer mecanismos razonables de registro, autenticación, validación o acceso a la Plataforma, incluyendo correo electrónico u otros medios idóneos según la funcionalidad de que se trate.</p>
+        <p>El usuario deberá proporcionar información exacta, completa y actualizada, y será responsable de las actuaciones realizadas mediante sus credenciales, enlaces o mecanismos de acceso, salvo que acredite un uso no autorizado no imputable a él.</p>
+        <p>Cuando ello sea razonablemente necesario para resguardar la integridad del servicio, prevenir suplantaciones, tramitar solicitudes relevantes o verificar la procedencia de una actuación, el Proveedor podrá requerir antecedentes adicionales para comprobar identidad, representación o legitimación.</p>
+        <p>Las medidas de validación podrán considerar, entre otros antecedentes, el uso de correo electrónico y, cuando resulte pertinente, direcciones de correo corporativo u otros elementos de contexto, sin que ello implique certificación de identidad ni garantía absoluta sobre la veracidad de la información proporcionada.</p>
+    </div>
+
+    <!-- Sección 8 -->
+    <div class="section" id="s8">
+        <h2>8. Información, contenidos y documentos</h2>
+        <p>La Plataforma podrá contener información proveniente de distintas fuentes, incluyendo antecedentes entregados directamente por el trabajador, referencias emitidas por evaluadores, documentos incorporados por el trabajador y procesos internos de organización o presentación de esa información.</p>
+        <p>El trabajador será responsable de que los antecedentes y documentos que incorpore se refieran a su propia trayectoria laboral o que esté legítimamente facultado para incorporarlos, y de que sean pertinentes a la finalidad de la Plataforma.</p>
+        <p>El evaluador será responsable del contenido de la referencia que emita, la que deberá ser lícita, formulada de buena fe y razonablemente pertinente a la finalidad laboral respectiva.</p>
+        <p>El Proveedor podrá aplicar revisiones formales, controles razonables de consistencia, medidas de trazabilidad u otros resguardos operativos respecto de la información tratada en la Plataforma. Tales medidas no confieren al Proveedor el carácter de ministro de fe ni lo convierten en certificador o garante de la veracidad de la información incorporada o emitida por usuarios o terceros.</p>
+    </div>
+
+    <!-- Sección 9 -->
+    <div class="section" id="s9">
+        <h2>9. Perfil del trabajador y alcance de visualización</h2>
+        <p>La Plataforma podrá estructurar un perfil asociado al trabajador sobre la base de la información incorporada y de las autorizaciones que éste haya otorgado.</p>
+        <p>El acceso de reclutadores o futuros empleadores quedará limitado, por regla general, a la información del perfil que el trabajador haya hecho visible conforme a las reglas aplicables, así como, en su caso, a una presentación resumida o consolidada de esa información, sin que ello implique acceso irrestricto a documentos de respaldo o antecedentes fuente.</p>
+        <p>La visibilidad del perfil del trabajador respecto de reclutadores o futuros empleadores dependerá de la autorización otorgada por el propio trabajador y podrá ser suspendida o desactivada a través de los mecanismos habilitados por el Proveedor.</p>
+    </div>
+
+    <!-- Sección 10 -->
+    <div class="section" id="s10">
+        <h2>10. Propiedad intelectual y licencia limitada de uso</h2>
+        <p>La Plataforma, su software, diseño, estructura, interfaces, marcas, signos distintivos y demás elementos de titularidad del Proveedor o de sus licenciantes se encuentran protegidos por la normativa aplicable. Lo anterior es sin perjuicio de los derechos que puedan corresponder a usuarios o terceros sobre antecedentes, documentos o materiales incorporados por ellos conforme a las reglas aplicables.</p>
+        <p>El Proveedor otorga al usuario una licencia limitada, revocable, no exclusiva, no sublicenciable e intransferible para usar la Plataforma únicamente conforme a estos Términos y Condiciones y a la finalidad del servicio.</p>
+        <p>Salvo autorización escrita del Proveedor o permiso legal expreso, el usuario no podrá copiar, adaptar, descompilar, distribuir, comercializar, explotar ni poner a disposición de terceros la Plataforma o parte de ella.</p>
+    </div>
+
+    <!-- Sección 11 -->
+    <div class="section" id="s11">
+        <h2>11. Protección de datos personales</h2>
+        <p>El tratamiento de datos personales efectuado en el contexto de la Plataforma se regirá por la Política de Privacidad del Proveedor y por la legislación chilena aplicable.</p>
+        <p>En atención a la naturaleza del servicio, ciertos tratamientos podrán estar sujetos a autorizaciones específicas y diferenciadas según su finalidad, las que se otorgarán a través de los mecanismos habilitados por el Proveedor. Ello podrá incluir, cuando corresponda, la solicitud de referencias a evaluadores, la incorporación de referencias o documentos al perfil y la visibilidad de información para reclutadores o futuros empleadores.</p>
+        <p>El Proveedor tratará los datos personales únicamente para las finalidades informadas y autorizadas, conforme a la normativa aplicable.</p>
+    </div>
+
+    <!-- Sección 12 -->
+    <div class="section" id="s12">
+        <h2>12. Comunicaciones electrónicas</h2>
+        <p>El usuario acepta que las comunicaciones relacionadas con el funcionamiento de la Plataforma, incluyendo solicitudes de referencia, confirmaciones, avisos operativos, notificaciones relativas a su cuenta o a estos Términos y Condiciones, y respuestas a solicitudes de soporte o ejercicio de derechos, puedan realizarse por correo electrónico y, cuando corresponda, por otros medios electrónicos habilitados por el Proveedor.</p>
+        <p>Para estos efectos, el usuario deberá mantener actualizados sus datos de contacto y revisar oportunamente los medios que haya informado.</p>
+    </div>
+
+    <!-- Sección 13 -->
+    <div class="section" id="s13">
+        <h2>13. Medidas ante abuso, incumplimiento o controversia</h2>
+        <p>El Proveedor podrá, con criterios razonables y proporcionales, adoptar medidas preventivas o correctivas cuando detecte o reciba antecedentes serios sobre un uso abusivo, ilícito o contrario a estos Términos y Condiciones, o sobre una controversia relevante para la integridad de la Plataforma o los derechos de otros usuarios.</p>
+        <p>Tales medidas podrán incluir alertas, advertencias, requerimientos de aclaración o verificación, ocultamiento temporal de información, suspensión temporal del acceso o de determinadas funcionalidades, cancelación de la cuenta o cierre del acceso, y otros resguardos operativos razonables.</p>
+        <p>Cuando ello sea razonable y no comprometa la seguridad de la Plataforma, la investigación del caso o los derechos de terceros, el Proveedor procurará informar al usuario afectado sobre la medida adoptada y su fundamento general.</p>
+    </div>
+
+    <!-- Sección 14 -->
+    <div class="section" id="s14">
+        <h2>14. Disponibilidad del servicio y limitación de responsabilidad</h2>
+        <p>El Proveedor procurará mantener la Plataforma disponible y operativa, pero no garantiza que ésta funcione de manera ininterrumpida, libre de errores o permanentemente disponible.</p>
+        <p>En la medida permitida por la ley, el Proveedor no será responsable por interrupciones, caídas, demoras o indisponibilidades temporales derivadas de labores de mantención, contingencias técnicas, servicios de terceros o causas ajenas a su control razonable; por inexactitudes, omisiones, falsedades o desactualizaciones en la información proporcionada por usuarios o terceros; ni por decisiones de búsqueda, evaluación, descarte o contratación adoptadas por usuarios sobre la base de la información disponible en la Plataforma.</p>
+        <p>La Plataforma constituye una herramienta de apoyo y organización de información, y no reemplaza la verificación, evaluación o juicio propio que cada usuario deba efectuar según su caso.</p>
+        <p>Nada de lo anterior excluye ni limita la responsabilidad que no pueda ser excluida o limitada conforme a la legislación chilena, especialmente en materia de consumo.</p>
+    </div>
+
+    <!-- Sección 15 -->
+    <div class="section" id="s15">
+        <h2>15. Desactivación, cierre y eliminación</h2>
+        <p>El usuario podrá solicitar, por los mecanismos habilitados por el Proveedor, la desactivación o despublicación de su perfil, el cierre de su cuenta o acceso y, cuando corresponda, la eliminación o cancelación de sus datos, conforme a la Política de Privacidad y a la legislación aplicable.</p>
+        <p>El Proveedor podrá adoptar como medida inicial la despublicación o desactivación del perfil o acceso correspondiente mientras tramita la solicitud respectiva.</p>
+        <p>La eliminación o cancelación de datos se sujetará a la normativa aplicable y a la Política de Privacidad. Sin perjuicio de ello, ciertos antecedentes mínimos podrán conservarse bloqueados o restringidos por el tiempo estrictamente necesario para acreditar el historial operativo, cumplir obligaciones legales o contractuales, atender requerimientos de autoridad competente, prevenir fraude o resolver controversias.</p>
+        <p>En caso de solicitarse la reactivación de un perfil o cuenta previamente desactivada, el Proveedor podrá requerir una verificación razonable de identidad antes de proceder.</p>
+    </div>
+
+    <!-- Sección 16 -->
+    <div class="section" id="s16">
+        <h2>16. Modificaciones a los T&amp;C</h2>
+        <p>El Proveedor podrá modificar estos Términos y Condiciones cuando ello sea necesario por cambios legales, técnicos, operativos o funcionales relacionados con la Plataforma.</p>
+        <p>Las modificaciones relevantes serán informadas por medios razonables. Cuando la ley lo exija o cuando el cambio afecte de manera sustancial los derechos, obligaciones o condiciones de uso aplicables al usuario, el Proveedor solicitará una nueva aceptación expresa antes de que tales modificaciones resulten aplicables en el ámbito correspondiente.</p>
+    </div>
+
+    <!-- Sección 17 -->
+    <div class="section" id="s17">
+        <h2>17. Gratuidad actual y eventuales servicios futuros</h2>
+        <p>A la fecha de esta versión de los presentes T&amp;C, el acceso y uso de las funcionalidades actualmente habilitadas en la Plataforma se ofrecen gratuitamente, salvo información expresa en contrario respecto de una funcionalidad o servicio específico.</p>
+        <p>El Proveedor podrá incorporar en el futuro funcionalidades pagadas, planes o servicios adicionales. En tal caso, las condiciones aplicables, incluido su precio cuando corresponda, deberán informarse de manera previa, clara y específica, y sólo serán aplicables previa contratación o aceptación expresa del usuario, según corresponda.</p>
+    </div>
+
+    <!-- Sección 18 -->
+    <div class="section" id="s18">
+        <h2>18. Ley aplicable y competencia</h2>
+        <p>Estos Términos y Condiciones se regirán por las leyes de la República de Chile.</p>
+        <p>Sin perjuicio de los derechos que la legislación de protección de los consumidores reconozca a quienes tengan dicha calidad, toda controversia que no se resuelva directamente entre las partes será sometida a los tribunales ordinarios de justicia competentes de la República de Chile.</p>
+    </div>
+
+    <!-- ANEXO I -->
+    <div class="anexo-header" id="anexo1">
+        <h2>Anexo I</h2>
+        <p>Condiciones específicas para el Trabajador</p>
+    </div>
+
+    <div class="section" style="border-top: none; border-radius: 0 0 4px 4px; margin-top: 0;">
+        <p style="margin-bottom: 16px;">El presente Anexo forma parte integrante de los Términos y Condiciones de la Plataforma y contiene disposiciones específicas aplicables a los usuarios que actúen en calidad de trabajador. Estas disposiciones complementan el régimen general previsto en dichos Términos y Condiciones y deberán interpretarse de manera armónica con éste.</p>
+
+        <h3>1. Solicitud de referencias</h3>
+        <p>El trabajador podrá solicitar, a través de la Plataforma, que uno o más evaluadores entreguen referencias laborales relativas a su trayectoria o desempeño laboral.</p>
+        <p>Para ello, el trabajador deberá proporcionar únicamente antecedentes pertinentes para dicha solicitud, así como datos de contacto laborales o profesionales idóneos del evaluador, en la medida en que esté facultado para proporcionarlos conforme a la finalidad de la Plataforma.</p>
+
+        <h3>2. Declaraciones del trabajador</h3>
+        <p>El trabajador declara que:</p>
+        <ol type="a">
+            <li>Los datos y antecedentes que ingresa son exactos, completos, actualizados y se refieren a su persona, a su trayectoria laboral o a antecedentes que está legítimamente facultado para proporcionar;</li>
+            <li>Los evaluadores que identifique o incorpore guardan una relación razonable con la trayectoria o experiencia laboral respecto de la cual se solicita la referencia; y</li>
+            <li>Los documentos que adjunte se refieren a su propia trayectoria laboral o respecto de los cuales está legítimamente facultado para incorporarlos para la finalidad habilitada por la Plataforma.</li>
+        </ol>
+
+        <h3>3. Documentos de respaldo</h3>
+        <p>El trabajador podrá adjuntar, a través de la Plataforma, documentos de respaldo habilitados para tal efecto, tales como certificados de cotizaciones, finiquitos u otros antecedentes vinculados a su trayectoria laboral.</p>
+        <p>Dichos documentos sólo podrán ser incorporados, tratados y considerados dentro del alcance informado, de las funcionalidades habilitadas y de las autorizaciones otorgadas por el trabajador conforme a las reglas aplicables.</p>
+
+        <h3>4. Visibilidad del perfil</h3>
+        <p>El trabajador podrá autorizar que la información de su perfil que haya hecho visible conforme a las reglas aplicables pueda ser consultada por reclutadores o futuros empleadores.</p>
+        <p>Mientras dicha visibilidad se mantenga activa, el trabajador acepta que esa información pueda ser consultada en el contexto de procesos reales de búsqueda, evaluación o selección de candidatos, dentro del alcance habilitado por la Plataforma.</p>
+
+        <h3>5. Revocación y efectos</h3>
+        <p>El trabajador podrá revocar las autorizaciones que haya otorgado, a través de los mecanismos habilitados por el Proveedor.</p>
+        <p>La revocación producirá efectos hacia el futuro y no afectará accesos, tratamientos o visualizaciones realizados válidamente con anterioridad.</p>
+        <p>Según corresponda, la revocación podrá implicar la paralización de nuevas solicitudes de referencia, el cese de visibilidad del perfil para reclutadores o futuros empleadores, o la exclusión futura de determinados documentos o antecedentes del perfil visible.</p>
+
+        <h3>6. Conductas prohibidas del trabajador</h3>
+        <p>El trabajador no podrá:</p>
+        <ol type="a">
+            <li>Solicitar referencias respecto de terceros sin contar con facultad suficiente para ello;</li>
+            <li>Incorporar documentos falsificados, alterados o respecto de los cuales no esté legítimamente facultado para su incorporación;</li>
+            <li>Inducir, presionar o manipular a evaluadores para obtener referencias falsas, engañosas o indebidamente influenciadas; ni</li>
+            <li>Utilizar la Plataforma como mecanismo de hostigamiento, afectación o exposición indebida de terceros.</li>
+        </ol>
+    </div>
+
+    <!-- ANEXO II -->
+    <div class="anexo-header" id="anexo2" style="margin-top: 32px;">
+        <h2>Anexo II</h2>
+        <p>Condiciones específicas para el Evaluador</p>
+    </div>
+
+    <div class="section" style="border-top: none; border-radius: 0 0 4px 4px; margin-top: 0;">
+        <p style="margin-bottom: 16px;">El presente Anexo forma parte integrante de los Términos y Condiciones de la Plataforma y contiene disposiciones específicas aplicables a los usuarios que actúen en calidad de evaluador. Estas disposiciones complementan el régimen general previsto en dichos Términos y Condiciones y deberán interpretarse de manera armónica con éste.</p>
+
+        <h3>1. Emisión de referencias</h3>
+        <p>El evaluador podrá entregar una referencia laboral respecto del trabajador, a solicitud de éste y a través de la Plataforma o de los canales habilitados por el Proveedor, por haber existido previamente entre ellos una relación de dependencia o verticalidad.</p>
+        <p>La referencia deberá limitarse a antecedentes pertinentes para la finalidad laboral respectiva, formulados de buena fe y conforme al conocimiento que el evaluador tenga sobre la trayectoria o desempeño laboral del trabajador.</p>
+
+        <h3>2. Identificación y trazabilidad</h3>
+        <p>El Proveedor podrá registrar antecedentes asociados al envío, recepción y emisión de la referencia, así como otros datos técnicos u operativos razonablemente necesarios para resguardar la trazabilidad, integridad y gestión del proceso.</p>
+        <p>La validación por correo electrónico u otros medios razonables podrá utilizarse como antecedente de control y trazabilidad interna, sin que ello equivalga a una certificación formal de identidad ni a una garantía absoluta sobre la identidad del evaluador.</p>
+
+        <h3>3. Estándar de conducta del evaluador</h3>
+        <p>El evaluador no podrá:</p>
+        <ol type="a">
+            <li>Emitir referencias falsas, engañosas o manifiestamente infundadas;</li>
+            <li>Incorporar expresiones ofensivas, discriminatorias, injuriosas o ajenas a la finalidad laboral de la referencia;</li>
+            <li>Revelar datos que resulten excesivos o no pertinentes para la finalidad laboral de la referencia; ni</li>
+            <li>Utilizar la instancia de referencia con fines de represalia, presión, hostigamiento o descrédito ilegítimo.</li>
+        </ol>
+
+        <h3>4. Facultades del Proveedor</h3>
+        <p>El Proveedor podrá abstenerse de incorporar, considerar o mantener visible una referencia, o bien ocultarla temporalmente, cuando existan antecedentes serios y razonables de ilicitud, abuso, falta de pertinencia o controversia relevante respecto de su contenido o de las circunstancias de su emisión.</p>
+
+        <h3>5. Responsabilidad del evaluador</h3>
+        <p>El evaluador será responsable del contenido de la referencia que emita, especialmente en cuanto a los antecedentes, apreciaciones o afirmaciones que formule en ella, sin perjuicio de las facultades de gestión, revisión u ocultamiento que correspondan al Proveedor conforme a estos Términos y Condiciones.</p>
+    </div>
+
+    <!-- ANEXO III -->
+    <div class="anexo-header" id="anexo3" style="margin-top: 32px;">
+        <h2>Anexo III</h2>
+        <p>Condiciones específicas para Reclutadores o Futuros Empleadores</p>
+    </div>
+
+    <div class="section" style="border-top: none; border-radius: 0 0 4px 4px; margin-top: 0;">
+        <p style="margin-bottom: 16px;">El presente Anexo forma parte integrante de los Términos y Condiciones de la Plataforma y contiene disposiciones específicas aplicables a los usuarios que actúen en calidad de reclutador o futuro empleador. Estas disposiciones complementan el régimen general previsto en dichos Términos y Condiciones y deberán interpretarse de manera armónica con éste.</p>
+
+        <h3>1. Finalidad exclusiva de uso</h3>
+        <p>El reclutador o futuro empleador sólo podrá acceder y utilizar la información del perfil que haya sido hecha visible conforme a las reglas aplicables para fines legítimos y reales de búsqueda, evaluación o selección de candidatos, dentro del alcance habilitado por la Plataforma y para la finalidad laboral correspondiente.</p>
+
+        <h3>2. Alcance del acceso</h3>
+        <p>El acceso del reclutador o futuro empleador se limitará, por regla general, a la información del perfil que el trabajador haya hecho visible conforme a las reglas aplicables, incluyendo, en su caso, una presentación resumida o consolidada de dicha información.</p>
+        <p>Cualquier acceso a un alcance distinto deberá encontrarse expresamente contemplado en la Plataforma y sujeto, en todo caso, a las autorizaciones aplicables del trabajador. Ese acceso no comprende, por regla general, documentos de respaldo ni otros antecedentes fuente.</p>
+
+        <h3>3. Prohibiciones especiales</h3>
+        <p>El reclutador o futuro empleador no podrá:</p>
+        <ol type="a">
+            <li>Utilizar la información para fines ajenos a procesos reales de búsqueda, evaluación, selección o contratación laboral;</li>
+            <li>Ceder, vender, divulgar, compartir o poner a disposición de terceros no autorizados la información obtenida desde la Plataforma;</li>
+            <li>Descargar, copiar o extraer masivamente perfiles, antecedentes o datos de la Plataforma;</li>
+            <li>Utilizar la información para crear bases de datos paralelas, efectuar perfilamiento no autorizado o desarrollar otros usos secundarios incompatibles con la finalidad autorizada;</li>
+            <li>Utilizar la información para adoptar decisiones exclusivamente automatizadas no autorizadas sobre el trabajador; ni</li>
+            <li>Utilizar la información de un modo que implique discriminación arbitraria o infracción de la normativa aplicable.</li>
+        </ol>
+
+        <h3>4. Medidas mínimas de resguardo</h3>
+        <p>El reclutador o futuro empleador deberá adoptar medidas razonables de confidencialidad, seguridad y uso restringido respecto de la información a la que acceda, atendida la naturaleza de dicha información y el contexto del acceso.</p>
+        <p>El acceso y utilización de esa información deberá limitarse exclusivamente a quien actúe en ese rol y, en su caso, a las personas que, dentro de su organización, necesiten conocerla para la finalidad autorizada.</p>
+
+        <h3>5. Consecuencias del incumplimiento</h3>
+        <p>El incumplimiento de las disposiciones aplicables al reclutador o futuro empleador conforme a estos Términos y Condiciones podrá dar lugar, según la gravedad del caso, a la restricción, suspensión o cancelación de su acceso a la Plataforma, así como al ejercicio de las acciones legales o contractuales que correspondan y a la adopción de otras medidas razonables y proporcionales por parte del Proveedor.</p>
+    </div>
+
+</div>
+
+<footer>
+    &copy; 2026 Huella Laboral. Todos los derechos reservados.
+    &nbsp;&middot;&nbsp; <a href="mailto:contacto@huellalaboral.cl">contacto@huellalaboral.cl</a>
+</footer>
+
+</body>
+</html>
