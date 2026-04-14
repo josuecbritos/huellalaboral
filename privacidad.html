@@ -30,6 +30,7 @@
             height: 56px;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             position: sticky;
             top: 0;
             z-index: 100;
@@ -130,15 +131,43 @@
             .section { padding: 20px 18px; }
             .toc { padding: 18px 18px; }
         }
+        .nav-back {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--subtitulo);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.15s;
+        }
+        .nav-back:hover { color: var(--azul); }
+        .nav-back {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--subtitulo);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.15s;
+        }
+        .nav-back:hover { color: var(--azul); }
     </style>
 </head>
 <body>
 
-<nav>
+<nav style="justify-content:space-between;">
     <a href="/" class="nav-logo">
         <img src="Huella_Laboral.png" alt="Huella Laboral">
     </a>
-</nav>
+        <a href="index.html" class="nav-back">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 4L6 8l4 4"/>
+            </svg>
+            Volver al inicio
+        </a>
+    </nav>
 
 <div class="container">
 
