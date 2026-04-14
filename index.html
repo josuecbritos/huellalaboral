@@ -353,6 +353,16 @@
             line-height: 1.2;
         }
 
+        .features-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--azul);
+            letter-spacing: -0.5px;
+            margin-bottom: 48px;
+            max-width: 640px;
+            line-height: 1.2;
+        }
+
         .features-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -603,7 +613,7 @@
     <section class="features">
         <div class="features-inner">
             <div class="section-label">Por qué Huella Laboral</div>
-            <h2 class="section-title">Autoridad y neutralidad en cada certificación</h2>
+            <h2 class="features-title">Tabulamos datos objetivos para generar indicadores confiables de trayectoria laboral</h2>
             <div class="features-grid">
                 <div class="feature-item">
                     <svg class="feature-icon" viewBox="0 0 40 40" fill="none" stroke="#0E2A47" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -611,7 +621,7 @@
                         <path d="M14 20L18 24L26 16"/>
                     </svg>
                     <div class="feature-title">Validación trazable</div>
-                    <div class="feature-desc">Cada evaluación queda registrada con identidad verificada del evaluador, generando un historial auténtico e irrefutable.</div>
+                    <div class="feature-desc">Cada evaluación queda registrada con la identidad del evaluador, generando un historial consolidado.</div>
                 </div>
                 <div class="feature-item">
                     <svg class="feature-icon" viewBox="0 0 40 40" fill="none" stroke="#0E2A47" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -620,8 +630,8 @@
                         <line x1="14" y1="20" x2="26" y2="20"/>
                         <line x1="14" y1="26" x2="20" y2="26"/>
                     </svg>
-                    <div class="feature-title">Certificación formal</div>
-                    <div class="feature-desc">Las referencias generadas tienen el rigor técnico requerido para contextos legales y procesos de selección exigentes.</div>
+                    <div class="feature-title">El valor de la información</div>
+                    <div class="feature-desc">Los datos que recopilamos permiten tomar decisiones de contratación con menor riesgo y mayor certeza.</div>
                 </div>
                 <div class="feature-item">
                     <svg class="feature-icon" viewBox="0 0 40 40" fill="none" stroke="#0E2A47" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -630,7 +640,7 @@
                         <path d="M26 10L28 12L32 8"/>
                     </svg>
                     <div class="feature-title">Neutralidad institucional</div>
-                    <div class="feature-desc">Actuamos como tercero imparcial entre trabajador y empleador, garantizando objetividad en cada evaluación emitida.</div>
+                    <div class="feature-desc">Actuamos como tercero imparcial, garantizando objetividad en cada evaluación y en la información provista por el trabajador.</div>
                 </div>
             </div>
         </div>
@@ -654,12 +664,12 @@
                 <div class="step">
                     <div class="step-number">3</div>
                     <div class="step-title">Evaluación</div>
-                    <div class="step-desc">El empleador completa la evaluación con su identidad verificada.</div>
+                    <div class="step-desc">El ex empleador completa la evaluación con su identidad verificada mediante su correo electrónico.</div>
                 </div>
                 <div class="step">
                     <div class="step-number">4</div>
                     <div class="step-title">Certificación</div>
-                    <div class="step-desc">El reclutador accede al informe consolidado y verificado.</div>
+                    <div class="step-desc">El reclutador accede al informe consolidado.</div>
                 </div>
             </div>
         </div>
@@ -685,10 +695,10 @@
     <script>
         function irAAccesoReclutadores(event) {
             event.preventDefault();
-            
+
             // Verificar si hay usuario logueado
             const usuario = localStorage.getItem('hl_usuario');
-            
+
             if (usuario) {
                 try {
                     const user = JSON.parse(usuario);
@@ -706,7 +716,7 @@
                     console.error('Error parsing user:', e);
                 }
             }
-            
+
             // Si no hay usuario logueado, ir a login
             window.location.href = 'login.html';
         }
