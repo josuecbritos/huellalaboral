@@ -772,17 +772,18 @@
                 </div>
                 
                 <!-- Datos de certificado y finiquito -->
+                <!-- CAMBIO 1 y 2: labels actualizados -->
                 <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:24px;" id="datosValidados">
                     <div style="background:var(--fondo); border:1px solid var(--borde); border-radius:4px; padding:20px;">
                         <div style="font-size:12px; font-weight:500; color:var(--subtitulo); margin-bottom:8px;">Empleos en últimos 5 años</div>
                         <div style="font-size:24px; font-weight:700; color:var(--azul);" id="certEmpleos">—</div>
                     </div>
                     <div style="background:var(--fondo); border:1px solid var(--borde); border-radius:4px; padding:20px;">
-                        <div style="font-size:12px; font-weight:500; color:var(--subtitulo); margin-bottom:8px;">Mayor permanencia en un empleo</div>
+                        <div style="font-size:12px; font-weight:500; color:var(--subtitulo); margin-bottom:8px;">Mayor permanencia con un empleador</div>
                         <div style="font-size:24px; font-weight:700; color:var(--azul);" id="certPermanencia">—</div>
                     </div>
                     <div style="background:var(--fondo); border:1px solid var(--borde); border-radius:4px; padding:20px;">
-                        <div style="font-size:12px; font-weight:500; color:var(--subtitulo); margin-bottom:8px;">Causal de término</div>
+                        <div style="font-size:12px; font-weight:500; color:var(--subtitulo); margin-bottom:8px;">Causal de término último trabajo</div>
                         <div style="font-size:16px; font-weight:500; color:var(--texto); margin-top:8px;" id="causalTexto">—</div>
                         <div style="margin-top:8px;" id="causalBadge"></div>
                     </div>
@@ -964,7 +965,6 @@
 
     // INIT
     document.addEventListener('DOMContentLoaded', () => {
-        // Verificar autenticación
         const token = localStorage.getItem('hl_token');
         const usuario = JSON.parse(localStorage.getItem('hl_usuario') || 'null');
         
@@ -973,7 +973,6 @@
             return;
         }
         
-        // Cargar datos del usuario
         document.getElementById('sidebarNombre').textContent = usuario.nombre || 'Reclutador';
         document.getElementById('sidebarEmail').textContent = usuario.email || '';
         
@@ -1054,11 +1053,9 @@
     }
 
     async function actualizarStats() {
-        // Procesos: desde variable local
         document.getElementById('statProcesosActivos').textContent = procesos.filter(p => p.estado === 'Activo').length;
         document.getElementById('statProcesosFinalizados').textContent = procesos.filter(p => p.estado === 'Finalizado').length;
 
-        // Candidatos y evaluaciones: via edge function obtener-stats
         try {
             const procesoIds = procesos.map(p => p.id);
 
@@ -1096,7 +1093,6 @@
         document.getElementById('procesoNombre').textContent = procesoActual.cargo;
         document.getElementById('procesoMeta').textContent = `${procesoActual.descripcion || ''} — Creado el ${formatFecha(procesoActual.fecha)}`;
 
-        // Cargar candidatos del proceso via edge function
         try {
             const response = await fetch(`https://dxblzmxcmaerycvdgfpy.supabase.co/functions/v1/obtener-proceso?proceso_id=${procesoId}`, {
                 headers: {
@@ -1108,7 +1104,6 @@
 
             const candidatosRaw = await response.json();
             
-            // Transformar a formato base
             const candidatosBase = candidatosRaw.map(c => {
                 if (c.trabajador_id && c.trabajadores) {
                     return {
@@ -1139,7 +1134,6 @@
                 }
             });
 
-            // Enriquecer candidatos con datos reales de evaluaciones
             const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c';
             const candidatosEnriquecidos = await Promise.all(candidatosBase.map(async c => {
                 if (c.pendiente || !c.rut) return c;
@@ -1196,7 +1190,6 @@
         const candidatosData = procesoActual.candidatosData || [];
         const vista = vistaDataProceso;
         
-        // Ordenar: invitados al final, luego por promedio
         const candidatosOrdenados = [...candidatosData].sort((a, b) => {
             if (a.pendiente && !b.pendiente) return 1;
             if (!a.pendiente && b.pendiente) return -1;
@@ -1207,7 +1200,6 @@
         tbody.innerHTML = candidatosData.length
             ? candidatosOrdenados.map(c => {
                 if (c.pendiente) {
-                    // Invitación pendiente
                     return `
                     <tr style="opacity:0.6;">
                         <td><div class="td-name">${c.email}</div><div class="td-sub">${c.rut}</div></td>
@@ -1215,7 +1207,6 @@
                         <td><span style="font-size:12px;color:var(--subtitulo);">Esperando respuesta</span></td>
                     </tr>`;
                 } else {
-                    // Candidato con datos
                     const d = c[vista];
                     return `
                     <tr>
@@ -1252,7 +1243,6 @@
         renderizarTablaCandidatos();
     }
 
-    // Función de ordenamiento (placeholder - se puede mejorar después)
     function ordenarCandidatos(criterio) {
         // Por ahora no hace nada, se puede implementar después si se requiere
     }
@@ -1263,23 +1253,19 @@
         document.getElementById('toggleTotal').classList.add('active');
         document.getElementById('toggleVerificada').classList.remove('active');
 
-        // Buscar candidato en procesoActual.candidatosData
         const candidato = procesoActual.candidatosData.find(c => c.id === candidatoId);
         if (!candidato) return;
 
-        // Mostrar vista con loading
         mostrarVista('resultados');
         document.getElementById('resultadoNombre').textContent = candidato.nombre;
         document.getElementById('listaEvaluaciones').innerHTML = '<p style="color:var(--subtitulo); text-align:center; padding:20px;">Cargando evaluaciones...</p>';
 
-        // Llamar a obtener-candidato para traer datos completos
         const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c';
         const res = await fetch(`https://dxblzmxcmaerycvdgfpy.supabase.co/functions/v1/obtener-candidato?rut=${encodeURIComponent(candidato.rut)}`, {
             headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}`, 'x-user-token': localStorage.getItem('hl_token') }
         });
         const data = await res.json();
 
-        // Poblar datos de documentos validados
         document.getElementById('certEmpleos').textContent = data.documentos?.cert_empleos !== null && data.documentos?.cert_empleos !== undefined ? data.documentos.cert_empleos : '—';
         document.getElementById('certPermanencia').textContent = data.documentos?.cert_permanencia !== null && data.documentos?.cert_permanencia !== undefined ? data.documentos.cert_permanencia + ' años' : '—';
         document.getElementById('causalTexto').textContent = formatearCausal(data.documentos?.causal_texto);
@@ -1291,12 +1277,14 @@
             : '';
         document.getElementById('causalBadge').innerHTML = badgeHtml;
 
-        // Transformar evaluaciones al formato que espera el renderizado
         const todasEvals = data.evaluaciones?.lista || [];
+
+        // CAMBIO 3: email_evaluador incluido en la función transformar()
         const transformar = (evals) => evals.map(e => ({
             evaluador: e.nombre_evaluador || '—',
             empresa: e.empresa_evaluador || '—',
             rut: e.rut_evaluador || '—',
+            email_evaluador: e.email_evaluador || '',
             periodo: e.tiempo_trabajo || '—',
             cargo: e.cargo || '—',
             verificada: e.verificada || false,
@@ -1312,7 +1300,6 @@
         const verificadas = validas.filter(e => e.verificada);
         const atributos = ['puntualidad', 'desempeno', 'relaciones', 'confiabilidad'];
 
-        // Calcular y guardar ambos promedios
         candidatoActualData = {
             candidato: candidato,
             total: { evaluaciones: validas, count: validas.length, promedios: {} },
@@ -1339,7 +1326,7 @@
 
         renderizarVista();
 
-        // Renderizar lista de evaluaciones (siempre muestra todas, no filtra por vista)
+        // CAMBIO 3b: email_evaluador mostrado en tarjeta de evaluación
         document.getElementById('listaEvaluaciones').innerHTML = validas.length
             ? validas.map(e => `
             <div class="evaluacion-card">
@@ -1349,7 +1336,7 @@
                             ${e.evaluador}
                             ${e.verificada ? '<span style="display:inline-block; margin-left:6px; font-size:10px; font-weight:700; color:#166534; background:rgba(47,191,113,0.12); padding:2px 6px; border-radius:2px;">✓ VERIFICADA</span>' : ''}
                         </div>
-                        <div class="evaluacion-empresa">${e.empresa} — RUT ${e.rut}</div>
+                        <div class="evaluacion-empresa">${e.empresa} — RUT ${e.rut}${e.email_evaluador ? ' — ' + e.email_evaluador : ''}</div>
                     </div>
                     <div>
                         <div class="evaluacion-fecha"><strong>Cargo:</strong> ${e.cargo}</div>
@@ -1386,11 +1373,9 @@
         const candidato = candidatoActualData.candidato;
         const atributos = ['puntualidad', 'desempeno', 'relaciones', 'confiabilidad'];
         
-        // Actualizar meta con cantidad de evaluaciones según vista
         const tipoEval = vistaDataActual === 'total' ? '' : ' verificada' + (data.count > 1 ? 's' : '');
         document.getElementById('resultadoMeta').textContent = `${candidato.rut} — ${data.count} evaluación${data.count > 1 ? 'es' : ''}${tipoEval} recibida${data.count > 1 ? 's' : ''}`;
         
-        // Actualizar card de promedio
         if (data.count > 0 && data.promedioGeneral) {
             const color = vistaDataActual === 'total' ? 'var(--azul)' : 'var(--verde)';
             const titulo = vistaDataActual === 'total' ? 'Promedio General' : 'Promedio Verificado ✓';
@@ -1401,7 +1386,6 @@
             document.getElementById('promedioValor').style.color = color;
             document.getElementById('promedioDesc').textContent = `Basado en ${data.count} evaluación${data.count > 1 ? 'es' : ''}${sufijo}`;
             
-            // Actualizar promedios individuales
             atributos.forEach(attr => {
                 const prom = data.promedios[attr].toFixed(1);
                 const attrCapitalized = attr === 'desempeno' ? 'Desempeno' : attr.charAt(0).toUpperCase() + attr.slice(1);
@@ -1414,7 +1398,6 @@
             document.getElementById('promedioValor').style.color = 'var(--subtitulo)';
             document.getElementById('promedioDesc').textContent = 'Sin evaluaciones verificadas';
             
-            // Limpiar promedios individuales
             atributos.forEach(attr => {
                 const attrCapitalized = attr === 'desempeno' ? 'Desempeno' : attr.charAt(0).toUpperCase() + attr.slice(1);
                 document.getElementById(`prom${attrCapitalized}`).textContent = '—';
@@ -1447,39 +1430,26 @@
         else e.target.value = v;
     });
     
-    // Formatear RUT en modal de candidato
     document.getElementById('candRut').addEventListener('input', function (e) {
         let v = e.target.value.replace(/[^0-9kK]/g, '');
         if (v.length > 1) { e.target.value = v.slice(0, -1).replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '-' + v.slice(-1).toUpperCase(); }
         else e.target.value = v;
     });
 
-    // Validación de RUT chileno
     function validarRutChileno(rut) {
-        // Limpiar formato
         rut = rut.replace(/\./g, '').replace(/-/g, '').toUpperCase();
-        
         if (rut.length < 2) return false;
-        
-        // Separar número y dígito verificador
         const numero = rut.slice(0, -1);
         const dvIngresado = rut.slice(-1);
-        
-        // Validar que el número sea válido
         if (!/^\d+$/.test(numero)) return false;
-        
-        // Calcular dígito verificador esperado
         let suma = 0;
         let multiplicador = 2;
-        
         for (let i = numero.length - 1; i >= 0; i--) {
             suma += parseInt(numero[i]) * multiplicador;
             multiplicador = multiplicador === 7 ? 2 : multiplicador + 1;
         }
-        
         const resto = suma % 11;
         const dvEsperado = resto === 0 ? '0' : resto === 1 ? 'K' : String(11 - resto);
-        
         return dvIngresado === dvEsperado;
     }
 
@@ -1493,13 +1463,11 @@
             return;
         }
         
-        // Validar formato RUT
         if (!/^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$/.test(rut)) {
             contenedor.innerHTML = '<div class="table-card" style="padding:32px; text-align:center;"><div class="empty-state-title">Formato inválido</div><div class="empty-state-desc" style="margin-top:6px;">Ingresa un RUT con formato XX.XXX.XXX-X</div></div>';
             return;
         }
         
-        // Validar dígito verificador
         if (!validarRutChileno(rut)) {
             contenedor.innerHTML = '<div class="table-card" style="padding:32px; text-align:center;"><div class="empty-state-title">RUT inválido</div><div class="empty-state-desc" style="margin-top:6px;">El dígito verificador no es correcto</div></div>';
             return;
@@ -1510,7 +1478,6 @@
         contenedor.innerHTML = '<div style="padding:32px; text-align:center; color:var(--subtitulo);">Buscando...</div>';
 
         try {
-            const token = localStorage.getItem('hl_token');
             const response = await fetch(`https://dxblzmxcmaerycvdgfpy.supabase.co/functions/v1/obtener-candidato?rut=${encodeURIComponent(rut)}`, {
                 headers: {
                     'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c',
@@ -1531,8 +1498,6 @@
             }
 
             const data = await response.json();
-            
-            // Mostrar vista completa de resultados usando los datos de la API
             mostrarResultadosBusqueda(data);
             
             btn.disabled = false;
@@ -1547,20 +1512,17 @@
     }
 
     function mostrarResultadosBusqueda(data) {
-        // Guardar datos del candidato para la vista
         const trabajador = data.trabajador;
         const evaluaciones = data.evaluaciones.lista || [];
         const promedios = data.promedios;
         const documentos = data.documentos;
         
-        // Poblar vista de resultados
         vistaDataActual = 'total';
         document.getElementById('toggleTotal').classList.add('active');
         document.getElementById('toggleVerificada').classList.remove('active');
         
         document.getElementById('resultadoNombre').textContent = trabajador.nombre;
         
-        // Datos de documentos validados
         document.getElementById('certEmpleos').textContent = documentos.cert_empleos !== null ? documentos.cert_empleos : '—';
         document.getElementById('certPermanencia').textContent = documentos.cert_permanencia !== null ? documentos.cert_permanencia + ' años' : '—';
         document.getElementById('causalTexto').textContent = formatearCausal(documentos.causal_texto);
@@ -1573,7 +1535,6 @@
         const validas = evaluaciones.filter(e => !e.rechazo);
         const verificadas = validas.filter(e => e.verificada);
 
-        // Guardar datos para toggle
         candidatoActualData = {
             candidato: { nombre: trabajador.nombre, rut: trabajador.rut },
             total: { 
@@ -1590,10 +1551,9 @@
             }
         };
 
-        // Renderizar vista
         renderizarVista();
 
-        // Renderizar lista de evaluaciones
+        // CAMBIO 4: email_evaluador mostrado en tarjeta de evaluación (búsqueda por RUT)
         document.getElementById('listaEvaluaciones').innerHTML = evaluaciones.map(e => `
             <div class="evaluacion-card">
                 <div class="evaluacion-header">
@@ -1602,7 +1562,7 @@
                             ${e.nombre_evaluador}
                             ${e.verificada ? '<span style="display:inline-block; margin-left:6px; font-size:10px; font-weight:700; color:#166534; background:rgba(47,191,113,0.12); padding:2px 6px; border-radius:2px;">✓ VERIFICADA</span>' : ''}
                         </div>
-                        <div class="evaluacion-empresa">${e.empresa_evaluador || '—'} — RUT ${e.rut_evaluador || '—'}</div>
+                        <div class="evaluacion-empresa">${e.empresa_evaluador || '—'} — RUT ${e.rut_evaluador || '—'}${e.email_evaluador ? ' — ' + e.email_evaluador : ''}</div>
                     </div>
                     <div class="evaluacion-fecha"><strong>Cargo:</strong> ${e.cargo || '—'}</div>
                     <div class="evaluacion-fecha"><strong>Tiempo en empresa:</strong> ${formatearTiempoTrabajo(e.tiempo_trabajo)}</div>
@@ -1630,13 +1590,10 @@
                 </div>
             </div>`).join('');
 
-        // Cambiar a vista de resultados
         mostrarVista('resultados');
     }
 
     function mostrarDetalleCandidato(data) {
-        // Por ahora solo mostramos los datos en consola
-        // Más adelante implementaremos la vista de detalle completa
         console.log('Datos del candidato:', data);
         alert(`Candidato: ${data.trabajador.nombre}
 Evaluaciones: ${data.evaluaciones.total}
@@ -1755,13 +1712,11 @@ Promedio: ${data.promedios.total?.promedio?.toFixed(1) || '—'}
             return;
         }
         
-        // Validar formato RUT
         if (!/^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$/.test(rut)) {
             alert('Formato de RUT inválido. Usa el formato XX.XXX.XXX-X');
             return;
         }
         
-        // Validar dígito verificador
         if (!validarRutChileno(rut)) {
             alert('RUT inválido: el dígito verificador no es correcto');
             return;
@@ -1797,14 +1752,12 @@ Promedio: ${data.promedios.total?.promedio?.toFixed(1) || '—'}
                 return;
             }
 
-            // Mostrar mensaje según el tipo
             if (result.tipo === 'existente') {
                 alert('✓ ' + result.mensaje);
             } else {
                 alert('✓ ' + result.mensaje);
             }
 
-            // Recargar candidatos del proceso
             verCandidatos(procesoActual.id);
             cerrarModalCandidato();
             document.getElementById('candEmail').value = '';
