@@ -279,6 +279,8 @@
         }
 
         .consent-text strong { color: var(--azul); }
+        .consent-text a { color: var(--azul); text-decoration: underline; }
+        .consent-text a:hover { color: var(--azul-hover); }
 
         /* LEYENDA TRABAJADOR */
         .consent-leyenda {
@@ -540,19 +542,10 @@
 
                 <!-- CONSENTIMIENTO DEL EVALUADOR -->
                 <div class="consent-block">
-                    <label class="consent-check">
+                    <div class="consent-check">
                         <input type="checkbox" id="consentimientoEval">
-                        <span class="consent-text">Autorizo a <strong>Huella Laboral</strong> a que mi evaluación de desempeño pueda ser vista por usuarios de la plataforma.</span>
-                    </label>
-                </div>
-
-                <!-- LEYENDA TRABAJADOR -->
-                <div class="consent-leyenda">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#2FBF71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
-                        <path d="M9 12l2 2 4-4"/>
-                        <path d="M10 2a8 8 0 1 0 0 16A8 8 0 0 0 10 2z"/>
-                    </svg>
-                    <p class="consent-leyenda-text">El trabajador ha dado su consentimiento para ser evaluado y autoriza el uso de sus datos con fines de certificación laboral.</p>
+                        <label for="consentimientoEval" class="consent-text">He leído y acepto los <a href="terminos.html" target="_blank" rel="noopener noreferrer">Términos y Condiciones</a> y la <a href="privacidad.html" target="_blank" rel="noopener noreferrer">Política de Privacidad</a>, y autorizo el uso de mis datos y de esta referencia en <strong>Huella Laboral</strong>.</label>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn-submit" id="btnSubmit">Enviar evaluación</button>
@@ -799,7 +792,7 @@
             v &= validarRadio('relaciones', 'err-relaciones', 'Selecciona una calificación.');
             v &= validarRadio('confiabilidad', 'err-confiabilidad', 'Selecciona una calificación.');
             if (!rechazoActivo && !document.getElementById('consentimientoEval').checked) {
-                mostrarMsg('Debes autorizar que tu evaluación pueda ser vista para continuar.');
+                mostrarMsg('Debes aceptar los Términos y Condiciones y la Política de Privacidad para continuar.');
                 v = false;
             }
             return !!v;
