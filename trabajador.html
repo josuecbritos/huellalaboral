@@ -742,18 +742,34 @@
                 </div>
             </div>
 
-            <!-- CONSENTIMIENTO -->
+            <!-- CONSENTIMIENTO PRINCIPAL (obligatorio) -->
             <div class="consent-block">
                 <label class="consent-check">
                     <input type="checkbox" id="consentimiento" name="consentimiento">
                     <span class="consent-text">
-                        Autorizo a <strong>Huella Laboral</strong> a utilizar mis datos personales y compartirlos con los empleadores indicados con el fin exclusivo de obtener referencias laborales verificadas. Autorizo a que las evaluaciones de mi desempeño y documentación entregada, formen parte de mi perfil en Huella Laboral, y puedan ser revisadas por empleadores que utilicen el portal en búsqueda de candidatos. He leído y acepto los <a href="terminos.html" style="color:var(--azul); font-weight:500;">Términos y Condiciones</a>.
+                        Para crear y activar mi perfil Huella Laboral, declaro que he leído y acepto los <a href="terminos.html" style="color:var(--azul); font-weight:500;">Términos y Condiciones</a> y la <a href="privacidad.html" style="color:var(--azul); font-weight:500;">Política de Privacidad</a> de la Plataforma. Asimismo, autorizo a <strong>Huella Laboral</strong> a:
                     </span>
                 </label>
-                <span class="field-error" id="err-consentimiento"></span>
+                <ul style="margin:10px 0 0 30px; display:flex; flex-direction:column; gap:6px; font-size:13px; color:#374151; line-height:1.6;">
+                    <li>Contactar a los evaluadores o referentes laborales que yo indique;</li>
+                    <li>Recibir de dichos evaluadores las referencias, validaciones o evaluaciones laborales que emitan sobre mí, tratarlas conforme a la Política de Privacidad e incorporarlas a mi perfil Huella Laboral; y</li>
+                    <li>Poner mi perfil, junto con sus referencias, validaciones o evaluaciones, a disposición de reclutadores o potenciales empleadores registrados o habilitados en la Plataforma, exclusivamente para fines de evaluación laboral, reclutamiento o selección.</li>
+                </ul>
                 <p class="consent-disclaimer">
-                    Tus datos serán tratados conforme a la Ley N° 19.628 de Protección de la Vida Privada. Huella Laboral actúa como intermediario neutral y no comercializa información personal. Puedes revocar este consentimiento en cualquier momento.
+                    Entiendo que estas autorizaciones son indispensables e indivisibles para prestar el servicio principal de creación, validación y visibilidad de mi perfil Huella Laboral. Sin ellas, la Plataforma no podría prestar dicho servicio.
                 </p>
+                <span class="field-error" id="err-consentimiento"></span>
+            </div>
+
+            <!-- CONSENTIMIENTO DOCUMENTOS (aparece solo al adjuntar archivo) -->
+            <div class="consent-block" id="consentimientoDocsBlock" style="display:none;">
+                <label class="consent-check">
+                    <input type="checkbox" id="consentimientoDocs" name="consentimientoDocs">
+                    <span class="consent-text">
+                        <strong>Autorización para documentos de respaldo:</strong> autorizo de manera voluntaria a <strong>Huella Laboral</strong> a incorporar a mi perfil los documentos de respaldo que yo decida subir o entregar, con la finalidad de complementar, acreditar o reforzar la información laboral contenida en mi perfil. Entiendo que esta autorización es opcional, que puedo no subir documentos de respaldo y que ello no impedirá la prestación del servicio principal, sin perjuicio de que mi perfil pueda aparecer con menor nivel de respaldo documental.
+                    </span>
+                </label>
+                <span class="field-error" id="err-consentimientoDocs"></span>
             </div>
 
             <button type="submit" class="btn-submit" id="btnSubmit">Enviar solicitud</button>
@@ -1133,7 +1149,7 @@
                     v => v.trim().length > 0, 'Selecciona el tiempo de trabajo.');
             });
 
-            // Validar consentimiento
+            // Validar consentimiento principal
             const consent = document.getElementById('consentimiento');
             const errConsent = document.getElementById('err-consentimiento');
             if (!consent.checked) {
@@ -1144,6 +1160,21 @@
             } else {
                 errConsent.textContent = '';
                 errConsent.style.display = 'none';
+            }
+
+            // Validar consentimiento de documentos (obligatorio si hay archivos adjuntos)
+            const hasDocs = certificadoInput.files.length > 0 || finiquitoInput.files.length > 0;
+            if (hasDocs) {
+                const consentDocs = document.getElementById('consentimientoDocs');
+                const errConsentDocs = document.getElementById('err-consentimientoDocs');
+                if (!consentDocs.checked) {
+                    errConsentDocs.textContent = 'Debes autorizar el uso de los documentos adjuntos para continuar.';
+                    errConsentDocs.style.display = 'block';
+                    valido = false;
+                } else {
+                    errConsentDocs.textContent = '';
+                    errConsentDocs.style.display = 'none';
+                }
             }
 
             if (!valido) {
@@ -1261,12 +1292,14 @@
             document.getElementById('fileSize').textContent = `(${(file.size / 1024).toFixed(0)} KB)`;
             document.getElementById('fileSelected').style.display = 'block';
             uploadArea.style.display = 'none';
+            actualizarConsentimientoDocs();
         }
 
         function eliminarArchivo() {
             certificadoInput.value = '';
             document.getElementById('fileSelected').style.display = 'none';
             uploadArea.style.display = 'block';
+            actualizarConsentimientoDocs();
         }
 
         // Manejo de finiquito
@@ -1299,12 +1332,27 @@
             document.getElementById('finiquitoSize').textContent = `(${(file.size / 1024).toFixed(0)} KB)`;
             document.getElementById('finiquitoSelected').style.display = 'block';
             uploadAreaFiniquito.style.display = 'none';
+            actualizarConsentimientoDocs();
         }
 
         function eliminarFiniquito() {
             finiquitoInput.value = '';
             document.getElementById('finiquitoSelected').style.display = 'none';
             uploadAreaFiniquito.style.display = 'block';
+            actualizarConsentimientoDocs();
+        }
+
+        // Mostrar/ocultar consentimiento de documentos según archivos adjuntos
+        function actualizarConsentimientoDocs() {
+            const hayCertificado = certificadoInput.files.length > 0;
+            const hayFiniquito = finiquitoInput.files.length > 0;
+            const block = document.getElementById('consentimientoDocsBlock');
+            if (hayCertificado || hayFiniquito) {
+                block.style.display = 'block';
+            } else {
+                block.style.display = 'none';
+                document.getElementById('consentimientoDocs').checked = false;
+            }
         }
 
         // Submit
