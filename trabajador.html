@@ -1273,7 +1273,12 @@
             e.preventDefault();
             uploadArea.classList.remove('drag-over');
             const file = e.dataTransfer.files[0];
-            if (file) mostrarArchivo(file);
+            if (file) {
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                certificadoInput.files = dt.files;
+                mostrarArchivo(file);
+            }
         });
 
         function mostrarArchivo(file) {
@@ -1313,7 +1318,13 @@
         uploadAreaFiniquito.addEventListener('drop', e => {
             e.preventDefault();
             uploadAreaFiniquito.classList.remove('drag-over');
-            if (e.dataTransfer.files[0]) mostrarFiniquito(e.dataTransfer.files[0]);
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                finiquitoInput.files = dt.files;
+                mostrarFiniquito(file);
+            }
         });
 
         function mostrarFiniquito(file) {
