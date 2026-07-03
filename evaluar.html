@@ -544,8 +544,9 @@
                 <div class="consent-block">
                     <div class="consent-check">
                         <input type="checkbox" id="consentimientoEval">
-                        <label for="consentimientoEval" class="consent-text">He leído y acepto los <a href="terminos.html" target="_blank" rel="noopener noreferrer">Términos y Condiciones</a> y la <a href="privacidad.html" target="_blank" rel="noopener noreferrer">Política de Privacidad</a>, y autorizo el uso de mis datos y de esta referencia en <strong>Huella Laboral</strong>.</label>
+                        <label for="consentimientoEval" class="consent-text">He leído y acepto los <a href="terminos.html" target="_blank" rel="noopener noreferrer">Términos y Condiciones</a>, especialmente el Anexo II aplicable a Evaluadores, y la <a href="privacidad.html" target="_blank" rel="noopener noreferrer">Política de Privacidad</a>. Autorizo a <strong>Huella Laboral</strong> a recibir, registrar y tratar mis datos y la referencia que emito, para gestionarla dentro de la Plataforma e incorporarla al perfil del trabajador evaluado, conforme a dichos documentos y al alcance autorizado por el trabajador.</label>
                     </div>
+                    <span class="field-error" id="err-consentimientoEval"></span>
                 </div>
 
                 <button type="submit" class="btn-submit" id="btnSubmit">Enviar evaluación</button>
@@ -747,6 +748,38 @@
                     }
                 });
             }
+
+            // Limpiar el aviso en rojo de campos de texto/select en cuanto el usuario los corrige
+            [['evalNombre', 'input'], ['evalEmpresa', 'input'], ['evalCargo', 'input'], ['tiempoTrabajo', 'change']].forEach(([id, evento]) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.addEventListener(evento, () => {
+                    el.classList.remove('error');
+                    const span = document.getElementById(`err-${id}`);
+                    if (span) span.textContent = '';
+                });
+            });
+
+            // Limpiar el aviso en rojo de las escalas de evaluación al seleccionar una opción
+            ['puntualidad', 'desempeno', 'relaciones', 'confiabilidad'].forEach(name => {
+                document.querySelectorAll(`input[name="${name}"]`).forEach(radio => {
+                    radio.addEventListener('change', () => {
+                        const span = document.getElementById(`err-${name}`);
+                        if (span) span.textContent = '';
+                    });
+                });
+            });
+
+            // Limpiar el aviso en rojo del consentimiento al marcarlo
+            const consentEval = document.getElementById('consentimientoEval');
+            if (consentEval) {
+                consentEval.addEventListener('change', () => {
+                    if (consentEval.checked) {
+                        const span = document.getElementById('err-consentimientoEval');
+                        if (span) { span.textContent = ''; span.style.display = 'none'; }
+                    }
+                });
+            }
         });
         
         // ============================================
@@ -791,9 +824,14 @@
             v &= validarRadio('desempeno', 'err-desempeno', 'Selecciona una calificación.');
             v &= validarRadio('relaciones', 'err-relaciones', 'Selecciona una calificación.');
             v &= validarRadio('confiabilidad', 'err-confiabilidad', 'Selecciona una calificación.');
+            const errConsent = document.getElementById('err-consentimientoEval');
             if (!rechazoActivo && !document.getElementById('consentimientoEval').checked) {
-                mostrarMsg('Debes aceptar los Términos y Condiciones y la Política de Privacidad para continuar.');
+                errConsent.textContent = 'Debes aceptar el consentimiento para continuar.';
+                errConsent.style.display = 'block';
                 v = false;
+            } else {
+                errConsent.textContent = '';
+                errConsent.style.display = 'none';
             }
             return !!v;
         }
