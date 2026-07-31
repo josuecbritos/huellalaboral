@@ -6,28 +6,26 @@ Orden seguido: 5.4 (funciones) → 5.5 (tokens) → 5.3 (RLS) → resto, según 
 
 ## 1. Punto previo: `ADMIN_EMAIL` (tu petición 4)
 
-**No es leíble por MCP.** El conector expone base de datos, funciones y logs; los secretos de las edge functions no están entre sus herramientas. `Deno.env.get('ADMIN_EMAIL')` solo se resuelve en tiempo de ejecución.
+**✅ CONFIRMADO por el usuario:** la variable existe en Edge Functions → Secrets. Punto cerrado.
 
-Lo que sí pude verificar, **indirectamente y sin leer datos personales**:
+Queda el registro de cómo se verificó desde la auditoría, que no podía llegar hasta el final: el conector MCP expone base de datos, funciones y logs, pero **no los secretos de las edge functions** — `Deno.env.get('ADMIN_EMAIL')` solo se resuelve en tiempo de ejecución.
+
+Lo que sí pude comprobar, **indirectamente y sin leer datos personales**:
 
 ```sql
 select count(*) from auth.users u
 left join public.usuarios p on p.id = u.id where p.id is null;  -- => 1
 ```
 
-Existe **exactamente una** cuenta en `auth.users` sin fila en `usuarios`, dominio `huellalaboral.cl`, creada el 2026-03-20, último acceso el 2026-07-03. Es el patrón exacto que `autenticar` reconoce como admin. Coherente con que `ADMIN_EMAIL` esté definido y sea correcto.
+Existe **exactamente una** cuenta en `auth.users` sin fila en `usuarios`, dominio `huellalaboral.cl`, creada el 2026-03-20, último acceso el 2026-07-03. Es el patrón exacto que `autenticar` reconoce como admin, y su confirmación por el usuario cierra la comprobación.
 
-**Lo que no puedo descartar** es una discrepancia de mayúsculas o un espacio sobrante en el valor de la variable. La comparación es estricta:
+**Nota de diseño que conviene conservar:** la comparación es estricta y la variable no tiene valor por defecto.
 
 ```js
 if (authUser.email !== Deno.env.get('ADMIN_EMAIL'))
 ```
 
-Supabase Auth normaliza los emails a minúscula. Si la variable estuviera guardada con una mayúscula, la comparación fallaría siempre y el panel de admin quedaría inaccesible para todos — incluido tú. Como el último acceso de esa cuenta es del 3 de julio, el camino parece funcionar.
-
-**Verificación que solo puedes hacer tú**, en el dashboard → Edge Functions → Secrets: que `ADMIN_EMAIL` exista, esté en minúsculas y no tenga espacios. Un minuto.
-
-**Riesgo latente:** si la variable no estuviese definida, `Deno.env.get()` devuelve `undefined` y la comparación `email !== undefined` es siempre verdadera → las tres funciones de admin rechazan a todo el mundo. Falla cerrado, que es la dirección correcta.
+Si la variable desapareciera o se guardara con una mayúscula —Supabase Auth normaliza los emails a minúscula—, `Deno.env.get()` devolvería `undefined` o un valor que no casa, y las tres funciones de admin rechazarían a todo el mundo, incluido el admin legítimo. **Falla cerrado**, que es la dirección correcta: el modo de fallo es perder acceso, no concederlo de más.
 
 ---
 
@@ -97,11 +95,23 @@ authenticated = arwdDxtm/postgres
 
 El día que alguien añada una política para hacer funcionar algo rápido, o cree una tabla nueva sin activar RLS, todo lo de esa tabla queda legible por cualquiera con la anon key, que está publicada en 8 HTML. No hay segunda línea. Un `REVOKE` de los privilegios que `anon` no necesita añadiría esa segunda línea, y no rompe nada: las 19 funciones entran con `service_role`.
 
-### 3.3 Verificación empírica — NO COMPLETADA
+### 3.3 Verificación empírica — ✅ COMPLETADA
 
-Tu punto 7 pedía probarlo de verdad. **No pude, y no quiero dar por bueno lo que no probé.**
+**Confirmado por el usuario desde la consola del navegador, con la anon key pública:**
 
-`auditoria/scripts/verificar-rls.sh` está escrito, probado sintácticamente y listo. Al ejecutarlo desde este contenedor:
+```
+GET /rest/v1/trabajadores   →   []      (habiendo 2 registros en la tabla)
+```
+
+La anon key llega hasta PostgREST y PostgREST responde correctamente — no es un error de red ni un rechazo de la clave: es RLS filtrando las filas. **La puerta paralela está cerrada.** Coincide con lo que predecía el análisis estático de §3.1.
+
+**Q-6 cerrada: RLS aguanta como segunda línea de defensa, verificado.**
+
+Esto no anula H-13. Que RLS filtre hoy es exactamente lo que se comprobó; que sea *lo único* que filtra sigue siendo cierto, y es lo que H-13 recoge. Ver §3.2.
+
+#### Registro de por qué no pude verificarlo yo
+
+`auditoria/scripts/verificar-rls.sh` está escrito, probado sintácticamente y listo. Al ejecutarlo desde el contenedor de la auditoría:
 
 ```
 curl: (56) CONNECT tunnel failed, response 403
@@ -113,15 +123,13 @@ El entorno de esta sesión enruta todo HTTPS por un proxy que **deniega `dxblzmx
 
 Dejo constancia porque el modo de fallo importa más que el fallo: un verificador que confunde "sin red" con "acceso denegado" produce exactamente el informe que nadie querría — tranquilizador y falso.
 
-**Para completarlo**, desde cualquier máquina con salida a internet:
+El script sigue siendo útil aunque la comprobación puntual ya esté hecha: cubre las **ocho** tablas, más tres intentos de escritura y los dos buckets de Storage, mientras que la verificación manual cubrió una tabla. Conviene pasarlo como control de regresión tras aplicar las correcciones del Horizonte 1, desde cualquier máquina con salida a internet:
 
 ```bash
 bash auditoria/scripts/verificar-rls.sh
 ```
 
-Sin argumentos ni configuración: saca la anon key de los HTML del repo, comprueba que es de rol `anon` antes de nada, y aborta si no lo es. Salida esperada según el análisis estático: `OK (bloqueado)` en las ocho tablas, `OK (rechazado)` en las tres escrituras, `OK (bloqueado)` en los dos buckets.
-
-**Estado de Q-6: respondida por análisis estático (políticas + ACL vía MCP), pendiente de confirmación empírica.**
+Sin argumentos ni configuración: saca la anon key de los HTML del repo, comprueba que es de rol `anon` antes de nada, y aborta si no lo es. Salida esperada: `OK (bloqueado)` en las ocho tablas, `OK (rechazado)` en las tres escrituras, `OK (bloqueado)` en los dos buckets.
 
 ---
 
@@ -321,11 +329,11 @@ Contenido de `dashboard-test.html` en `754fd1e`:
 - **Corrección:** caducidad, rotación bajo demanda y un modo de revocar.
 - **Esfuerzo:** M
 
-### [H-13] `anon` tiene todos los privilegios sobre las 8 tablas
-- **Severidad:** Media *(hoy no hay fuga; es ausencia de defensa en profundidad)*
+### [H-13] `anon` tiene todos los privilegios: RLS es la única barrera
+- **Severidad:** Media *(no hay fuga — verificado; es ausencia de defensa en profundidad)*
 - **Ubicación:** `pg_class.relacl` en las 8 tablas de `public`
-- **Evidencia:** `anon=arwdDxtm/postgres` en las ocho.
-- **Impacto:** lo único que impide leer todos los datos personales con la anon key es RLS. No hay segunda barrera: una política permisiva añadida por descuido, o una tabla nueva sin `ENABLE ROW LEVEL SECURITY`, expone todo de inmediato y en silencio.
+- **Evidencia:** `anon=arwdDxtm/postgres` en las ocho. Y a la vez, comprobado empíricamente que RLS bloquea hoy: `GET /rest/v1/trabajadores` con la anon key devuelve `[]` habiendo 2 registros.
+- **Impacto:** las dos cosas son ciertas al mismo tiempo y por eso esto sigue siendo un hallazgo. RLS filtra —confirmado—, pero es **lo único** que filtra: `anon` conserva SELECT, INSERT, UPDATE y DELETE sobre las ocho tablas. Una política permisiva añadida por descuido, o una tabla nueva creada sin `ENABLE ROW LEVEL SECURITY`, expone todo de inmediato y en silencio, sin nada detrás que lo detenga. El riesgo no es el estado actual: es que un solo error futuro basta.
 - **Amenaza:** T-5
 - **Corrección:** `REVOKE` sobre `anon` de lo que no usa. Las 19 funciones entran con `service_role`, así que no rompe nada.
 - **Esfuerzo:** S

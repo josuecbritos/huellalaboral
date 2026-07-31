@@ -305,7 +305,7 @@ Sobre P-1 y P-2 conviene ver cómo encadenan: `crear-solicitud` devuelve `{ succ
 
 ## 9. Supuestos (D-6)
 
-1. **`ADMIN_EMAIL` está definido** en las variables de entorno del proyecto. Si no lo estuviera, `Deno.env.get('ADMIN_EMAIL')` devolvería `undefined` y la comparación `authUser.email !== undefined` sería siempre cierta: las tres funciones de admin rechazarían a todo el mundo, incluido el admin. Como `admin.html` es un flujo en uso, asumo que está definido. Confirmable en el dashboard.
+1. ~~**`ADMIN_EMAIL` está definido** en las variables de entorno del proyecto.~~ **Deja de ser supuesto: confirmado por el usuario en Edge Functions → Secrets.** Ver `FASE-2-SEGURIDAD.md` §1.
 2. **El validador interno es una persona de Huella Laboral** que lee `contacto@huellalaboral.cl`, no un rol delegado a terceros.
 3. **`huellalaboral.cl` es el dominio de producción**, ya que está codificado en los enlaces de los siete correos.
 4. Los conteos de filas vienen de las estadísticas de `list_tables`; son aproximados y no requirieron ningún `SELECT` sobre datos personales (D-5).

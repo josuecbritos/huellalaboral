@@ -8,7 +8,7 @@
 
 ## 1. Resumen ejecutivo
 
-Huella Laboral está bien construido en varias capas que suelen fallar en proyectos de este tamaño: la autenticación de correo está correctamente montada, RLS cierra por defecto sobre las tablas sensibles, los buckets de Storage son privados, los secretos se leen todos por variable de entorno y no hay una sola credencial en los 122 commits del repositorio. El manejo de errores del frontend es más sólido de lo habitual en código sin framework.
+Huella Laboral está bien construido en varias capas que suelen fallar en proyectos de este tamaño: la autenticación de correo está correctamente montada, RLS cierra sobre las tablas sensibles —confirmado empíricamente—, los buckets de Storage son privados, los secretos se leen todos por variable de entorno y no hay una sola credencial en los 122 commits del repositorio. El manejo de errores del frontend es más sólido de lo habitual en código sin framework.
 
 El problema está concentrado en un punto y es sistemático: **de las 19 edge functions, todas operan con `service_role`, que salta el RLS — y seis no comprueban quién las llama o qué recurso piden.** Como el RLS no aplica dentro de una edge function, lo que esas seis no filtran no lo filtra nadie. Ahí viven los siete hallazgos críticos.
 
@@ -42,7 +42,7 @@ Y hay una fecha que reordena las prioridades: **la Ley 21.719 entra en vigencia 
 | **H-10** | `agregar-candidato` / `obtener-stats` sin comprobar propiedad | 🟠 Alta | T-3, T-6 | S |
 | **H-11** | `autenticar` sin rate limiting | 🟠 Alta | — | M |
 | **H-12** | `token_consulta` no expira ni se revoca | 🟠 Alta | T-2 | M |
-| **H-13** | `anon` con todos los privilegios sobre las 8 tablas | 🟡 Media | T-5 | S |
+| **H-13** | `anon` con todos los privilegios: RLS es la única barrera | 🟡 Media | T-5 | S |
 | **H-14** | `auth-test`: función huérfana en producción | 🟡 Media | — | S |
 | **H-15** | Sin cabeceras de seguridad HTTP | 🟡 Media | T-7 | S |
 | **H-16** | La sesión caduca a la hora sin renovación | 🟡 Media | — | M |
@@ -76,7 +76,7 @@ No todo es hallazgo, y conviene no rehacer lo que ya funciona.
 | Área | Estado |
 |------|--------|
 | **Autenticación de correo** | SPF, DKIM y DMARC verificados por DNS. `p=quarantine`, doble alineación, subdominio dedicado. Mejor que la media |
-| **RLS** | Las 5 tablas sensibles cierran por defecto. Las 3 con políticas las tienen bien escritas, contra `auth.uid()` |
+| **RLS** | ✅ **Confirmado empíricamente.** `GET /rest/v1/trabajadores` con la anon key devuelve `[]` habiendo 2 registros. Las 5 tablas sensibles cierran por defecto; las 3 con políticas las tienen bien escritas, contra `auth.uid()` |
 | **Storage** | Ambos buckets privados, con límite de tamaño y MIME acotado. URLs firmadas de 1 h |
 | **Secretos** | Los 19 archivos usan `Deno.env.get()`. Cero literales. Cero `service_role` en 122 commits |
 | **Funciones de admin** | `listar-usuarios`, `gestionar-usuario` y `obtener-stats` sí revalidan contra `ADMIN_EMAIL`. El `localStorage.rol` no es explotable |
@@ -189,8 +189,6 @@ Lo que quedó fuera de alcance, y por qué. Ninguna es un hueco silencioso.
 
 | Zona | Motivo | Cómo cerrarla |
 |------|--------|---------------|
-| **Verificación empírica de RLS** | El proxy del entorno deniega `supabase.co`. Script escrito y listo | `bash auditoria/scripts/verificar-rls.sh` desde una máquina con salida a internet |
-| **Valor de `ADMIN_EMAIL`** | Los secretos de edge functions no son leíbles por MCP. Verificado indirectamente: existe exactamente 1 cuenta Auth sin fila en `usuarios`, con acceso reciente | Dashboard → Edge Functions → Secrets. Comprobar minúsculas y sin espacios |
 | **Explotación de H-02** | Es de solo lectura: no deja rastro en la base. Los logs del MCP son de 24 h y vuelven vacíos | Logs de Vercel y analytics de Supabase, que sí guardan histórico |
 | **Contenido de `evaluaciones.comentarios`** | Es dato personal (D-5): no lo leí | Buscar `<script`, `onerror=` y `javascript:` en las 2 filas |
 | **Plan y cuota de Resend** | No accesible por MCP | Panel de Resend. Verificar también si la API key es de solo envío |
@@ -218,8 +216,10 @@ Lo que quedó fuera de alcance, y por qué. Ninguna es un hueco silencioso.
 
 Un apunte que afecta a cómo leer este informe.
 
-La primera versión de `verificar-rls.sh` **dio un aprobado completo sin haber enviado una sola petición**. El entorno bloquea `supabase.co`; `curl` devolvía `000`, y mi lógica trataba todo código distinto de `200` como "acceso bloqueado". El script imprimió "RLS aguanta" para las ocho tablas. Lo detecté porque `000` no es un código HTTP.
+La primera versión de `verificar-rls.sh` **dio un aprobado completo sin haber enviado una sola petición**. El entorno de la auditoría bloquea `supabase.co`; `curl` devolvía `000`, y mi lógica trataba todo código distinto de `200` como "acceso bloqueado". El script imprimió "RLS aguanta" para las ocho tablas. Lo detecté porque `000` no es un código HTTP.
 
 Está corregido —ahora hay un preflight que aborta con "NO se ha probado nada"— y lo dejo escrito porque el modo de fallo es más instructivo que el fallo: un verificador que confunde *sin red* con *acceso denegado* produce el peor informe posible, tranquilizador y falso.
+
+**El desenlace refuerza el punto.** La comprobación acabó haciéndola el usuario desde la consola del navegador, y el resultado coincide con lo que predecía el análisis estático: RLS bloquea. Es decir, el veredicto original del script era correcto — y aun así no valía nada, porque no lo había probado. Acertar por casualidad y verificar no son lo mismo, y solo lo segundo se puede sostener ante quien pregunte.
 
 Por eso, en este informe, lo verificado y lo no verificado están separados de forma explícita en cada sección, y la respuesta a "¿hubo explotación?" distingue entre *no hay indicios* y *no puedo saberlo*. Son cosas distintas y la diferencia importa.
