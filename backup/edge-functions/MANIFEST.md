@@ -1,8 +1,9 @@
 # Respaldo de edge functions — punto de retorno
 
 Recuperado vía MCP de Supabase el **8 de agosto de 2026**, proyecto `dxblzmxcmaerycvdgfpy`.
+`crear-reclutador.ts` regenerado el **11 de agosto de 2026** al cerrar H-01 (versión 14 → 15).
 
-**19 funciones · 2,454 líneas · 89,068 bytes (87.0 KB)**
+**19 funciones · 2,475 líneas · 89,921 bytes (87.8 KB)**
 
 Contenido íntegro y literal de cada `index.ts` desplegado, un archivo por función,
 sin resumir ni reformatear. `version` es la versión activa en producción al momento
@@ -12,7 +13,7 @@ del respaldo; `ezbr_sha256` es el hash que reporta Supabase para ese despliegue.
 |---------|--------:|-------:|------:|-------------|
 | `crear-solicitud.ts` | 26 | 369 | 15,620 | `e98e255beb35d065…` |
 | `agregar-candidato.ts` | 10 | 295 | 11,438 | `013946e5009b08ae…` |
-| `crear-reclutador.ts` | 14 | 214 | 8,931 | `3554526edd20674c…` |
+| `crear-reclutador.ts` | 15 | 235 | 9,784 | `61f1889065d7fb7b…` |
 | `obtener-candidato.ts` | 9 | 162 | 5,810 | `dcd511dabb97f863…` |
 | `guardar-evaluacion.ts` | 6 | 162 | 5,691 | `135ddbc708529bb1…` |
 | `establecer-password.ts` | 6 | 116 | 4,252 | `3c38ab72175f3d99…` |

@@ -3,8 +3,10 @@
 Herramienta de **referencias laborales verificadas**: un trabajador solicita referencias a sus
 ex-jefaturas, se validan sus documentos, y un reclutador consulta el resultado.
 
-**Está en marcha blanca, sobre producción y con datos personales reales.** Volúmenes actuales:
-2 reclutadores, 5 procesos, 2 trabajadores. No hay staging.
+**Está en marcha blanca, sobre producción y con datos personales reales.** No hay staging.
+
+Volumen: 4 reclutadores reales (verificado el 11/08). El resto de los recuentos de `TECNICO.md` §6
+son del 31/07 y están marcados como **no verificados** — no decidir en base a ellos sin comprobarlos.
 
 ---
 

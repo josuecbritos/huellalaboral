@@ -6,8 +6,8 @@ qué la protege. Se consulta para saber **dónde tocar**. El porqué está en `F
 **Este documento describe el estado actual y se actualiza en cada iteración.** Documentación
 desactualizada miente con autoridad.
 
-**Actualizado:** 11 de agosto de 2026 · **Estado del código:** H-01 desplegado (`crear-reclutador`
-versión 15), pendiente de verificación funcional
+**Actualizado:** 11 de agosto de 2026 · **Estado del código:** H-01 cerrado (`crear-reclutador`
+versión 15, desplegada y verificada en producción)
 
 ---
 
@@ -123,14 +123,27 @@ usuarios ──1:N──▶ procesos ──1:N──▶ candidatos_proceso ─�
 
 | Tabla | Filas | Papel | Detalles que importan |
 |-------|:-----:|-------|----------------------|
-| `usuarios` | 2 | Reclutadores | PK = `auth.users.id`. **Sin columna de rol.** `activo`, `deleted` |
-| `procesos` | 5 | Procesos de selección | `usuario_id` = dueño. Default `'activo'`, el código escribe `'Activo'` |
-| `candidatos_proceso` | 10 | N:N proceso↔trabajador | `trabajador_id` NULL + `rut_invitado` = invitación pendiente |
-| `trabajadores` | 2 | Personas evaluadas | `rut` unique. `token_consulta` con default `gen_random_uuid()` |
-| `empleadores_solicitados` | 2 | Evaluadores invitados | `token` unique, `fecha_expiracion`, `completado` |
-| `evaluaciones` | 2 | Las referencias | Notas 1-5 con CHECK. `comentarios` es **texto libre de terceros** |
-| `documentos` | 4 | Certificado y finiquito | `storage_path` a los buckets |
-| `validaciones_documentos` | 2 | Resultado de la validación | **`validador_id` existe y nunca se escribe** |
+| `usuarios` | **4** | Reclutadores | PK = `auth.users.id`. **Sin columna de rol.** `activo`, `deleted` |
+| `procesos` | 5 ⚠️ | Procesos de selección | `usuario_id` = dueño. Default `'activo'`, el código escribe `'Activo'` |
+| `candidatos_proceso` | 10 ⚠️ | N:N proceso↔trabajador | `trabajador_id` NULL + `rut_invitado` = invitación pendiente |
+| `trabajadores` | 2 ⚠️ | Personas evaluadas | `rut` unique. `token_consulta` con default `gen_random_uuid()` |
+| `empleadores_solicitados` | 2 ⚠️ | Evaluadores invitados | `token` unique, `fecha_expiracion`, `completado` |
+| `evaluaciones` | 2 ⚠️ | Las referencias | Notas 1-5 con CHECK. `comentarios` es **texto libre de terceros** |
+| `documentos` | 4 ⚠️ | Certificado y finiquito | `storage_path` a los buckets |
+| `validaciones_documentos` | 2 ⚠️ | Resultado de la validación | **`validador_id` existe y nunca se escribe** |
+
+**Sobre los recuentos.** ⚠️ = **no verificado.** Esas cifras vienen de la auditoría del 31/07 y
+no se han comprobado desde entonces. No son de fiar para decidir: `usuarios` decía 2 y el listado
+real del 11/08 devolvió 6 —cuatro reclutadores reales (Andotek, Yokono, MJB, ImmerX) y dos de
+prueba de H-01, ya eliminados—, o sea **4 filas activas** más el admin, que no tiene fila. Si ese
+número estaba mal, los demás también pueden estarlo.
+
+Esto no es una minucia de inventario: con 4 reclutadores reales en vez de 2, la exposición de
+H-04 y H-05 —IDOR entre reclutadores— es bastante mayor de lo que este documento hacía pensar.
+
+Los recuentos se verifican cuando el conector MCP tenga habilitado el grupo `database`. Hoy no lo
+tiene, por decisión de seguridad: mantiene `apply_migration` bloqueado del lado del servidor y no
+solo por convención.
 
 **Estados**
 - `trabajadores.estado`: `'pendiente'` → `'documentos_validados'`

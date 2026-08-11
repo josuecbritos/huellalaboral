@@ -12,15 +12,15 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 
 | | Cerrados | En curso | Pendientes | Total |
 |---|:---:|:---:|:---:|:---:|
-| Hallazgos | 0 | 1 | 49 | 50 |
+| Hallazgos | 1 | 0 | 49 | 50 |
 
-**En curso:** H-01 — desplegado sí (versión 15) · verificación A completa · B, C y D pendientes.
+**En curso:** ninguno. H-01 cerrado el 11/08/2026.
 
 ---
 
 ## H-01 · `crear-reclutador` no comprobaba autorización
 
-🔴 Crítica · SEG · Esfuerzo S · **Estado: desplegado, en verificación**
+🔴 Crítica · SEG · Esfuerzo S · **Estado: ✅ CERRADO** (11/08/2026)
 
 ### El problema
 
@@ -64,28 +64,53 @@ La reactivación quedó tras la misma puerta, sin comprobación aparte: el bloqu
 |------|--------|----------|----------|:------:|
 | **A** | Llamada anónima con anon key | `200` · `success: true` (el fallo) | `200` · `success: true` | ✅ |
 | **A** | ¿Llegó el correo de contraseña? | Recibido | Recibido | ✅ |
-| **B** | Admin crea reclutador | `200` · `success: true` | | ⬜ |
-| **B** | Llega el correo | Recibido | | ⬜ |
-| **C1** | Sin cabecera `x-user-token` | `401` · No autorizado | | ⬜ |
-| **C2** | Token basura | `401` · Token inválido | | ⬜ |
-| **C3** | Reclutador no admin | `403` · Acceso restringido | | ⬜ |
-| **C4** | Reactivación sin autorización | `401`, sin `reactivated` | | ⬜ |
-| **D1** | `admin.html` lista usuarios | Carga | | ⬜ |
-| **D2** | Eliminar usuario desde `admin.html` | Funciona | | ⬜ |
+| **B** | Admin crea reclutador | `200` · `success: true` | `200` · `success: true` | ✅ |
+| **B** | Llega el correo | Recibido | Recibido | ✅ |
+| **C1** | Sin cabecera `x-user-token` | `401` · No autorizado | `401` · No autorizado | ✅ |
+| **C2** | Token basura | `401` · Token inválido | `401` · Token inválido | ✅ |
+| **C3** | Reclutador no admin | `403` · Acceso restringido | `403` · Acceso restringido | ✅ |
+| **C4** | Reactivación sin autorización | `401`, sin `reactivated` | `401` · No autorizado | ✅ |
+| **D1** | `admin.html` lista usuarios | Carga | Devolvió los 6 usuarios | ✅ |
+| **D2** | Eliminar usuario desde `admin.html` | Funciona | Borrado sin error | ✅ |
 
 **Evidencia del paso A** — 2026-08-11 15:56 UTC, ventana de incógnito, sin sesión, solo anon key:
 usuario creado `11e91ada-ad2b-4465-be83-3684ee9f3354`, correo `josuebrito+h01antes@gmail.com`,
 correo de creación de contraseña recibido. La vulnerabilidad no solo creaba la cuenta: entregaba
 el acceso.
 
-### Pendiente
+**Evidencia del paso B** — 2026-08-11 17:11 UTC: usuario `3a0f04a9-2ee1-452d-afce-dcde8b15ed2f`,
+correo `josuebrito+h01feliz@gmail.com`. El camino feliz quedó intacto.
 
-- [x] Desplegar (versión 15) — 11/08 17:07 UTC
-- [ ] Fases B, C, D — las corre el dueño desde la consola del navegador, contra producción
-- [ ] Eliminar los usuarios de prueba A y B
-- [ ] Regenerar el respaldo de `crear-reclutador` a versión 15 — **solo al cerrar el hallazgo.**
-      Hasta que B, C y D pasen, el punto de retorno debe seguir siendo la versión 14
-- [x] Actualizar `TECNICO.md` §4: `crear-reclutador` pasa a ✅ / 🏷️
+**Verificación independiente del despliegue** — versión 15 leída vía MCP, `ezbr_sha256`
+`61f1889065d7fb7b…`, `verify_jwt: true`, bloque de autorización antes del `req.json()`.
+
+**Nota sobre C4 — cómo se probó de verdad.** La reactivación sin autorización necesita un usuario
+con `deleted = true`, y no había ninguno. En vez de dar la prueba por cubierta por inspección del
+código —"el bloque va antes del `req.json()`, luego también cubre `confirm_reactivate`"—, se
+encadenó con D2: el borrado suave de la fase D2 sobre el usuario de la fase A produjo justamente
+el `deleted = true` que C4 requería. Las dos pruebas se ejecutaron de verdad y no dejaron datos
+basura.
+
+**El patrón, para los hallazgos que vienen:** cuando a un camino le falta el estado previo que lo
+hace alcanzable, conviene buscar qué otra prueba del plan lo genera y encadenarlas, antes de
+rebajar la prueba a una lectura del código. Un razonamiento sobre el código no es una ejecución.
+
+### Criterio de cierre
+
+- [x] Código desplegado — versión 15, 11/08 17:07 UTC
+- [x] Prueba A: el fallo existía
+- [x] Camino feliz intacto — fase B
+- [x] Caminos hostiles rechazados — fases C1 a C4
+- [x] No regresión — fases D1 y D2, `listar-usuarios` y `gestionar-usuario` siguen operativas
+- [x] Limpieza: usuarios de prueba A y B eliminados
+- [x] Respaldo regenerado a versión 15, y `MANIFEST.md` actualizado
+- [x] Visto bueno del dueño
+
+**Pendiente de reverificación:** el respaldo se regeneró desde `supabase/functions/crear-reclutador/index.ts`,
+que es exactamente el archivo enviado al desplegar, y coincide con la lectura de la versión 15
+hecha vía MCP tras el despliegue. La comparación byte a byte contra una llamada nueva a
+`get_edge_function` no se pudo repetir al cerrar porque el conector se desconectó. Conviene
+rehacerla la próxima vez que el conector esté disponible.
 
 ---
 

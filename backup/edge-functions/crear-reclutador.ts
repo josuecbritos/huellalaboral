@@ -16,6 +16,27 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const resendApiKey = Deno.env.get('RESEND_API_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
+    // Verificar autenticación
+    const userToken = req.headers.get('x-user-token')
+    if (!userToken) {
+      return new Response(
+        JSON.stringify({ error: 'No autorizado' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    const { data: { user: authUser }, error: tokenError } = await supabase.auth.getUser(userToken)
+    if (tokenError || !authUser) {
+      return new Response(
+        JSON.stringify({ error: 'Token inválido' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    if (authUser.email !== Deno.env.get('ADMIN_EMAIL')) {
+      return new Response(
+        JSON.stringify({ error: 'Acceso restringido' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
     const { nombre, empresa, email, confirm_reactivate } = await req.json()
 
