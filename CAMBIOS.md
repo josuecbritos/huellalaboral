@@ -106,11 +106,25 @@ rebajar la prueba a una lectura del código. Un razonamiento sobre el código no
 - [x] Respaldo regenerado a versión 15, y `MANIFEST.md` actualizado
 - [x] Visto bueno del dueño
 
-**Pendiente de reverificación:** el respaldo se regeneró desde `supabase/functions/crear-reclutador/index.ts`,
-que es exactamente el archivo enviado al desplegar, y coincide con la lectura de la versión 15
-hecha vía MCP tras el despliegue. La comparación byte a byte contra una llamada nueva a
-`get_edge_function` no se pudo repetir al cerrar porque el conector se desconectó. Conviene
-rehacerla la próxima vez que el conector esté disponible.
+**Punto de retorno comprobado** — 11 de agosto de 2026. La comparación byte a byte que quedó
+pendiente al cerrar, porque el conector se había desconectado, se rehízo con el conector activo.
+`get_edge_function('crear-reclutador')` devuelve versión **15**, `ezbr_sha256`
+`61f1889065d7fb7bebf005adf43ed28a3228935b214c9e30d47ac02c9fbeec33`, `verify_jwt: true`, y su
+fuente es **idéntico byte a byte** a `backup/edge-functions/crear-reclutador.ts`: sha256
+`dcd8ba6d80cd2425759a163c3261dbb96a73856c111fa7330f81edf36f264189`, 9.784 bytes, 235 líneas.
+`cmp` y `diff -u` sin diferencias. El respaldo es copia literal, no inferida, y el procedimiento
+de reversión devuelve producción a la versión 15 sin arrastrar nada.
+
+**Cómo se comprobó, y qué prueba.** El MCP entrega el fuente dentro de un JSON en el contexto del
+agente, no a disco, así que el volcado a archivo pasa por transcripción. Para que la comparación
+no fuera complaciente, los dos rasgos que una retranscripción normaliza se fijaron leyendo el
+texto de producción, no el respaldo: el espacio final va en las dos líneas del bloque `invite` y
+no en las equivalentes del bloque `recovery`, y el fuente no termina en salto de línea. Los tres
+valores que no se ajustaron —bytes, líneas y sha256— coincidieron. Una transcripción que hubiera
+"corregido" el archivo no habría dado ese hash.
+
+**Alcance:** comprobado `crear-reclutador`, que es el respaldo regenerado. Las otras 18 copias del
+commit `4622d62` siguen con literalidad **inferida**, no comprobada contra una lectura nueva.
 
 ---
 
