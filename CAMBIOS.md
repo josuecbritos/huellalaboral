@@ -14,7 +14,13 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 |---|:---:|:---:|:---:|:---:|
 | Hallazgos | 1 | 0 | 49 | 50 |
 
-**En curso:** ninguno. H-01 cerrado el 11/08/2026.
+**En curso:** ninguno. H-01 cerrado el 11/08/2026, sin pendientes.
+
+**Punto de retorno.** Las 19 funciones de `backup/edge-functions/` coinciden con producción en
+versión y `ezbr_sha256` (comprobado el 11/08). De las 19, `crear-reclutador.ts` está además
+comprobada byte a byte contra el fuente desplegado; las otras 18 tienen literalidad **inferida**
+del respaldo del 08/08, no comprobada contra una lectura nueva. No es un pendiente de ningún
+hallazgo: es el estado del respaldo. Detalle en `backup/edge-functions/MANIFEST.md`.
 
 ---
 
@@ -109,13 +115,17 @@ rebajar la prueba a una lectura del código. Un razonamiento sobre el código no
 - [x] Limpieza: usuarios de prueba A y B eliminados
 - [x] Respaldo regenerado a versión 15, y `MANIFEST.md` actualizado
 - [x] Visto bueno del dueño
+- [x] Punto de retorno comprobado byte a byte contra producción
+
+**H-01 queda cerrado sin pendientes.**
 
 **Punto de retorno comprobado** — 11 de agosto de 2026. La comparación byte a byte que quedó
 pendiente al cerrar, porque el conector se había desconectado, se rehízo con el conector activo.
 `get_edge_function('crear-reclutador')` devuelve versión **15**, `ezbr_sha256`
 `61f1889065d7fb7bebf005adf43ed28a3228935b214c9e30d47ac02c9fbeec33`, `verify_jwt: true`, y su
 fuente es **idéntico byte a byte** a `backup/edge-functions/crear-reclutador.ts`: sha256
-`dcd8ba6d80cd2425759a163c3261dbb96a73856c111fa7330f81edf36f264189`, 9.784 bytes, 235 líneas.
+`dcd8ba6d80cd2425759a163c3261dbb96a73856c111fa7330f81edf36f264189`, 9.784 bytes, 235 líneas
+—234 saltos de línea, porque la última no termina en salto, así que `wc -l` devuelve 234—.
 `cmp` y `diff -u` sin diferencias. El respaldo es copia literal, no inferida, y el procedimiento
 de reversión devuelve producción a la versión 15 sin arrastrar nada.
 
@@ -126,9 +136,6 @@ texto de producción, no el respaldo: el espacio final va en las dos líneas del
 no en las equivalentes del bloque `recovery`, y el fuente no termina en salto de línea. Los tres
 valores que no se ajustaron —bytes, líneas y sha256— coincidieron. Una transcripción que hubiera
 "corregido" el archivo no habría dado ese hash.
-
-**Alcance:** comprobado `crear-reclutador`, que es el respaldo regenerado. Las otras 18 copias del
-commit `4622d62` siguen con literalidad **inferida**, no comprobada contra una lectura nueva.
 
 ---
 
