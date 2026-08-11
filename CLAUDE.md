@@ -62,6 +62,26 @@ y ninguna decía qué contenía.
 **No se commitea a `main` directamente.** `main` es lo que Vercel despliega: en un hallazgo de
 frontend, un commit malo sale a producción sin escala. El PR es la única barrera que queda.
 
+### Dejar el PR abierto al terminar
+
+Con título y descripción. El dueño revisa y fusiona; no debería tener que crearlo. Si el hallazgo
+queda a medias, el PR va **en borrador**, no sin abrir.
+
+### Verificar el estado real de las ramas antes de tocar un archivo compartido
+
+`CAMBIOS.md`, `TECNICO.md`, `FUNCIONAL.md` y `CLAUDE.md` los tocan todos los hallazgos. Antes de
+editarlos: `git fetch --prune` y comparar contra `origin/main`. No fiarse de lo que la sesión
+anterior dejó dicho.
+
+Comprobar **las dos cosas**, porque son distintas y ambas han fallado ya:
+
+- **Que lo que se cree fusionado lo esté.** `git log --oneline origin/main..<rama>` vacío, o
+  `git merge-base --is-ancestor <commit> origin/main`. Una rama borrada del remoto no significa
+  fusionada: el cierre de H-01 se perdió así y hubo que rescatarlo de commits que solo existían
+  en el disco de la sesión.
+- **Que el contenido esté de verdad.** `git show origin/main:CAMBIOS.md | grep …`. Es la
+  comprobación que no se puede discutir.
+
 ### El grupo `database` del conector no se va a activar
 
 Decisión del dueño, en firme. Ya se pidió dos veces y la respuesta fue la misma. Queda escrita
