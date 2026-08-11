@@ -6,7 +6,8 @@ qué la protege. Se consulta para saber **dónde tocar**. El porqué está en `F
 **Este documento describe el estado actual y se actualiza en cada iteración.** Documentación
 desactualizada miente con autoridad.
 
-**Actualizado:** 11 de agosto de 2026 · **Estado del código:** anterior al despliegue de H-01
+**Actualizado:** 11 de agosto de 2026 · **Estado del código:** H-01 desplegado (`crear-reclutador`
+versión 15), pendiente de verificación funcional
 
 ---
 
@@ -67,7 +68,7 @@ Es la raíz de H-02 y H-03.
 |---|---------|---------------|:-----:|:-----:|---------|
 | 1 | `autenticar` | `login.html` | 🔑 email+pass | n/a | — |
 | 2 | `establecer-password` | `crear-password.html` | 🔑 access_token | `!deleted` y `!activo` | — |
-| 3 | `crear-reclutador` | `admin.html` | ⛔ | ⛔ | M-6, M-7 |
+| 3 | `crear-reclutador` | `admin.html` | ✅ | 🏷️ | M-6, M-7 |
 | 4 | `listar-usuarios` | `admin.html` | ✅ | 🏷️ | — |
 | 5 | `gestionar-usuario` | `admin.html` | ✅ | 🏷️ | — |
 | 6 | `crear-proceso` | `dashboard.html` | ✅ | 👤 | — |

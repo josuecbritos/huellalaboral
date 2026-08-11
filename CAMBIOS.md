@@ -14,13 +14,13 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 |---|:---:|:---:|:---:|:---:|
 | Hallazgos | 0 | 1 | 49 | 50 |
 
-**En curso:** H-01 — desplegado no · verificación A completa.
+**En curso:** H-01 — desplegado sí (versión 15) · verificación A completa · B, C y D pendientes.
 
 ---
 
 ## H-01 · `crear-reclutador` no comprobaba autorización
 
-🔴 Crítica · SEG · Esfuerzo S · **Estado: en verificación**
+🔴 Crítica · SEG · Esfuerzo S · **Estado: desplegado, en verificación**
 
 ### El problema
 
@@ -44,9 +44,14 @@ La reactivación quedó tras la misma puerta, sin comprobación aparte: el bloqu
 
 ### El cambio
 
-- **Rama:** `claude/huella-laboral-context-improvements-rlhz3i` · commit `f1daa26`
+- **Rama:** `claude/huella-laboral-context-improvements-rlhz3i` · commit `f1daa26`, fusionado a
+  `main` en el merge `95cce48`
 - **Archivo:** `supabase/functions/crear-reclutador/index.ts`
 - **Diff contra el respaldo:** 21 líneas insertadas, 0 modificadas, 0 borradas
+- **Despliegue:** 11 de agosto de 2026, 17:07 UTC. Versión 14 → **15**, `verify_jwt` sigue en
+  `true`. Nuevo `ezbr_sha256`: `61f1889065d7fb7b…`. Antes de desplegar se confirmó que la versión
+  viva era la 14 con `ezbr_sha256: 3554526edd20674c…`, o sea el punto de retorno seguía siendo
+  válido. Tras desplegar se comprobó que ninguna de las otras 18 funciones cambió de versión
 - **Desviación:** la variable se llama `tokenError`, no `authError`. Copiar el bloque literal de
   `listar-usuarios` habría colisionado con el `authError` que ya declara la línea 30 con `let` —
   `SyntaxError` en el arranque, la función no levanta.
@@ -75,11 +80,12 @@ el acceso.
 
 ### Pendiente
 
-- [ ] Desplegar (versión 15)
-- [ ] Fases B, C, D
+- [x] Desplegar (versión 15) — 11/08 17:07 UTC
+- [ ] Fases B, C, D — las corre el dueño desde la consola del navegador, contra producción
 - [ ] Eliminar los usuarios de prueba A y B
-- [ ] Regenerar el respaldo de `crear-reclutador` a versión 15
-- [ ] Actualizar `TECNICO.md` §4: `crear-reclutador` pasa a ✅ / 🏷️
+- [ ] Regenerar el respaldo de `crear-reclutador` a versión 15 — **solo al cerrar el hallazgo.**
+      Hasta que B, C y D pasen, el punto de retorno debe seguir siendo la versión 14
+- [x] Actualizar `TECNICO.md` §4: `crear-reclutador` pasa a ✅ / 🏷️
 
 ---
 
