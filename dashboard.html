@@ -939,6 +939,21 @@
     let vistaDataProceso = 'total'; // 'total' o 'verificada' (para tabla comparativa)
     let candidatoActualData = {}; // guarda ambos promedios
 
+    // H-07: escapa los datos de origen externo antes de inyectarlos con innerHTML.
+    // Se aplica a todo valor que haya tecleado una persona; los números, las fechas
+    // formateadas y las cadenas literales del código no lo necesitan.
+    // String(valor) es deliberado: reproduce exactamente lo que interpolaría la
+    // plantilla, así que null y undefined se siguen viendo como antes y el arreglo
+    // no introduce ningún cambio visual.
+    function escapeHtml(valor) {
+        return String(valor)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     const CAUSAL_LABELS = {
         'mutuo_acuerdo':       'Mutuo acuerdo de las partes',
         'necesidades_empresa': 'Necesidades de la empresa',
@@ -1025,7 +1040,7 @@
                 
                 return `
                 <tr>
-                    <td><div class="td-name">${p.cargo}</div><div class="td-sub">${p.descripcion || ''}</div></td>
+                    <td><div class="td-name">${escapeHtml(p.cargo)}</div><div class="td-sub">${escapeHtml(p.descripcion || '')}</div></td>
                     <td>${p.candidatos}</td>
                     <td><span class="badge ${badgeClass}">${estadoProceso}</span></td>
                     <td>${formatFecha(p.fecha)}</td>
@@ -1204,7 +1219,7 @@
                 if (c.pendiente) {
                     return `
                     <tr style="opacity:0.6;">
-                        <td><div class="td-name">${c.email}</div><div class="td-sub">${c.rut}</div></td>
+                        <td><div class="td-name">${escapeHtml(c.email)}</div><div class="td-sub">${escapeHtml(c.rut)}</div></td>
                         <td colspan="6" style="text-align:center;"><span style="font-size:12px; color:var(--subtitulo); background:var(--fondo-gris); padding:4px 12px; border-radius:12px;">⏳ Invitación pendiente</span></td>
                         <td><span style="font-size:12px;color:var(--subtitulo);">Esperando respuesta</span></td>
                     </tr>`;
@@ -1212,12 +1227,12 @@
                     const d = c[vista];
                     return `
                     <tr>
-                        <td><div class="td-name">${c.nombre}</div><div class="td-sub">${c.rut}</div></td>
+                        <td><div class="td-name">${escapeHtml(c.nombre)}</div><div class="td-sub">${escapeHtml(c.rut)}</div></td>
                         <td><strong style="font-size:18px;color:var(--azul);">${d.promedio ? d.promedio.toFixed(1) : '—'}</strong></td>
                         <td>${d.count} / ${c.empleadores}</td>
                         <td>${c.cert_empleos !== null && c.cert_empleos !== undefined ? c.cert_empleos : '—'}</td>
                         <td>${c.cert_permanencia !== null && c.cert_permanencia !== undefined ? c.cert_permanencia + ' años' : '—'}</td>
-                        <td>${c.causal_texto || '—'}</td>
+                        <td>${escapeHtml(c.causal_texto || '—')}</td>
                         <td>${c.evaluaciones > 0
                             ? `<button class="btn-accion" onclick="verResultados('${c.id}')">Ver detalle</button>`
                             : `<span style="font-size:12px;color:var(--subtitulo);">Sin evaluaciones</span>`}
@@ -1336,14 +1351,14 @@
                 <div class="evaluacion-header">
                     <div>
                         <div class="evaluacion-evaluador">
-                            ${e.evaluador}
+                            ${escapeHtml(e.evaluador)}
                             ${e.verificada ? '<span style="display:inline-block; margin-left:6px; font-size:10px; font-weight:700; color:#166534; background:rgba(47,191,113,0.12); padding:2px 6px; border-radius:2px;">✓ VERIFICADA</span>' : ''}
                         </div>
-                        <div class="evaluacion-empresa">${e.empresa} — RUT ${e.rut}${e.email_evaluador ? ' — ' + e.email_evaluador : ''}</div>
+                        <div class="evaluacion-empresa">${escapeHtml(e.empresa)} — RUT ${escapeHtml(e.rut)}${e.email_evaluador ? ' — ' + escapeHtml(e.email_evaluador) : ''}</div>
                     </div>
                     <div>
-                        <div class="evaluacion-fecha"><strong>Cargo:</strong> ${e.cargo}</div>
-                        <div class="evaluacion-fecha"><strong>Tiempo en empresa:</strong> ${formatearTiempoTrabajo(e.periodo)}</div>
+                        <div class="evaluacion-fecha"><strong>Cargo:</strong> ${escapeHtml(e.cargo)}</div>
+                        <div class="evaluacion-fecha"><strong>Tiempo en empresa:</strong> ${escapeHtml(formatearTiempoTrabajo(e.periodo))}</div>
                     </div>
                 </div>
                 <div class="evaluacion-body">
@@ -1364,7 +1379,7 @@
                                     <div class="eval-score-texto">${escalaTextos[e[attr].val]}</div>
                                 </div>`).join('')}
                            </div>
-                           ${e.otros ? `<div class="eval-otros"><div class="eval-otros-label">Comentarios adicionales</div><div class="eval-otros-texto">${e.otros}</div></div>` : ''}`
+                           ${e.otros ? `<div class="eval-otros"><div class="eval-otros-label">Comentarios adicionales</div><div class="eval-otros-texto">${escapeHtml(e.otros)}</div></div>` : ''}`
                     }
                 </div>
             </div>`).join('')
@@ -1492,7 +1507,7 @@
             if (!response.ok) {
                 if (response.status === 401) { cerrarSesion(); return; }
                 if (response.status === 404) {
-                    contenedor.innerHTML = `<div class="table-card" style="padding:32px; text-align:center;"><div class="empty-state-title">Sin resultados</div><div class="empty-state-desc" style="margin-top:6px;">No se encontró ningún trabajador con el RUT <strong>${rut}</strong>.</div></div>`;
+                    contenedor.innerHTML = `<div class="table-card" style="padding:32px; text-align:center;"><div class="empty-state-title">Sin resultados</div><div class="empty-state-desc" style="margin-top:6px;">No se encontró ningún trabajador con el RUT <strong>${escapeHtml(rut)}</strong>.</div></div>`;
                 } else {
                     throw new Error('Error al buscar');
                 }
@@ -1563,13 +1578,13 @@
                 <div class="evaluacion-header">
                     <div>
                         <div class="evaluacion-evaluador">
-                            ${e.nombre_evaluador}
+                            ${escapeHtml(e.nombre_evaluador)}
                             ${e.verificada ? '<span style="display:inline-block; margin-left:6px; font-size:10px; font-weight:700; color:#166534; background:rgba(47,191,113,0.12); padding:2px 6px; border-radius:2px;">✓ VERIFICADA</span>' : ''}
                         </div>
-                        <div class="evaluacion-empresa">${e.empresa_evaluador || '—'} — RUT ${e.rut_evaluador || '—'}${e.email_evaluador ? ' — ' + e.email_evaluador : ''}</div>
+                        <div class="evaluacion-empresa">${escapeHtml(e.empresa_evaluador || '—')} — RUT ${escapeHtml(e.rut_evaluador || '—')}${e.email_evaluador ? ' — ' + escapeHtml(e.email_evaluador) : ''}</div>
                     </div>
-                    <div class="evaluacion-fecha"><strong>Cargo:</strong> ${e.cargo || '—'}</div>
-                    <div class="evaluacion-fecha"><strong>Tiempo en empresa:</strong> ${formatearTiempoTrabajo(e.tiempo_trabajo)}</div>
+                    <div class="evaluacion-fecha"><strong>Cargo:</strong> ${escapeHtml(e.cargo || '—')}</div>
+                    <div class="evaluacion-fecha"><strong>Tiempo en empresa:</strong> ${escapeHtml(formatearTiempoTrabajo(e.tiempo_trabajo))}</div>
                 </div>
                 <div class="evaluacion-body">
                     ${e.rechazo
@@ -1589,7 +1604,7 @@
                                     <div class="eval-score-texto">${escalaTextos[e[attr]]}</div>
                                 </div>`).join('')}
                            </div>
-                           ${e.comentarios ? `<div class="eval-otros"><div class="eval-otros-label">Comentarios adicionales</div><div class="eval-otros-texto">${e.comentarios}</div></div>` : ''}`
+                           ${e.comentarios ? `<div class="eval-otros"><div class="eval-otros-label">Comentarios adicionales</div><div class="eval-otros-texto">${escapeHtml(e.comentarios)}</div></div>` : ''}`
                     }
                 </div>
             </div>`).join('');

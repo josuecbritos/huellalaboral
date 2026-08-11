@@ -533,6 +533,21 @@
 
         let accionPendiente = null;
 
+        // H-07: escapa los datos de origen externo antes de inyectarlos con innerHTML.
+        // Se aplica a todo valor que haya tecleado una persona; los números, las fechas
+        // formateadas y las cadenas literales del código no lo necesitan.
+        // String(valor) es deliberado: reproduce exactamente lo que interpolaría la
+        // plantilla, así que null y undefined se siguen viendo como antes y el arreglo
+        // no introduce ningún cambio visual.
+        function escapeHtml(valor) {
+            return String(valor)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         // Funciones de validación
         function validarEmail(email) {
             const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -587,11 +602,11 @@
             tbody.innerHTML = usuarios.map(u => `
                 <tr>
                     <td>
-                        <div class="td-name">${u.nombre}</div>
+                        <div class="td-name">${escapeHtml(u.nombre)}</div>
                     </td>
-                    <td>${u.empresa}</td>
+                    <td>${escapeHtml(u.empresa)}</td>
                     <td>
-                        <div class="td-email">${u.email}</div>
+                        <div class="td-email">${escapeHtml(u.email)}</div>
                     </td>
                     <td>${new Date(u.created_at).toLocaleDateString('es-CL')}</td>
                     <td>
