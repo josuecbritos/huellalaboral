@@ -179,6 +179,9 @@ Si responde "no" a tres o más, se posterga.
 **Etapa 0 — Marcha blanca.** Criterio de cierre: 10 procesos completos sin fallas críticas.
 
 El trabajo de corrección de hallazgos es la casilla "Recorrer el MVP de extremo a extremo y
-documentar fallas" de la ruta de 90 días. Volúmenes actuales: 2 reclutadores, 5 procesos, 2
-trabajadores. Cerrar los agujeros ahora cuesta poco y la superficie de datos personales
-expuesta es pequeña.
+documentar fallas" de la ruta de 90 días. Volúmenes actuales: **4 reclutadores** —verificado el
+11/08 contra el listado real—, 5 procesos ⚠️ y 2 trabajadores ⚠️. Las dos cifras marcadas ⚠️
+vienen de la auditoría del 31/07 y no están comprobadas; ver `TECNICO.md` §6. Cerrar los agujeros
+ahora cuesta poco y la superficie de datos personales expuesta es pequeña, aunque con 4
+reclutadores en vez de 2 la exposición de H-04 y H-05 —IDOR entre reclutadores— es mayor de lo
+que esta sección hacía pensar.

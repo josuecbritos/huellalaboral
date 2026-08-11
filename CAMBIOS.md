@@ -79,7 +79,11 @@ correo de creación de contraseña recibido. La vulnerabilidad no solo creaba la
 el acceso.
 
 **Evidencia del paso B** — 2026-08-11 17:11 UTC: usuario `3a0f04a9-2ee1-452d-afce-dcde8b15ed2f`,
-correo `josuebrito+h01feliz@gmail.com`. El camino feliz quedó intacto.
+correo `josuebrito+h01feliz@gmail.com`. El camino feliz quedó intacto. El correo de creación de
+contraseña **llegó**; el dueño lo confirmó expresamente el 11/08 al revisar esta tabla. Se anota
+aquí porque el pedido original detallaba nueve pruebas y la tabla marca diez: la fila del correo
+de B se había dado por buena sobre una afirmación global, no sobre evidencia propia. Confirmada
+punto por punto, la fila se sostiene.
 
 **Verificación independiente del despliegue** — versión 15 leída vía MCP, `ezbr_sha256`
 `61f1889065d7fb7b…`, `verify_jwt: true`, bloque de autorización antes del `req.json()`.
@@ -125,6 +129,27 @@ valores que no se ajustaron —bytes, líneas y sha256— coincidieron. Una tran
 
 **Alcance:** comprobado `crear-reclutador`, que es el respaldo regenerado. Las otras 18 copias del
 commit `4622d62` siguen con literalidad **inferida**, no comprobada contra una lectura nueva.
+
+---
+
+## Correcciones de documentación
+
+Cambios que no tocan código pero sí lo que los documentos afirman. Se registran porque un dato
+falso en `FUNCIONAL.md` o `TECNICO.md` dirige mal la siguiente iteración.
+
+| Fecha | Documento | Qué decía | Qué dice | Por qué |
+|-------|-----------|-----------|----------|---------|
+| 11/08 | `TECNICO.md` §6 | `usuarios`: 2 filas | 4 filas activas, más el admin sin fila | El listado real del 11/08 devolvió 6 registros: 4 reclutadores reales y 2 de prueba de H-01, ya eliminados |
+| 11/08 | `TECNICO.md` §6 | Los otros 7 recuentos sin marcar | Marcados ⚠️ no verificado | Son del 31/07. Si el de `usuarios` estaba mal, los demás también pueden estarlo |
+| 11/08 | `FUNCIONAL.md` §9 | «2 reclutadores, 5 procesos, 2 trabajadores» | «4 reclutadores» verificado; procesos y trabajadores marcados ⚠️ | Mismo dato ya corregido en `TECNICO.md` y `CLAUDE.md`. `FUNCIONAL.md` manda, y era el único de los tres que seguía diciendo 2 |
+
+La corrección de `FUNCIONAL.md` §9 se hizo con autorización expresa del dueño el 11/08, por
+tratarse de contenido aprobado. Se limitó a la cifra y a marcar las dos que siguen sin comprobar;
+no se tocó nada más del documento.
+
+**Consecuencia que no es de inventario:** con 4 reclutadores reales en vez de 2, la exposición de
+H-04 y H-05 —IDOR entre reclutadores— es mayor de lo que la documentación hacía pensar. El dato
+cambia la prioridad, no solo el recuento.
 
 ---
 
