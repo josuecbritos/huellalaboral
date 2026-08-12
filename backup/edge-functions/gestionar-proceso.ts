@@ -6,6 +6,43 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-user-token',
 }
 
+// ─── Comprobación de propiedad · H-04, H-05, H-10 ────────────────────────────
+// Bloque IDÉNTICO en obtener-proceso, gestionar-proceso, agregar-candidato y
+// obtener-stats. Cada edge function se despliega por separado, así que se
+// duplica físicamente: si se cambia, se cambia en las cuatro.
+//
+// Devuelve solo los ids que existen Y pertenecen a userId. Un id ajeno y un id
+// inexistente son indistinguibles en la respuesta, a propósito: distinguirlos
+// confirmaría la existencia de procesos de terceros.
+//
+// Si la consulta falla, lanza. El llamante devuelve 500 y no opera. Fallar
+// cerrado es deliberado: un catch que devolviera los ids pedidos convertiría un
+// error transitorio de red en el mismo IDOR que esto viene a cerrar.
+async function filtrarProcesosPropios(
+  supabase: any,
+  procesoIds: string[],
+  userId: string
+): Promise<string[]> {
+  if (!procesoIds.length) return []
+  const { data, error } = await supabase
+    .from('procesos')
+    .select('id')
+    .in('id', procesoIds)
+    .eq('usuario_id', userId)
+  if (error) throw error
+  return (data ?? []).map((p: any) => p.id)
+}
+
+// El caso de un solo proceso, que es el de tres de las cuatro funciones.
+async function esProcesoPropio(
+  supabase: any,
+  procesoId: string,
+  userId: string
+): Promise<boolean> {
+  const propios = await filtrarProcesosPropios(supabase, [procesoId], userId)
+  return propios.length === 1
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -38,6 +75,18 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'proceso_id y accion son requeridos' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // H-05: comprobar propiedad antes de operar. Va antes del despacho por
+    // acción, así que cubre 'finalizar' y 'eliminar' por construcción y también
+    // cualquier acción que se añada después. 'eliminar' borra las filas de
+    // candidatos_proceso y luego el proceso: sin esta comprobación, era borrado
+    // irreversible de datos ajenos.
+    if (!(await esProcesoPropio(supabase, proceso_id, authUser.id))) {
+      return new Response(
+        JSON.stringify({ error: 'Proceso no encontrado' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 

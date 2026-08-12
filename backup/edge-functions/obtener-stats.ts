@@ -6,6 +6,43 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-user-token',
 }
 
+// ─── Comprobación de propiedad · H-04, H-05, H-10 ────────────────────────────
+// Bloque IDÉNTICO en obtener-proceso, gestionar-proceso, agregar-candidato y
+// obtener-stats. Cada edge function se despliega por separado, así que se
+// duplica físicamente: si se cambia, se cambia en las cuatro.
+//
+// Devuelve solo los ids que existen Y pertenecen a userId. Un id ajeno y un id
+// inexistente son indistinguibles en la respuesta, a propósito: distinguirlos
+// confirmaría la existencia de procesos de terceros.
+//
+// Si la consulta falla, lanza. El llamante devuelve 500 y no opera. Fallar
+// cerrado es deliberado: un catch que devolviera los ids pedidos convertiría un
+// error transitorio de red en el mismo IDOR que esto viene a cerrar.
+async function filtrarProcesosPropios(
+  supabase: any,
+  procesoIds: string[],
+  userId: string
+): Promise<string[]> {
+  if (!procesoIds.length) return []
+  const { data, error } = await supabase
+    .from('procesos')
+    .select('id')
+    .in('id', procesoIds)
+    .eq('usuario_id', userId)
+  if (error) throw error
+  return (data ?? []).map((p: any) => p.id)
+}
+
+// El caso de un solo proceso, que es el de tres de las cuatro funciones.
+async function esProcesoPropio(
+  supabase: any,
+  procesoId: string,
+  userId: string
+): Promise<boolean> {
+  const propios = await filtrarProcesosPropios(supabase, [procesoId], userId)
+  return propios.length === 1
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -44,11 +81,30 @@ serve(async (req) => {
       )
     }
 
+    // H-10: el array llega del cliente y se contaba sobre él sin filtrar, así
+    // que se filtraban recuentos agregados de procesos ajenos.
+    //
+    // Se filtra en silencio a los propios en vez de rechazar la petición entera.
+    // Dos razones: la pantalla de estadísticas se rompería completa por un solo
+    // id inválido, y rechazar con un error distinto según el id exista o no
+    // filtraría por diferencia lo que la comprobación viene a esconder. Los ids
+    // salen de `listar-procesos`, que ya filtra por `usuario_id`: un id ajeno
+    // aquí es un fallo o un ataque, y en ambos casos lo correcto es devolver los
+    // números propios del llamante.
+    const procesosPropios = await filtrarProcesosPropios(supabase, proceso_ids, authUser.id)
+
+    if (!procesosPropios.length) {
+      return new Response(
+        JSON.stringify({ candidatos: 0, evaluaciones: 0 }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     // Candidatos únicos (excluyendo invitaciones pendientes)
     const { data: candidatosRaw, error: candidatosError } = await supabase
       .from('candidatos_proceso')
       .select('trabajador_id')
-      .in('proceso_id', proceso_ids)
+      .in('proceso_id', procesosPropios)
       .not('trabajador_id', 'is', null)
 
     if (candidatosError) throw candidatosError

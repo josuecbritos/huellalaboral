@@ -12,9 +12,13 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 
 | | Cerrados | En curso | Pendientes | Total |
 |---|:---:|:---:|:---:|:---:|
-| Hallazgos | 1 | 0 | 49 | 50 |
+| Hallazgos | 5 | 0 | 45 | 50 |
 
-**En curso:** ninguno. H-01 cerrado el 11/08/2026.
+**En curso:** ninguno. Cerrados el 11/08/2026: H-01, H-07, H-04, H-05 y H-10.
+
+**Residuos de prueba en producción, ninguno limpiable hoy.** Tres filas creadas por pruebas de
+verificación que no tienen vía de borrado: el trabajador con payload XSS de H-07 y los dos
+candidatos de H-10. Detalle en cada hallazgo. La causa común es N-2.
 
 ---
 
@@ -114,6 +118,139 @@ rehacerla la próxima vez que el conector esté disponible.
 
 ---
 
+## H-04, H-05 y H-10 · IDOR entre reclutadores
+
+🔴 Crítica (H-04, H-05) · 🟠 Alta (H-10) · SEG · Esfuerzo S · **Estado: ✅ CERRADOS** (11/08/2026)
+
+### El problema
+
+Cuatro funciones autenticaban pero **no comprobaban propiedad**: verificaban que el llamante fuera
+un reclutador válido y luego operaban sobre el `proceso_id` que viniera en la petición, fuera de
+quien fuera. `listar-procesos` ya lo hacía bien con `.eq('usuario_id', userId)`; estas cuatro no.
+
+| Hallazgo | Función | Qué permitía |
+|----------|---------|--------------|
+| **H-04** | `obtener-proceso` | Leer la cartera de candidatos de cualquier reclutador, con nombre, RUT, correo, WhatsApp y comuna. De solo lectura, sin rastro |
+| **H-05** | `gestionar-proceso` | `eliminar` borraba `candidatos_proceso` y el proceso ajeno. **Irreversible.** `finalizar` cerraba procesos ajenos |
+| **H-10** | `agregar-candidato` | Inyectar candidatos en procesos ajenos. Y `reclutador_nombre` llegaba del cliente y salía en M-4 y M-5: invitaciones firmadas con el nombre de otro |
+| **H-10** | `obtener-stats` | Recuentos agregados de procesos ajenos, sobre un array sin filtrar |
+
+### La decisión
+
+Un bloque de comprobación de propiedad **idéntico en las cuatro**, con dos funciones:
+`filtrarProcesosPropios` como primitiva sobre un array y `esProcesoPropio` como envoltorio de un
+solo id. Así el requisito de "idéntico en las cuatro" se cumple literalmente aunque `obtener-stats`
+necesite el caso del array y las otras tres el de un id.
+
+Tres decisiones que no son obvias:
+
+**`404`, nunca `403`.** Un proceso ajeno y uno inexistente devuelven exactamente la misma respuesta.
+Un `403` confirmaría la existencia del proceso, que es justo lo que la comprobación esconde.
+
+**`obtener-stats` filtra en silencio en vez de rechazar la petición entera.** La pantalla de
+estadísticas se rompería completa por un solo id inválido, y rechazar con un error distinto según
+el id exista o no filtraría por diferencia. Los ids salen de `listar-procesos`, que ya filtra, así
+que un id ajeno ahí es un fallo o un ataque, y en ambos casos lo correcto es devolver los números
+propios del llamante.
+
+**El bloque falla cerrado.** Si la consulta a `procesos` da error, lanza y el llamante devuelve
+`500`. Un `catch` que devolviera los ids pedidos convertiría un error transitorio de red en el
+mismo IDOR que esto viene a cerrar.
+
+### El cambio
+
+- **Rama:** `fix/H-04-bloque-propiedad` · commits `8af5be8` (convenciones) y `575bbf8` (el arreglo),
+  PR #5
+- **Archivos:** `supabase/functions/{obtener-proceso,gestionar-proceso,agregar-candidato,obtener-stats}/index.ts`
+- **Despliegues:** 11 de agosto de 2026, uno por uno y con aprobación explícita en cada tanda
+
+| Función | Versión | `ezbr_sha256` nuevo |
+|---------|:-------:|---------------------|
+| `obtener-proceso` | 2 → **3** | `f3c1110b5adc901a…` |
+| `gestionar-proceso` | 2 → **3** | `76d6df201f16825f…` |
+| `obtener-stats` | 2 → **3** | `579d2aaea7922de9…` |
+| `agregar-candidato` | 10 → **11** | `bca77d9e7c7e9d23…` |
+
+`verify_jwt` sigue en `true` en las cuatro. Antes de cada despliegue se confirmó que la versión
+viva coincidía con el `MANIFEST`, y las cuatro saltaron exactamente una versión, lo que descarta
+que alguien hubiera tocado producción entremedio. Las otras 15 funciones no se tocaron.
+
+**`dashboard.html` no se modificó, y no fue un olvido.** Los HTML se despliegan al fusionar a
+`main` y las edge functions por separado. Quitar `reclutador_nombre` del body antes de desplegar
+`agregar-candidato` habría hecho que la versión viva —que aún lo exigía— devolviera `400` al
+agregar candidatos. El campo se sigue enviando y la función lo ignora. Quitarlo es limpieza
+posterior, no parte del arreglo.
+
+### Verificación
+
+| Fase | Función | Prueba | Obtenido | Estado |
+|------|---------|--------|----------|:------:|
+| **A** | `agregar-candidato` | Inyección Andotek→ImmerX antes de v11 | `200` · `tipo: 'existente'` · M-4 firmado "NOMBRE FALSO" | ✅ |
+| **A** | `obtener-proceso` | — | **No se pudo hacer.** Ver abajo | ⚠️ |
+| **B** | `obtener-proceso` | Proceso propio, ambas cuentas | `200`, dashboards cargando con normalidad | ✅ |
+| **B** | `gestionar-proceso` | `finalizar` sobre proceso propio | `200` · `{success: true}` | ✅ |
+| **B** | `agregar-candidato` | Alta propia con `reclutador_nombre: 'NOMBRE FALSO 3'` en el body | `200`, correo firmado **"Josué Brito"** | ✅ |
+| **B** | `obtener-stats` | ImmerX sobre proceso propio | `{candidatos: 1, evaluaciones: 0}` | ✅ |
+| **C** | `obtener-proceso` | Proceso ajeno e inexistente | `404` `{error:'Proceso no encontrado'}`, idénticos byte a byte | ✅ |
+| **C** | `gestionar-proceso` | `finalizar` sobre ajeno e inexistente | `404` idénticos | ✅ |
+| **C** | `agregar-candidato` | La misma inyección de la fase A, tras v11 | `404` | ✅ |
+| **C** | `obtener-stats` | Andotek pidiendo el proceso de ImmerX | `{candidatos: 0, evaluaciones: 0}` | ✅ |
+| **D** | `listar-procesos` | Sigue operativa | `200` | ✅ |
+| **D** | `crear-proceso` | Alta desde el dashboard | Sin error | ✅ |
+| **D** | `obtener-stats` | Andotek sobre proceso propio | `{candidatos: 1, evaluaciones: 0}` | ✅ |
+
+**Por qué el cero de `obtener-stats` en la fase C prueba algo.** Un `{candidatos: 0}` podría ser
+"no hay datos" en vez de "no es tuyo". Se descartó en la misma tanda: el mismo proceso devuelve
+`{candidatos: 1}` a su dueño. El cero es por filtrado, no por ausencia.
+
+**Por qué `eliminar` no se probó, y por qué está bien.** Destruye datos ajenos de forma
+irreversible si la comprobación fallara. La comprobación va **antes** del despacho por acción, así
+que `finalizar` la cubre por construcción — y también cubrirá cualquier acción que se añada
+después. Es el mismo criterio que en C4 de H-01, pero al revés: allí se buscó ejecutar la prueba de
+verdad en vez de razonar sobre el código; aquí se decide no ejecutarla porque el coste de que
+falle no es un error, es pérdida de datos de un tercero.
+
+**La fase A de `obtener-proceso` no se pudo hacer, y es un error de método.** El pedido la define
+como "sobre producción vulnerable" y a la vez ordena desplegar primero y verificar después. Las dos
+cosas no caben. Se desplegó sin señalar el choque, y con eso desapareció la condición que la prueba
+necesitaba. **No se revirtió para recuperarla:** volver a la v2 habría reabierto el acceso a datos
+de candidatos ajenos en producción, y eso cuesta más que la evidencia.
+
+Se recuperó por otra vía: la fase A de H-10 sobre `agregar-candidato`, que seguía vulnerable,
+demuestra la misma clase de fallo —operar sobre el `proceso_id` de otro— y de paso los dos fallos
+de H-10 a la vez. La casilla de `obtener-proceso` queda en ⚠️ a propósito: no se va a marcar ✅ por
+analogía.
+
+**El patrón, para los hallazgos que vienen:** cuando el orden de despliegue que pide un pedido
+destruye la condición previa que otra de sus pruebas necesita, hay que decirlo **antes** de
+desplegar. Después ya no hay decisión que tomar.
+
+### Criterio de cierre
+
+- [x] Código desplegado — las cuatro, 11/08, con aprobación explícita en cada tanda
+- [~] Prueba A: el fallo existía — demostrada en `agregar-candidato`; **no** en `obtener-proceso`
+- [x] Camino feliz intacto — fase B en las cuatro
+- [x] Caminos hostiles rechazados — fase C en las cuatro
+- [x] No regresión — fase D, `listar-procesos` y `crear-proceso` operativas
+- [ ] **Limpieza: incompleta.** Ver abajo
+- [x] Respaldos regenerados y `MANIFEST.md` al día
+- [x] Visto bueno del dueño
+
+### Residuos en producción
+
+Ninguno es limpiable hoy, por el hallazgo N-2 de abajo.
+
+| Qué | Dónde | De qué prueba viene |
+|-----|-------|---------------------|
+| Candidato vinculado, RUT `11.111.111-1` | Proceso ImmerX `165a911f-e646-4fa4-bcb3-3674e70924f0` | Fase A de H-10 |
+| Invitación pendiente `dc2c4b41-24c5-4173-baa0-cc3ad35f9b3e`, RUT `22.222.222-2` | El mismo proceso | Fase B de H-10 |
+| Trabajador `e4f2571c-8d46-41c4-ba09-8d9624e2a986`, con payload XSS en el nombre | Proceso de Andotek | Fase A de H-07 |
+
+El residuo de H-07 ya no es solo un dato raro: ahora se sabe que **tampoco se puede quitar del
+proceso**, no solo que no se puede borrar de `trabajadores`.
+
+---
+
 ## Decisiones de producto tomadas durante el trabajo
 
 Decisiones que no son de un solo hallazgo y que afectan cómo se abordan los siguientes.
@@ -131,6 +268,28 @@ Queda anotado para revisión futura, no como pendiente abierto.
 
 **Nota sobre H-08:** al eliminar la búsqueda por RUT hay que revisar qué se rompe en
 `dashboard.html`, o el reclutador queda con un buscador que ya no responde.
+
+---
+
+## Hallazgos nuevos detectados durante el trabajo
+
+No estaban en la auditoría. Se anotan al encontrarlos para que no dependan de que alguien
+recuerde haberlos visto.
+
+| # | Dónde | Qué pasa | Detectado en | Estado |
+|---|-------|----------|--------------|--------|
+| N-1 | `crear-solicitud`, líneas 254, 294 y 337 del respaldo | Interpola `${trabajador.nombre}` sin escapar en el HTML de los correos **M-1, M-2 y M-3**. No es XSS —los clientes de correo no ejecutan scripts— pero sí inyección de HTML en el correo a contacto frío que `FUNCIONAL.md` §7 llama el más frágil del sistema | H-07 | Abierto, sin pedido |
+| N-2 | Producto, no una función concreta | **No existe forma de quitar un candidato de un proceso.** Ni por interfaz ni por edge function: `gestionar-proceso` solo borra filas de `candidatos_proceso` como parte de `eliminar` el proceso entero | H-10 | Abierto, sin pedido |
+
+**Por qué N-1 no se arregló en H-07:** es una edge function, y el pedido de H-07 acotaba el
+alcance a `dashboard.html` y `admin.html`. Se deja para decisión del dueño.
+
+**N-2 es funcional antes que técnico.** Es la razón de que los tres residuos de prueba sigan en
+producción, pero el problema real no son las pruebas: un reclutador que agrega un candidato por
+error no tiene forma de deshacerlo salvo borrar el proceso completo, lo que se lleva por delante a
+todos los demás candidatos. Cualquier arreglo tiene que decidir antes qué significa "quitar":
+borrar la fila, o marcarla como retirada conservando la trazabilidad del consentimiento
+(`FUNCIONAL.md` §6.3). Es decisión de producto, no de implementación.
 
 ---
 
