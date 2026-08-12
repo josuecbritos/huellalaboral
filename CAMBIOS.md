@@ -20,6 +20,13 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 verificación que no tienen vía de borrado: el trabajador con payload XSS de H-07 y los dos
 candidatos de H-10. Detalle en cada hallazgo. La causa común es N-2.
 
+**Punto de retorno.** Las 19 funciones de `backup/edge-functions/` coinciden con producción en
+versión y `ezbr_sha256`. Cinco archivos se han regenerado tras un despliegue y llevan su propia
+comprobación: `crear-reclutador.ts` está verificada **byte a byte** contra el fuente desplegado,
+y las cuatro de H-04/H-05/H-10 por lectura de vuelta desde producción y comparación. Las otras
+14 mantienen literalidad **inferida** del respaldo del 08/08. No es un pendiente de ningún
+hallazgo: es el estado del respaldo. Detalle en `backup/edge-functions/MANIFEST.md`.
+
 ---
 
 ## H-01 · `crear-reclutador` no comprobaba autorización
