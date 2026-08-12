@@ -36,6 +36,20 @@ del respaldo; `ezbr_sha256` es el hash que reporta Supabase para ese despliegue.
 | `gestionar-proceso.ts` | 3 | 136 | 4,905 | `76d6df201f16825f…` |
 | `auth-test.ts` | 1 | 50 | 1,601 | `53aade882951fc84…` |
 
+## Comprobación del punto de retorno — 11 de agosto de 2026
+
+| Qué se comprobó | Alcance | Resultado |
+|-----------------|---------|-----------|
+| Versión y `ezbr_sha256` de la tabla vs. `list_edge_functions` | Las 19 | Coinciden. Producción no se movió desde el respaldo |
+| Líneas y bytes de la tabla vs. el archivo en disco | Las 19 | Coinciden. 2.475 líneas, 89.921 bytes |
+| Fuente de producción vs. el archivo, byte a byte | `crear-reclutador.ts` | **Idéntico.** sha256 `dcd8ba6d80cd2425759a163c3261dbb96a73856c111fa7330f81edf36f264189` |
+
+La tercera fila es la que convierte la literalidad de inferida en comprobada, y por ahora solo
+cubre `crear-reclutador.ts`. Para las otras 18, lo comprobado es que producción sigue en la misma
+versión y con el mismo `ezbr_sha256` que tenía al respaldar: eso descarta que hayan cambiado
+después del 8 de agosto, pero **no** verifica que la copia se tomara sin pérdida ese día. Mientras
+esa comparación no se rehaga función por función, la literalidad de esas 18 sigue siendo inferida.
+
 ## Notas
 
 - Las 19 tienen `verify_jwt: true`.

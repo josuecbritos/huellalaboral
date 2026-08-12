@@ -138,6 +138,23 @@ Los cuatro hashes tienen que coincidir. Al cerrar H-04/H-05/H-10 valían `6df77b
 | `evaluar.html` | Evaluador | `token` en query string |
 | `validar.html` | Validador interno | `trabajador_id` en query string |
 
+**Escapado de datos externos (desde H-07, 11/08).** `dashboard.html` y `admin.html` definen cada
+uno su propia función `escapeHtml`, y **toda plantilla que inyecte con `innerHTML` un valor
+tecleado por una persona debe pasar por ella**. Los dos archivos son independientes y no comparten
+scripts, así que la función está duplicada a propósito: si se cambia, se cambia en los dos.
+
+Tres cosas que no son obvias y cuestan un hallazgo si se olvidan:
+
+- **`formatearCausal` y `formatearTiempoTrabajo` devuelven dato de usuario.** Hacen
+  `LABELS[valor] || valor`: si el código no está en su tabla, sale el valor crudo de la base.
+  Parecen traductores de códigos y son un paso-a-través.
+- **`escapeHtml` no protege un `onclick`.** En un atributo, el parser decodifica `&#39;` a `'`
+  antes de que el motor de JS lo vea. Los `onclick` del panel interpolan UUID de la base y eso es
+  lo que los protege. Si alguno pasara a llevar texto de usuario, la solución no es escapar: es
+  dejar de interpolarlo ahí.
+- Los otros diez HTML no tienen `escapeHtml` porque hoy no inyectan dato de usuario con
+  `innerHTML`. Comprobado en H-07; si se añade uno, hay que añadir también la función.
+
 ## 6. Modelo de datos
 
 ```
