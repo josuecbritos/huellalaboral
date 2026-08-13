@@ -95,6 +95,7 @@ if (antes.length !== despues.length) throw new Error(`Cambio el numero de correo
 console.log('')
 
 let malos = 0
+const cambiosPorCorreo = {}
 for (let i = 0; i < Math.max(antes.length, despues.length); i++) {
   const a = antes[i], d = despues[i]
   const la = (a?.html ?? '').split('\n').map(s => s.trim()).filter(Boolean)
@@ -106,14 +107,22 @@ for (let i = 0; i < Math.max(antes.length, despues.length); i++) {
   console.log(`${'═'.repeat(96)}\n${nombre(d)}  ·  para ${d.to}`)
   console.log(`  asunto ${asuntoIgual ? '✅ igual' : '❌ CAMBIA'}: ${d.subject}`)
   console.log(`  from/to ${okDest ? '✅ iguales' : '❌ CAMBIAN'}   ·   lineas del cuerpo: ${la.length} → ${ld.length}`)
+  cambiosPorCorreo[nombre(d)] = dif.length
   console.log(`  lineas que cambian: ${dif.length}`)
   for (const [k, x, y] of dif) console.log(`    - ${x}\n    + ${y}`)
   if (!asuntoIgual || !okDest) malos++
 }
 
-// El boton de M-1 y su token
-const m1 = despues.find(c => nombre(c) === 'M-1')
-const enlace = m1.html.match(/href="(https:\/\/huellalaboral\.cl\/evaluar\.html\?token=[^"]+)"/)?.[1]
-console.log(`${'═'.repeat(96)}\nBoton de M-1: ${enlace ?? '❌ NO ENCONTRADO'}`)
-console.log(`  apunta a evaluar.html con token: ${enlace && /token=uuid-\d+$/.test(enlace) ? '✅' : '❌'}`)
-console.log(`\n${malos === 0 ? `✅ Salen los ${despues.length} correos (${salieron.join(', ')}) y solo cambia la frase pedida en M-1` : `❌ ${malos} correos con cambios no pedidos`}`)
+// Los enlaces de M-1 y M-2, que son lo que no puede romperse aunque cambie el texto
+const enlaceDe = (m, patron) => despues.find(c => nombre(c) === m)?.html.match(patron)?.[1]
+const linkM1 = enlaceDe('M-1', /href="(https:\/\/huellalaboral\.cl\/evaluar\.html\?token=[^"]+)"/)
+const linkM2 = enlaceDe('M-2', /href="(https:\/\/huellalaboral\.cl\/estado\.html\?token=[^"]+)"/)
+console.log('═'.repeat(96))
+console.log(`Boton de M-1: ${linkM1 ?? '❌ NO ENCONTRADO'}`)
+console.log(`Boton de M-2: ${linkM2 ?? '❌ NO ENCONTRADO'}`)
+if (!linkM1 || !linkM2) throw new Error('Falta el enlace de M-1 o M-2')
+// El resumen se calcula, no se escribe a mano: la version anterior decia
+// "solo cambia la frase de M-1" pasara lo que pasara, y siguio diciendolo
+// cuando el cambio ya era otro.
+const resumen = ESPERADOS.map(m => `${m}: ${cambiosPorCorreo[m]} linea(s)`).join(' · ')
+console.log(`\n${malos === 0 ? `✅ Salen los ${despues.length} correos y los enlaces siguen. Cambios — ${resumen}` : `❌ ${malos} correos con cambios no pedidos`}`)

@@ -14,8 +14,11 @@ Regenerados después:
 - `agregar-candidato.ts` el **13/08** al nombrar empresa y cargo en M-4 y M-5, dos veces:
   versión 12 → 13, y 13 → 14 al pasar el asunto de M-5 a pretérito. **La vigente es la 14.**
 - `crear-solicitud.ts` el **13/08** al decir en M-1 de dónde salió el correo (versión 28 → 29).
+- `crear-solicitud.ts` otra vez el **13/08**, versión 29 → 30, para **importar al repo un cambio
+  que el dueño hizo a mano en el editor del panel** (texto de M-2). El código no salió del repo:
+  entró en él. Detalle en `CAMBIOS.md`.
 
-**19 funciones · 3,004 líneas · 115,858 bytes (113.1 KB)**
+**19 funciones · 3,004 líneas · 115,854 bytes (113.1 KB)**
 
 Las líneas son líneas de contenido. Ningún archivo termina en salto de línea, así que `wc -l`
 devuelve una menos por archivo: 2,985 + 19 = 3,004.
@@ -26,7 +29,7 @@ del respaldo; `ezbr_sha256` es el hash que reporta Supabase para ese despliegue.
 
 | Archivo | Versión | Líneas | Bytes | ezbr_sha256 |
 |---------|--------:|-------:|------:|-------------|
-| `crear-solicitud.ts` | 29 | 402 | 17,626 | `995c4fd2027d4a0a…` |
+| `crear-solicitud.ts` | 30 | 402 | 17,622 | `9d4f76e88eeff58e…` |
 | `agregar-candidato.ts` | 14 | 482 | 20,511 | `dc96cc1e6098554f…` |
 | `crear-reclutador.ts` | 15 | 235 | 9,784 | `61f1889065d7fb7b…` |
 | `obtener-candidato.ts` | 10 | 203 | 8,073 | `0a2d25029e24236f…` |
@@ -59,8 +62,8 @@ cubre `crear-reclutador.ts`. Para el resto, lo comprobado es que producción est
 versión y con el mismo `ezbr_sha256` que registra la tabla. El detalle por archivo está abajo.
 
 **Los recuentos de esa tabla son del 11/08 y no se han rehecho.** Desde entonces se regeneró
-`agregar-candidato.ts` dos veces y `crear-solicitud.ts` una (13/08), así que el total vigente es el de la cabecera —3.004
-líneas, 115.858 bytes—, no el de la fila. La comprobación de versión y `ezbr_sha256` sí se repitió
+`agregar-candidato.ts` dos veces y `crear-solicitud.ts` dos (13/08), así que el total vigente es el
+de la cabecera —3.004 líneas, 115.854 bytes—, no el de la fila. La comprobación de versión y `ezbr_sha256` sí se repitió
 antes de desplegar el 13/08: las 19 seguían donde el respaldo decía.
 
 ## Notas
@@ -87,7 +90,7 @@ lea más garantía de la que hay.
 | `gestionar-proceso.ts` | H-05 | Igual |
 | `agregar-candidato.ts` | H-10, luego M-4/M-5 | **La v13 sí se leyó de vuelta y se comparó; la v14 que hay en el archivo, no.** Ver la nota de abajo |
 | `obtener-stats.ts` | H-10 | Igual |
-| `crear-solicitud.ts` | H-02/H-03, luego M-1 | **Solo copia del fuente enviado a desplegar.** No leída de vuelta. La vigente es la v29 del 13/08 |
+| `crear-solicitud.ts` | H-02/H-03, M-1, y el cambio manual de M-2 | **Leída de vuelta de producción y reconstruida a partir de ella.** Es la única del repositorio que se hizo en ese sentido. Ver la nota de abajo |
 | `obtener-validacion.ts` | H-02 | Igual |
 | `validar-documentos.ts` | H-03 | Igual |
 | `obtener-estado.ts` | Cadena de validación | Igual |
@@ -107,6 +110,20 @@ pretérito, que es la que está en el archivo— se desplegó y **no** se reley�
 del fuente enviado, comprobada con `cmp` contra `supabase/functions/agregar-candidato/index.ts`.
 Lo que sostiene la equivalencia es lo mismo que en las cinco de abajo, más un dato propio: la v13
 del mismo archivo hizo el viaje de ida y vuelta sin perder nada.
+
+**`crear-solicitud.ts` es un caso distinto de todos los demás, y conviene que se entienda.** Las
+otras se escribieron en el repo y de ahí salieron a producción. Esta, en su v30, **entró desde
+producción**: el dueño editó el correo M-2 en el editor del panel de Supabase y desplegó desde
+ahí, así que durante un rato producción fue la única copia de ese texto. El archivo se reconstruyó
+leyendo la v30 con `get_edge_function` y aplicando sobre el repo las dos líneas que cambiaban.
+
+Lo que respalda que la reconstrucción es fiel:
+
+- El tamaño cuadra **exactamente** con la aritmética de los dos cambios: quitar « de evaluación»
+  son −15 bytes y cambiar el texto del botón son +11, y el archivo pasó de 17.626 a 17.622. Un
+  tercer cambio inadvertido habría descuadrado la cuenta.
+- Los tres correos se regeneraron con el fuente real y se compararon contra `origin/main`: M-2
+  cambia dos líneas, M-1 y M-3 ninguna, y los enlaces de los dos botones siguen en pie.
 
 Si en algún momento hace falta el punto de retorno con garantía plena, la comprobación pendiente
 es un `get_edge_function` y un `cmp` por archivo. No es urgente, pero tampoco está hecha.
