@@ -44,7 +44,7 @@ serve(async (req) => {
 
     const { data: trabajador } = await supabase
       .from('trabajadores')
-      .select('id, token_validacion_usado')
+      .select('id, token_validacion, token_validacion_usado')
       .eq('token_validacion', token)
       .maybeSingle()
 
@@ -56,6 +56,10 @@ serve(async (req) => {
     // el token serviría para escribir sobre el trabajador que el atacante
     // quisiera.
     const trabajadorId = trabajador.id
+    // El envío que se está validando. Se copia a cada fila de
+    // `validaciones_documentos` para que la validación quede atada a estos
+    // documentos y no a los que hubiera antes.
+    const envioId = trabajador.token_validacion
 
     // Obtener documentos del trabajador
     const { data: documentos, error: docError } = await supabase
@@ -76,6 +80,7 @@ serve(async (req) => {
           documento_id: certDoc.id,
           trabajador_id: trabajadorId,
           tipo_documento: 'certificado',
+          envio_id: envioId,
           valido: certificado.valido,
           empleos_ultimos_5_anos: certificado.empleos_ultimos_5_anos || null,
           tiempo_maximo_un_empleador_anos: certificado.tiempo_maximo_un_empleador_anos || null,
@@ -105,7 +110,18 @@ serve(async (req) => {
           documento_id: finiqDoc.id,
           trabajador_id: trabajadorId,
           tipo_documento: 'finiquito',
-          valido: true, // Siempre true si llegó aquí
+          envio_id: envioId,
+          // Antes esto era `valido: true` fijo, con el comentario "Siempre true
+          // si llegó aquí": el finiquito no podía ser no válido por
+          // construcción, dijera lo que dijera el validador.
+          //
+          // `validar.html` no manda hoy un campo de validez general para el
+          // finiquito — solo `valido_y_coincide`— así que se usa ese, que es el
+          // único juicio que el validador emite sobre este documento. No es un
+          // campo inventado, pero sí junta dos cosas que en el certificado van
+          // separadas: "el documento sirve" y "coincide con la causal". Si se
+          // quieren separar, hay que añadir el campo al formulario.
+          valido: finiquito.valido_y_coincide === true,
           finiquito_valido_y_coincide: finiquito.valido_y_coincide
         })
         .select()
@@ -113,11 +129,12 @@ serve(async (req) => {
 
       if (valError) throw valError
 
-      // Actualizar documento
+      // Actualizar documento. `validado` refleja el juicio del validador, no un
+      // `true` fijo: un finiquito rechazado quedaba marcado como validado.
       await supabase
         .from('documentos')
         .update({ 
-          validado: true,
+          validado: finiquito.valido_y_coincide === true,
           fecha_validacion: new Date().toISOString()
         })
         .eq('id', finiqDoc.id)
