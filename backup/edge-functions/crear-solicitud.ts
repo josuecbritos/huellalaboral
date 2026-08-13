@@ -284,7 +284,7 @@ serve(async (req) => {
     <h1 style="color: #0E2A47;">Solicitud de Referencia Laboral</h1>
     <p>Hola,</p>
     <p>Somos <strong>Huella Laboral</strong>, una plataforma que gestiona referencias laborales para generar perfiles confiables.</p>
-    <p><strong>${trabajador.nombre}</strong> te ha solicitado una referencia laboral para usar en su proceso de postulación.</p>
+    <p><strong>${trabajador.nombre}</strong> te ha solicitado una referencia laboral para usar en su proceso de postulación, y <strong>nos entregó tu correo como una de sus jefaturas anteriores</strong>.</p>
     <p>Tu respuesta estará visible para reclutadores en nuestra plataforma, pero <strong>no será visible para el postulante</strong>.</p>
     <p>El proceso es muy simple y le será de gran ayuda.</p>
     <div style="margin: 30px 0;">
