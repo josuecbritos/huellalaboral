@@ -335,6 +335,41 @@ Los siete correos salen por Resend con `fetch` directo. Hechos transversales:
   octavo correo — son siete, y este es el M-3.
 - DMARC está configurado.
 
+### M-4 y M-5 nombran la empresa y el cargo (desde el 13/08)
+
+Los dos correos que envía `agregar-candidato` decían solo el nombre del reclutador. Un trabajador
+con tres postulaciones abiertas recibía un nombre de persona suelto y no podía saber cuál era.
+`procesos.cargo` y `usuarios.empresa` ya existían y no se leían.
+
+| | M-4 · ya tiene referencias | M-5 · trabajador nuevo |
+|---|---|---|
+| **Asunto** | `${empresa} te agregó a un proceso de selección` | `${empresa} te invita a un proceso de selección` |
+| **Apertura** | `<strong>${reclutador}</strong>, de <strong>${empresa}</strong>, te ha agregado a un proceso de selección para el cargo de <strong>${cargo}</strong>.` | Igual, con «te ha invitado a participar en». |
+
+**El verbo se mantiene distinto entre los dos a propósito** —«agregó» frente a «invitó»—: son
+situaciones distintas y uniformarlas perdería información.
+
+**El cargo no sube al asunto.** Casi la mitad de los correos se abren en el móvil, donde el asunto
+se corta entre los 35 y 50 caracteres; con el cargo pasaría de 80 y se cortaría justo donde está
+el dato útil.
+
+Tres cosas que no son obvias:
+
+- **Los respaldos son por campo, no todo o nada.** Sin empresa, el asunto vuelve al de antes
+  —firma el reclutador— y la apertura omite el inciso. Sin cargo, se omite su cola y la frase
+  termina en «un proceso de selección.». Se trata como ausente lo mismo `null` que la cadena
+  vacía tras recortar: los dos campos son obligatorios en sus formularios, pero eso no impide que
+  lleguen en blanco, y «para el cargo de  .» es peor que una frase corta.
+- **El asunto lleva los valores en crudo y el cuerpo los lleva escapados.** El asunto de Resend es
+  texto plano: escaparlo mostraría «Fábrica &amp;amp; Cía» literal en la bandeja de entrada. El
+  cuerpo es HTML y sigue el criterio de H-07. Se escapan los tres —reclutador, empresa y cargo—,
+  aunque el pedido solo pedía los dos últimos: el nombre del reclutador lo teclea un humano y va
+  en la misma frase.
+- **El cargo cuesta una consulta más**, y no se evitó a propósito. Ahorrarla exigía pedir `cargo`
+  dentro de `filtrarProcesosPropios`, que es idéntico en cuatro funciones: tocarlo aquí obligaría
+  a tocar las otras tres. La consulta va **después** de la comprobación de propiedad, así que un
+  proceso ajeno devuelve 404 antes de llegar a ella.
+
 ## 8. Reglas de trabajo sobre este código
 
 - **`apply_migration` está prohibido.** El esquema no se toca.

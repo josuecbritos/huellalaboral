@@ -11,8 +11,12 @@ Regenerados después:
   H-02, H-03 y H-35.
 - `crear-solicitud.ts`, `validar-documentos.ts`, `obtener-estado.ts`, `obtener-candidato.ts` y
   `agregar-candidato.ts` el **12/08** con la cadena de validación de documentos.
+- `agregar-candidato.ts` el **13/08** al nombrar empresa y cargo en M-4 y M-5 (versión 12 → 13).
 
-**19 funciones · 2,918 líneas · 111,464 bytes (108.9 KB)**
+**19 funciones · 2,996 líneas · 115,302 bytes (112.6 KB)**
+
+Las líneas son líneas de contenido. Ningún archivo termina en salto de línea, así que `wc -l`
+devuelve una menos por archivo: 2,977 + 19 = 2,996.
 
 Contenido íntegro y literal de cada `index.ts` desplegado, un archivo por función,
 sin resumir ni reformatear. `version` es la versión activa en producción al momento
@@ -21,7 +25,7 @@ del respaldo; `ezbr_sha256` es el hash que reporta Supabase para ese despliegue.
 | Archivo | Versión | Líneas | Bytes | ezbr_sha256 |
 |---------|--------:|-------:|------:|-------------|
 | `crear-solicitud.ts` | 28 | 402 | 17,546 | `4ee7818dcb5335a5…` |
-| `agregar-candidato.ts` | 12 | 396 | 16,197 | `7ce3e052fb5d9d89…` |
+| `agregar-candidato.ts` | 13 | 474 | 20,035 | `49262b26d9c33d3f…` |
 | `crear-reclutador.ts` | 15 | 235 | 9,784 | `61f1889065d7fb7b…` |
 | `obtener-candidato.ts` | 10 | 203 | 8,073 | `0a2d25029e24236f…` |
 | `guardar-evaluacion.ts` | 6 | 162 | 5,691 | `135ddbc708529bb1…` |
@@ -52,6 +56,11 @@ La tercera fila es la que convierte la literalidad de inferida en comprobada, y 
 cubre `crear-reclutador.ts`. Para el resto, lo comprobado es que producción está en la misma
 versión y con el mismo `ezbr_sha256` que registra la tabla. El detalle por archivo está abajo.
 
+**Los recuentos de esa tabla son del 11/08 y no se han rehecho.** Desde entonces se regeneró
+`agregar-candidato.ts` (13/08), así que el total vigente es el de la cabecera —2.996 líneas,
+115.302 bytes—, no el de la fila. La comprobación de versión y `ezbr_sha256` sí se repitió antes
+de desplegar el 13/08: las 19 seguían donde el respaldo decía.
+
 ## Notas
 
 - Las 19 tienen `verify_jwt: true`.
@@ -74,7 +83,7 @@ lea más garantía de la que hay.
 | `crear-reclutador.ts` | H-01 | **Byte a byte.** `cmp` y `diff -u` sin diferencias contra `get_edge_function` |
 | `obtener-proceso.ts` | H-04 | Leído de vuelta de producción tras desplegar y comparado |
 | `gestionar-proceso.ts` | H-05 | Igual |
-| `agregar-candidato.ts` | H-10 | Igual |
+| `agregar-candidato.ts` | H-10, luego M-4/M-5 | Leído de vuelta de producción tras desplegar y comparado. La versión vigente es la del 13/08 |
 | `obtener-stats.ts` | H-10 | Igual |
 | `crear-solicitud.ts` | H-02/H-03 | **Solo copia del fuente enviado a desplegar.** No leída de vuelta |
 | `obtener-validacion.ts` | H-02 | Igual |

@@ -16,14 +16,17 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 
 **Cerrados:** H-01, H-07, H-04, H-05 y H-10 el 11/08; H-02, H-03 y H-35 el 12/08.
 
-**En curso:** **UX-19 y UX-20** (favicon y logo por fondo), verificados el 13/08 y a la espera de
-que se fusione el PR #9. No queda nada por comprobar; los cinco archivos ya están en `main`.
-La cadena de validación de documentos, que incluye H-22, se cerró el 12/08.
+**En curso:** **M-4 y M-5** (nombrar empresa y cargo en los correos de `agregar-candidato`),
+desplegado el 13/08 y pendiente de la verificación por bandeja de entrada del dueño.
 
-El recuento de la tabla no se movió, y conviene decir por qué: los identificadores `UX-nn` no
-aparecen en `AUDITORIA.md` —vienen de la numeración que el dueño lleva aparte—, así que no consta
-si UX-19 y UX-20 son dos de los 41 pendientes o se suman a ellos. Se deja el número como está en
-lugar de ajustarlo a ojo.
+**Cerrados también:** UX-19 y UX-20 el 13/08, fusionados en el PR #9. La cadena de validación de
+documentos, que incluye H-22, se cerró el 12/08.
+
+**La tabla cuenta solo los `H-nn`, y por eso no se ha movido** desde el 12/08 pese a haber cerrado
+UX-19 y UX-20 y estar en curso M-4/M-5. Ni los `UX-nn` ni los `M-n` aparecen en `AUDITORIA.md`:
+vienen de la numeración que el dueño lleva aparte, así que no consta si son parte de los 41
+pendientes o se suman a ellos. Se deja el número como está en lugar de ajustarlo a ojo. **Si el
+dueño confirma cómo se numeran, la tabla se corrige de una vez.**
 
 ### Datos de prueba en producción
 
@@ -698,7 +701,7 @@ Lo que UX-22 impide no es borrarlos, sino **quitar un candidato de un proceso de
 
 ## UX-19 y UX-20 · Favicon en las 12 pantallas, y logo según el fondo
 
-🔵 Presentación · UX · Esfuerzo S · **Estado: ✅ VERIFICADO, a la espera de fusión** (13/08/2026)
+🔵 Presentación · UX · Esfuerzo S · **Estado: ✅ CERRADOS** (13/08/2026) · PR #9 fusionado
 
 ### El problema
 
@@ -844,6 +847,127 @@ primero los archivos a `main`, después el PR. Ambas cosas hechas.
 
 Ni edge functions ni migración: el cambio es solo de frontend. **Queda cerrado al fusionar**, que
 es lo único pendiente.
+
+---
+
+## M-4 y M-5 · Los correos no decían de qué empresa ni a qué cargo
+
+🔵 Presentación · UX · Esfuerzo S · **Estado: 🚀 DESPLEGADO, pendiente de verificación** (13/08/2026)
+
+### El problema
+
+Los dos correos que envía `agregar-candidato` nombraban al reclutador y nada más. El trabajador
+recibía un nombre de persona suelto: con tres postulaciones abiertas, no podía saber cuál era.
+
+Los datos existían y no se consultaban. `procesos.cargo` es obligatorio en `crear-proceso` y
+`usuarios.empresa` lo es en `crear-reclutador`. La función ya consultaba las dos tablas —`procesos`
+para comprobar propiedad, `usuarios` para el nombre del reclutador— y no pedía ninguno de los dos
+campos.
+
+### La decisión
+
+**El cargo no sube al asunto.** El asunto se corta entre los 35 y 50 caracteres en el móvil;
+«Andotek te invita a un proceso de selección» son 44, y con el cargo pasaría de 80 y se cortaría
+justo donde está el dato útil. El cargo va en el cuerpo, que tiene espacio.
+
+**El verbo se mantiene distinto entre los dos correos** —«agregó» en M-4, «invitó» en M-5—. Son
+situaciones distintas y uniformarlas perdería información.
+
+**Los respaldos son por campo, no todo o nada.** Sin empresa el asunto vuelve al de antes y firma
+el reclutador; sin cargo se omite su cola. Se trata como ausente lo mismo `null` que la cadena
+vacía tras recortar espacios: que un campo sea obligatorio en su formulario no impide que llegue
+en blanco, y «para el cargo de  .» es peor que una frase corta.
+
+**El asunto lleva los valores crudos y el cuerpo los lleva escapados.** No es una inconsistencia:
+el asunto de Resend es texto plano, y escaparlo mostraría «Fábrica &amp;amp; Cía» literal en la
+bandeja de entrada. El cuerpo es HTML y sigue el criterio de H-07.
+
+**Se escapan los tres, no los dos del pedido.** El pedido pedía escapar `empresa` y `cargo`. El
+nombre del reclutador va en la misma frase, lo teclea un humano igual que los otros dos, y estaba
+sin escapar desde antes. Escaparlo es una línea en código que ya se estaba tocando; dejarlo fuera
+habría sido aplicar el criterio a dos de tres valores de la misma oración. **Alcance algo mayor
+que el del pedido, y se anota como tal.** No es N-1: aquel es `crear-solicitud` y sigue abierto.
+
+**El cargo cuesta una consulta más.** El pedido pedía evitarla si se podía, y no se pudo sin pagar
+un precio peor: la única forma era pedir `cargo` dentro de `filtrarProcesosPropios`, que es
+**idéntico en cuatro funciones a propósito**, de modo que tocarlo aquí obligaba a tocar las otras
+tres —fuera de alcance— y rompía la uniformidad de la comprobación de propiedad para ahorrar una
+búsqueda por clave primaria. Mal negocio sobre un invariante de seguridad. La consulta va
+**después** de la comprobación: un proceso ajeno devuelve 404 antes de llegar a ella.
+
+### El cambio
+
+`agregar-candidato` v12 → **v13**, `verify_jwt: true` sin cambios. Una función, ningún HTML,
+ninguna migración.
+
+| Dónde | Qué |
+|-------|-----|
+| `select` de `usuarios` | `nombre` → `nombre, empresa` |
+| Consulta nueva a `procesos` | `select('cargo')`, después de la comprobación de propiedad |
+| `textoOpcional` | Trata `null` y la cadena vacía tras recortar como ausentes |
+| `escapeHtml` | Igual que el de H-07. Solo para el cuerpo |
+| `aperturaCorreo` | Construye la frase de M-4 y M-5 con los respaldos por campo |
+
+### Verificación
+
+**Sin fase A**, y el pedido lo dice: el fallo se lee en el código, no hay que capturarlo.
+
+Las pruebas se corrieron sobre el **fuente real transpilado**, no sobre una copia a mano: si lo
+probado no es lo desplegado, la prueba no vale nada.
+
+**Matriz de respaldos — 12 combinaciones, las 12 según §2 y §3:**
+
+| Caso | Asunto M-4 | Apertura |
+|------|-----------|----------|
+| Ambos | `Andotek te agregó…` | `<b>Josué</b>, de <b>Andotek</b>, te ha agregado … para el cargo de <b>Operario de bodega</b>.` |
+| Sin cargo | `Andotek te agregó…` | `…, de <b>Andotek</b>, te ha agregado a un proceso de selección.` |
+| Sin empresa | `Josué Britos te agregó…` | `<b>Josué</b> te ha agregado … para el cargo de <b>Operario de bodega</b>.` |
+| Ninguno | `Josué Britos te agregó…` | Como antes del cambio |
+| Cadena vacía | Igual que «ninguno» | Igual que «ninguno» |
+
+M-5 se comportó igual, con su propio verbo y su propio asunto de respaldo.
+
+**No regresión, medida y no razonada.** Se generó el correo completo con el código de `origin/main`
+y con el nuevo, y se compararon línea a línea:
+
+| | M-4 | M-5 |
+|---|---|---|
+| Líneas del cuerpo antes / después | 19 / 19 | 22 / 22 |
+| Líneas que cambian | **1** | **1** |
+| `from`, `to` | Iguales | Iguales |
+| Botón a `trabajador.html` | Intacto | Intacto |
+
+La única línea que cambia en cada correo es la de apertura. El resto del cuerpo, el botón, los
+enlaces, los estilos y el pie quedaron literalmente iguales.
+
+**Escapado:**
+
+| Entrada | Asunto (texto plano) | Cuerpo (HTML) |
+|---------|---------------------|---------------|
+| `Fábrica & Cía <SA>` | `Fábrica & Cía <SA> …` crudo | `Fábrica &amp;amp; Cía &amp;lt;SA&amp;gt;` |
+| Reclutador `<img src=x onerror=alert(1)>` | No aparece | Escapado, sin etiqueta viva en el HTML |
+
+### Criterio de cierre
+
+| Requisito | Estado |
+|-----------|--------|
+| Código desplegado | ✅ v13, `verify_jwt: true` |
+| Prueba A | — No aplica, el pedido la excluye |
+| Camino feliz | ⏳ **Pendiente del dueño**: bloques A y B por bandeja de entrada |
+| Respaldos | ⚠️ Probados sobre el fuente real; **no reproducibles por interfaz**, ver abajo |
+| No regresión | ✅ Una línea cambia por correo, medido contra `origin/main` |
+| Respaldo regenerado | ✅ v13, `MANIFEST.md` actualizado |
+| Documentación | ✅ `CAMBIOS.md` y `TECNICO.md` §7 |
+| PR abierto, sin fusionar | ✅ |
+
+**Sobre el bloque C.** El pedido pedía comprobar al menos el caso de cargo ausente y decirlo si no
+se podía provocar desde la interfaz. **No se puede:** `cargo` es obligatorio en el formulario de
+`crear-proceso` y `empresa` lo es en el de `crear-reclutador`, así que por producto no hay forma de
+llegar a un proceso sin cargo ni a un reclutador sin empresa. Lo que se probó son las cinco
+combinaciones sobre el fuente real, que es la única vía que queda sin `execute_sql`. **Se dice en
+vez de darlo por bueno.**
+
+Ni migración ni HTML: el cambio es solo de la función.
 
 ---
 
