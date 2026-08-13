@@ -353,6 +353,23 @@ Nada más: ni el asunto, ni el botón, ni el pie, ni los estilos. **Sin imágene
 transaccional, y la relación imagen/texto y el bloqueo de imágenes por defecto no compensan.
 M-2 y M-3, que salen de la misma función, no se tocaron.
 
+### M-2 habla de seguimiento, no de evaluación (desde el 13/08)
+
+M-2 es la confirmación al trabajador, y su botón lleva a `estado.html`. Dos frases prometían algo
+distinto de lo que hay al otro lado:
+
+| | Antes | Ahora |
+|---|---|---|
+| Frase sobre el botón | «…seguimiento a tu solicitud **de evaluación** en el siguiente link» | «…seguimiento a tu solicitud en el siguiente link» |
+| Texto del botón | «Ver mi evaluación» | «Ver el estado de mi solicitud» |
+
+**`estado.html` es seguimiento, no una carta de presentación** —decisión de producto del 13/08—.
+«Ver mi evaluación» prometía un resultado que muchas veces todavía no existe: el trabajador entra
+recién enviada la solicitud y no hay ninguna evaluación que ver. Y «solicitud de evaluación»
+tampoco era exacto: lo que el trabajador solicita son **referencias**.
+
+El enlace y el token no cambian; solo el texto.
+
 ### M-4 y M-5 nombran la empresa y el cargo (desde el 13/08)
 
 Los dos correos que envía `agregar-candidato` decían solo el nombre del reclutador. Un trabajador

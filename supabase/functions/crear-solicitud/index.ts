@@ -326,12 +326,12 @@ serve(async (req) => {
               <h1 style="color: #0E2A47;">¡Solicitud Recibida!</h1>
               <p>Hola <strong>${trabajador.nombre}</strong>,</p>
               <p>Gracias por usar Huella Laboral. Tus evaluadores ya recibieron la solicitud de referencia. Una vez que la completen, los reclutadores podrán ver tu perfil en nuestra plataforma.</p>
-              <p style="margin-top: 20px;">Puedes hacer seguimiento a tu solicitud de evaluación en el siguiente link:</p>
+              <p style="margin-top: 20px;">Puedes hacer seguimiento a tu solicitud en el siguiente link:</p>
               <div style="margin: 20px 0;">
                 <a href="https://huellalaboral.cl/estado.html?token=${tokenConsulta}"
                    style="display: inline-block; background: #0E2A47; color: white; padding: 12px 24px;
                           text-decoration: none; border-radius: 4px; font-weight: 600; font-size: 14px;">
-                  Ver mi evaluación
+                  Ver el estado de mi solicitud
                 </a>
               </div>
               <p style="color: #6B7280; font-size: 12px;">Guarda este link — es personal y te permite ver tu estado en cualquier momento.</p>

@@ -16,11 +16,15 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 
 **Cerrados:** H-01, H-07, H-04, H-05 y H-10 el 11/08; H-02, H-03 y H-35 el 12/08.
 
-**En curso:** **M-1** (decir al evaluador de dónde salió su correo), desplegado el 13/08 y
-pendiente de la verificación por bandeja de entrada del dueño.
+**En curso:** **M-2**, un cambio de texto que el dueño hizo **a mano en el panel de Supabase** y que
+se importó al repo después. Ya está en producción y verificado; falta fusionar el PR.
 
-**Cerrados también:** UX-19 y UX-20 el 13/08, fusionados en el PR #9. M-4 y M-5 el 13/08,
-fusionados en el PR #10. La cadena de validación de documentos, que incluye H-22, se cerró el 12/08.
+**Cerrados también:** UX-19 y UX-20 el 13/08 (PR #9). M-4 y M-5 el 13/08 (PR #10). M-1 el 13/08
+(PR #11). La cadena de validación de documentos, que incluye H-22, se cerró el 12/08.
+
+⚠️ **El repo dejó de ser la única fuente del código de las funciones el 13/08.** Antes de desplegar
+cualquier función, comparar su versión y su `ezbr_sha256` contra `backup/edge-functions/MANIFEST.md`:
+si no coinciden, producción tiene algo que el repo no. Detalle en la sección de M-2.
 
 ### Qué cuenta la tabla, y qué no
 
@@ -53,6 +57,7 @@ variantes de prueba por «no dejar residuo» cuando el residuo era limpiable en 
 | Trabajador «sin documentos» con RUT `44.444.444-4` | `e2fccdec-891d-4017-9e14-c6a98aafa5bc` | Fase D de la cadena de validación |
 | Trabajador con RUT `55.555.555-5`, correo `josuebrito+m5@gmail.com` | — | Bloque B de M-4/M-5, el 13/08 |
 | Proceso «Analista Comercial — Agosto 2026» (Yokono), con `11.111.111-1` y `55.555.555-5` dentro | — | Bloques A, B y D de M-4/M-5, el 13/08 |
+| Trabajador con RUT `88.888.888-8`, sin documentos | — | Verificación del cambio manual de M-2, el 13/08 |
 
 **Punto de retorno.** Las 19 funciones de `backup/edge-functions/` coinciden con producción en
 versión y `ezbr_sha256`. Diez archivos se han regenerado tras un despliegue y llevan su propia
@@ -1016,7 +1021,7 @@ Ni migración ni HTML: el cambio es solo de la función.
 
 ## M-1 · El contacto frío no decía de dónde había salido el correo
 
-🔵 Presentación · UX · Esfuerzo S · **Estado: 🚀 DESPLEGADO, pendiente de verificación** (13/08/2026)
+🔵 Presentación · UX · Esfuerzo S · **Estado: ✅ CERRADO** (13/08/2026) · PR #11 fusionado
 
 ### El problema
 
@@ -1093,6 +1098,81 @@ Ni migración ni HTML: el cambio es solo de la función.
 
 ---
 
+## M-2 · Cambio hecho a mano en producción, importado al repo después
+
+🔵 Presentación · UX · Esfuerzo XS · **Estado: ✅ EN PRODUCCIÓN, importado al repo** (13/08/2026)
+
+### Lo primero, porque es lo que no se puede perder de vista
+
+**Este cambio no salió del repositorio: entró en él.** El dueño editó `crear-solicitud` en el
+editor del panel de Supabase y desplegó desde ahí. Durante un rato, **producción fue la única
+copia de ese texto**: no existía en ninguna rama, en ningún PR ni en el respaldo.
+
+El dueño avisó antes de que se descubriera en una comparación, que es lo que evitó el daño real.
+Si no lo hubiera hecho, el siguiente despliegue desde el repo —el de cualquier hallazgo que toque
+esta función— habría **pisado el cambio sin que nadie se enterara**, porque el fuente del repo era
+la v29 y se habría enviado tal cual.
+
+### El cambio
+
+Dos líneas de M-2, la confirmación al trabajador. Ni el asunto, ni M-1, ni M-3, ni lógica.
+
+| | Antes (repo, v29) | Ahora (producción, v30) |
+|---|---|---|
+| Frase sobre el botón | «Puedes hacer seguimiento a tu solicitud **de evaluación** en el siguiente link:» | «Puedes hacer seguimiento a tu solicitud en el siguiente link:» |
+| Texto del botón | «Ver mi evaluación» | «Ver el estado de mi solicitud» |
+
+### La decisión
+
+**`estado.html` es seguimiento, no una carta de presentación.** Decisión de producto del dueño,
+tomada el 13/08. «Ver mi evaluación» prometía un resultado que muchas veces todavía no existe —el
+trabajador entra recién enviada la solicitud y no hay nada que ver—, y «solicitud de evaluación»
+tampoco era exacto: lo que el trabajador solicita son **referencias**.
+
+### Cómo se importó, y con qué se comprobó
+
+No se dio por buena la descripción del cambio: se leyó la **v30 de producción** con
+`get_edge_function` y se aplicaron sobre el repo las dos líneas que efectivamente diferían.
+
+| Comprobación | Resultado |
+|--------------|-----------|
+| Versión y `ezbr_sha256` de producción | v30 · `9d4f76e88eeff58e…` |
+| **El tamaño cuadra con la aritmética de los dos cambios** | Quitar « de evaluación» son −15 bytes; el botón, +11. El archivo pasó de 17.626 a **17.622**, exactamente −4 |
+| Los tres correos, regenerados y comparados contra `origin/main` | M-2 cambia **2** líneas; M-1 y M-3, **0** |
+| Los enlaces de los botones | `evaluar.html?token=…` y `estado.html?token=…` intactos |
+| Bandeja de entrada | ✅ Comprobado por el dueño: solicitud sin documentos con `88.888.888-8`, 200, correo con las dos frases nuevas y el resto idéntico |
+
+La fila del tamaño es la que hace trabajo de verdad: **un tercer cambio inadvertido habría
+descuadrado la cuenta.** Sin ella, la importación sería confiar en que la descripción era completa.
+
+### Lo que esto deja abierto
+
+**Un cambio en el panel no deja rastro en el repositorio, y el repositorio no se entera.** No hay
+nada que lo impida ni que lo detecte solo: el aviso del dueño fue el único mecanismo. Mientras el
+punto de retorno siga siendo `backup/edge-functions/`, la única defensa es comparar versión y
+`ezbr_sha256` de las 19 contra el `MANIFEST` **antes de cualquier despliegue** — que es lo que ya
+se hace, y lo que habría detectado este caso en la siguiente iteración.
+
+Queda anotado como **UX-25** en la tabla de hallazgos nuevos, aunque no es de interfaz: es de
+proceso.
+
+### Criterio de cierre
+
+| Requisito | Estado |
+|-----------|--------|
+| Código en producción | ✅ v30, `verify_jwt: true` |
+| Repo coincide con producción | ✅ Reconstruido desde la v30 y comprobado por tamaño |
+| Camino feliz | ✅ Bandeja de entrada, por el dueño, con `88.888.888-8` |
+| No regresión | ✅ M-1 y M-3 sin una línea de diferencia; los dos enlaces en pie |
+| Respaldo regenerado | ✅ v30, `MANIFEST.md` actualizado con la versión y el hash reales |
+| Documentación | ✅ `CAMBIOS.md` y `TECNICO.md` §7 |
+| PR abierto, sin fusionar | ✅ |
+
+**No se redesplegó nada**, y es importante: desplegar desde el repo antes de importar habría
+pisado el cambio del dueño. El orden fue leer producción primero, escribir el repo después.
+
+---
+
 ## Decisiones de producto tomadas durante el trabajo
 
 Decisiones que no son de un solo hallazgo y que afectan cómo se abordan los siguientes.
@@ -1122,6 +1202,7 @@ recuerde haberlos visto.
 |---|-------|----------|--------------|--------|
 | N-1 | `crear-solicitud`, líneas 254, 294 y 337 del respaldo | Interpola `${trabajador.nombre}` sin escapar en el HTML de los correos **M-1, M-2 y M-3**. No es XSS —los clientes de correo no ejecutan scripts— pero sí inyección de HTML en el correo a contacto frío que `FUNCIONAL.md` §7 llama el más frágil del sistema | H-07 | Abierto, sin pedido |
 | UX-22 | Producto, no una función concreta | **No existe forma de quitar un candidato de un proceso.** Ni por interfaz ni por edge function: `gestionar-proceso` solo borra filas de `candidatos_proceso` como parte de `eliminar` el proceso entero. Se anotó primero como «N-2» | H-10 | Abierto, sin pedido |
+| UX-25 | Proceso, no código | **Un cambio hecho en el editor del panel de Supabase no deja rastro en el repositorio, y nada lo detecta solo.** El 13/08 producción tuvo durante un rato una versión de `crear-solicitud` que no existía en ninguna rama. El siguiente despliegue desde el repo la habría pisado en silencio. Lo único que lo evitó fue que el dueño avisara | Cambio manual de M-2 | Abierto, sin pedido |
 | N-3 | `dashboard.html`, las tres tarjetas de la ficha | **Las tarjetas están diseñadas para un número grande** («3», «5 años») y desde la cadena de validación reciben frases. «No válido — ‹motivo›» desborda, y el motivo lo escribe el validador **sin límite de largo**. La causal muestra un guion con la insignia debajo. El dato es correcto; el formato no | Fase C de la cadena de validación | Abierto, sin pedido |
 
 **Por qué N-1 no se arregló en H-07:** es una edge function, y el pedido de H-07 acotaba el
