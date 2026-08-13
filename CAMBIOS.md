@@ -16,8 +16,8 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 
 **Cerrados:** H-01, H-07, H-04, H-05 y H-10 el 11/08; H-02, H-03 y H-35 el 12/08.
 
-**En curso:** **UX-19 y UX-20** (favicon y logo por fondo), en PR sin fusionar desde el 13/08,
-bloqueados por cuatro archivos de imagen que todavía no están en el repo. Detalle en su sección.
+**En curso:** **UX-19 y UX-20** (favicon y logo por fondo), verificados el 13/08 y a la espera de
+que se fusione el PR #9. No queda nada por comprobar; los cinco archivos ya están en `main`.
 La cadena de validación de documentos, que incluye H-22, se cerró el 12/08.
 
 El recuento de la tabla no se movió, y conviene decir por qué: los identificadores `UX-nn` no
@@ -698,7 +698,7 @@ Lo que UX-22 impide no es borrarlos, sino **quitar un candidato de un proceso de
 
 ## UX-19 y UX-20 · Favicon en las 12 pantallas, y logo según el fondo
 
-🔵 Presentación · UX · Esfuerzo S · **Estado: ⏸️ EN PR, sin fusionar** (13/08/2026)
+🔵 Presentación · UX · Esfuerzo S · **Estado: ✅ VERIFICADO, a la espera de fusión** (13/08/2026)
 
 ### El problema
 
@@ -768,47 +768,82 @@ La última fila es la que hace útiles a las otras. Una comparación que da ✅ 
 comprueba nada; ya pasó en la cadena de validación con una comprobación que detectaba el problema
 y no abortaba. El control se corrió de verdad, no se razonó.
 
-El arnés queda en `pedidos/maqueta-UX-19-UX-20.mjs` para poder repetirlo cuando lleguen los
-archivos que faltan.
+El arnés queda en `pedidos/maqueta-UX-19-UX-20.mjs`. Detecta si los archivos reales están en la
+raíz y lo dice al arrancar; mientras faltaban, medía con un relleno de 704×192.
 
-### Lo que la verificación **no** cubre, y por qué
+**Esta medición se corrió dos veces.** La primera, con los cuatro archivos aún sin subir, dejaba
+una afirmación condicionada —«la maquetación no cambia *siempre que* los logos sean 704×192»—. El
+dueño los subió (commit `f5be6fe`) y se repitió con los reales: **mismo resultado, ya sin
+condición**.
 
-**Cuatro de los cinco binarios no están en el repo.** El dueño subió `favicon.ico` (commit
-`a948f7e`); `logo-huella-laboral.png`, `logo-huella-laboral-blanco.png`, `favicon-32.png` y
-`apple-touch-icon.png` siguen sin subir. Llegaron como imágenes pegadas en el chat, y de una
-imagen renderizada no se reconstruye el binario original.
+### Los archivos, comprobados y no supuestos
 
-La medición se hizo con un PNG de relleno de 704×192 con alfa, que es lo único que la maquetación
-mira del archivo: sus dimensiones. Eso deja **una afirmación condicionada, y conviene leerla como
-lo que es**:
+Antes de repetir la medición se comprobó qué son de verdad los cinco archivos, en vez de fiarse
+del nombre. Es exactamente el error que originó UX-20: `Huella_Laboral.png` decía `.png` y era
+un JPEG.
 
-> La maquetación no cambia **siempre que los dos logos sean 704×192**, como dice el pedido. Si
-> alguno viniera con otras dimensiones, la caja se mueve — el control lo demuestra.
+| Archivo | Qué es | Dimensiones | Transparente |
+|---------|--------|------------:|-------------:|
+| `logo-huella-laboral.png` | PNG RGBA | 704×192 | 76,6 % |
+| `logo-huella-laboral-blanco.png` | PNG RGBA | 704×192 | 76,6 % |
+| `favicon-32.png` | PNG RGBA | 32×32 | 17,2 % |
+| `apple-touch-icon.png` | PNG RGBA | 180×180 | 20,7 % |
+| `favicon.ico` | ICO, 3 iconos | 16, 32, 48 | — |
+| `Huella_Laboral.png` *(el antiguo)* | **JPEG** | 704×192 | **0 %** |
 
-Lo que **no** se ha comprobado y no se puede comprobar sin los archivos: que el negativo blanco
-se lea bien sobre `var(--azul)`, que el fondo sea realmente transparente, y qué aspecto tiene el
-favicon en la pestaña. Son las tres cosas que motivaron el pedido, y quedan para la revisión
-visual del dueño tras subir los archivos.
+La última fila es el diagnóstico de UX-20 medido en píxeles: **0 % de transparencia**, y el 80 %
+de su tinta es clara, que es el fondo blanco viajando dentro de la imagen.
+
+Los dos logos nuevos tienen **la misma silueta** —76,6 % transparente los dos— y se diferencian
+solo en el color de la tinta:
+
+| Logo | Luminancia media de la tinta | Contraste sobre `var(--azul)` #0E2A47 |
+|------|-----------------------------:|--------------------------------------:|
+| `logo-huella-laboral.png` | 38 (100 % tinta oscura) | **1:1 — invisible** |
+| `logo-huella-laboral-blanco.png` | 255 (100 % tinta clara) | **14,57:1** |
+
+Ese `1:1` es la justificación de que hagan falta dos archivos y no uno transparente: sobre el
+azul, el logo azul desaparece aunque el fondo sea transparente. El negativo pasa WCAG AA (3:1
+para texto grande) con holgura.
+
+### Revisión visual, ya con los archivos reales
+
+Renderizadas las cuatro pantallas representativas y miradas una a una:
+
+| Pantalla | Qué se comprobó | Resultado |
+|----------|-----------------|-----------|
+| `dashboard.html` · `.sidebar` | Negativo blanco sobre azul | ✅ Sin recuadro. Las líneas horizontales del diseño se conservan |
+| `estado.html` · `nav` | Negativo blanco sobre azul | ✅ Igual. Cabe en los 56 px de la barra |
+| `index.html` · `nav` | Logo azul sobre claro | ✅ Igual que antes del cambio |
+| `validar.html` · `.header` | Logo azul, el de 180 px | ✅ Igual que antes |
+
+**Queda una salvedad conocida y aceptada:** `favicon-32.png` es un círculo blanco opaco con la
+huella azul —solo 17,2 % transparente—, así que en pestañas de tema claro el círculo se funde con
+el fondo y queda flotando la huella. Está aceptado por el dueño y es la razón de que el bloque
+sea idéntico en los 12: cambiarlo es sustituir tres archivos.
 
 ### Criterio de cierre
 
 | Requisito | Estado |
 |-----------|--------|
-| Los cinco archivos en la raíz | ⚠️ **1 de 5.** Falta que el dueño suba los otros cuatro |
-| Favicon idéntico en los 12 | ✅ |
+| Los cinco archivos en la raíz | ✅ `a948f7e` (favicon.ico) y `f5be6fe` (los otros cuatro) |
+| Los archivos son lo que dicen ser | ✅ Comprobado con `file` y por píxeles, no por el nombre |
+| Favicon idéntico en los 12 | ✅ Un solo `sha256` para las 12 copias |
 | Logo por fondo, 2 blancos y 10 azules | ✅ |
-| Maquetación intacta | ✅ condicionado a que los PNG sean 704×192 |
-| Revisión visual sobre el azul | ⏸️ Requiere los archivos |
-| `Huella_Laboral.png` conservado | ✅ |
+| Maquetación intacta | ✅ Medido con los archivos reales, sin condición |
+| Revisión visual sobre el azul | ✅ Sin recuadro, contraste 14,57:1 |
+| `Huella_Laboral.png` conservado | ✅ Sin referencias desde ningún HTML |
 | Documentación | ✅ `CAMBIOS.md` y `TECNICO.md` §5 |
-| PR abierto, sin fusionar | ✅ |
+| PR abierto, sin fusionar | ✅ PR #9 |
 
-**No se puede fusionar todavía.** Los 12 HTML apuntan a dos archivos que no están en `main`: en
-cuanto Vercel despliegue, las 12 pantallas quedan sin logo. Es el único orden posible —el PR no
-puede traer los binarios— y por eso el requisito de fusión es explícito: **primero los cuatro
-archivos en `main`, después el PR.**
+**Ya se puede fusionar.** El bloqueo era de orden, no de código: los 12 HTML apuntaban a dos
+archivos que no estaban en `main`, y fusionar antes habría dejado las 12 pantallas sin logo en
+cuanto Vercel desplegara. El PR no podía traer los binarios —llegaron como imágenes pegadas en el
+chat, y de una imagen renderizada no se reconstruye el binario—, así que el orden era forzoso:
+primero los archivos a `main`, después el PR. Ambas cosas hechas.
 
-Ni edge functions ni migración: el cambio es solo de frontend.
+Ni edge functions ni migración: el cambio es solo de frontend. **Queda cerrado al fusionar**, que
+es lo único pendiente.
 
 ---
 

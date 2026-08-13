@@ -197,10 +197,15 @@ imagen igual, guiándose por los bytes y no por el nombre.
 Se sustituye por dos PNG con transparencia, de las mismas dimensiones (704×192), **uno por
 color de fondo**:
 
-| Fondo del contenedor | Archivo | Pantallas |
-|----------------------|---------|-----------|
-| `var(--azul)` | `logo-huella-laboral-blanco.png` | `dashboard.html` (`.sidebar`), `estado.html` (`nav`) |
-| Claro | `logo-huella-laboral.png` | Las otras diez |
+| Fondo del contenedor | Archivo | Pantallas | Contraste de la tinta |
+|----------------------|---------|-----------|----------------------:|
+| `var(--azul)` | `logo-huella-laboral-blanco.png` | `dashboard.html` (`.sidebar`), `estado.html` (`nav`) | 14,57:1 |
+| Claro | `logo-huella-laboral.png` | Las otras diez | — |
+
+**Son dos archivos y no uno transparente por una razón medible:** el logo azul sobre
+`var(--azul)` da un contraste de **1:1**. Quitar el fondo blanco no basta; sobre el azul, el
+logo azul desaparece. Los dos archivos tienen la misma silueta —76,6 % de píxeles transparentes
+en ambos— y se diferencian solo en el color de la tinta (luminancia media 38 frente a 255).
 
 `Huella_Laboral.png` **se conserva** como punto de retorno hasta que la fusión esté verificada.
 Ya no lo referencia ningún HTML.
@@ -227,9 +232,15 @@ Dos cosas que cuestan un rato si se olvidan:
   intrínseca del archivo. Un reemplazo que no sea 704×192 **mueve la caja**, y en
   `crear-password.html` además desplaza el logo en horizontal porque su contenedor está centrado.
   Si algún día se cambia el logo, se comprueba antes su tamaño.
-- **El favicon elegido es un círculo blanco con la huella azul.** En pestañas de tema claro el
-  círculo se funde con el fondo y queda flotando la huella. Está aceptado; es la razón por la
-  que el bloque debe poder cambiarse de un tirón.
+- **El favicon elegido es un círculo blanco con la huella azul.** `favicon-32.png` es opaco en un
+  82,8 % de su superficie: el círculo blanco está dentro de la imagen. En pestañas de tema claro
+  se funde con el fondo y queda flotando la huella. Está aceptado; es la razón por la que el
+  bloque debe poder cambiarse de un tirón.
+
+**Comprobar el archivo, no el nombre.** UX-20 existió porque nadie miró dentro de un `.png`
+durante meses. Antes de dar por bueno un reemplazo, `file <archivo>` dice qué es de verdad, y el
+arnés `pedidos/maqueta-UX-19-UX-20.mjs` mide la caja del logo en los 12 HTML contra `origin/main`
+y avisa si se mueve.
 
 ## 6. Modelo de datos
 
