@@ -12,25 +12,31 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 
 | | Cerrados | En curso | Pendientes | Total |
 |---|:---:|:---:|:---:|:---:|
-| Hallazgos | 8 | 1 | 41 | 50 |
+| Hallazgos | 9 | 0 | 41 | 50 |
 
 **Cerrados:** H-01, H-07, H-04, H-05 y H-10 el 11/08; H-02, H-03 y H-35 el 12/08.
 
-**En curso:** la cadena de validación de documentos (incluye H-22). Desplegada y fase A demostrada;
-**B, C y D pendientes**.
+**En curso:** ninguno. La cadena de validación de documentos, que incluye H-22, se cerró el 12/08.
 
-**Residuos de prueba en producción, ninguno limpiable hoy.** Tres filas creadas por pruebas de
-verificación que no tienen vía de borrado: el trabajador con payload XSS de H-07 y los dos
-candidatos de H-10. La causa común es N-2. Detalle en cada hallazgo.
+### Datos de prueba en producción
 
-El trabajador de H-07, `e4f2571c-8d46-41c4-ba09-8d9624e2a986`, quedó además con
-`estado: 'documentos_validados'` **falso**, puesto por la fase A de H-03. No es explotable —el
-agujero está cerrado— pero es un dato incorrecto en producción y hay que saberlo si alguien lo mira.
+**Se borran desde el editor SQL del panel.** Esto corrige lo que esta bitácora afirmó durante
+varias iteraciones: que «no había forma de borrarlos». Era falso y venía de confundir dos cosas
+distintas —lo que no existe es una **vía de producto** para quitar un candidato de un proceso, que
+es UX-22 (antes anotado aquí como N-2)—. La consecuencia del error no fue técnica: se rechazaron
+variantes de prueba por «no dejar residuo» cuando el residuo era limpiable en un minuto.
+
+| Qué | Id | De dónde viene |
+|-----|----|----------------|
+| Trabajador con payload XSS en el nombre, y `estado: 'documentos_validados'` **falso** | `e4f2571c-8d46-41c4-ba09-8d9624e2a986` | Fase A de H-07, y fase A de H-03 |
+| Candidato con RUT `11.111.111-1` en el proceso ImmerX `165a911f-…` | — | Fase A de H-10 |
+| Invitación pendiente, RUT `22.222.222-2` | `dc2c4b41-24c5-4173-baa0-cc3ad35f9b3e` | Fase B de H-10 |
+| Trabajador «sin documentos» con RUT `44.444.444-4` | `e2fccdec-891d-4017-9e14-c6a98aafa5bc` | Fase D de la cadena de validación |
 
 **Punto de retorno.** Las 19 funciones de `backup/edge-functions/` coinciden con producción en
-versión y `ezbr_sha256`. Ocho archivos se han regenerado tras un despliegue y llevan su propia
-comprobación, con tres grados distintos de rigor que el `MANIFEST` detalla uno a uno. Las otras
-11 mantienen literalidad **inferida** del respaldo del 08/08. No es un pendiente de ningún
+versión y `ezbr_sha256`. Diez archivos se han regenerado tras un despliegue y llevan su propia
+comprobación, con distintos grados de rigor que el `MANIFEST` detalla uno a uno. Las otras
+9 mantienen literalidad **inferida** del respaldo del 08/08. No es un pendiente de ningún
 hallazgo: es el estado del respaldo. Detalle en `backup/edge-functions/MANIFEST.md`.
 
 ---
@@ -277,19 +283,16 @@ diff del HTML renderizado antes y después.
 
 ### Residuo en producción
 
-El proceso de prueba lo borró el dueño desde `dashboard.html`. **La fila del trabajador
-`e4f2571c-8d46-41c4-ba09-8d9624e2a986` sigue en la tabla `trabajadores`**, con el payload en el
-campo `nombre`, y no hay forma de borrarla: ninguna pantalla expone el borrado de trabajadores y
-sin el grupo `database` del conector tampoco se puede por SQL.
-
+El proceso de prueba lo borró el dueño desde `dashboard.html`. La fila del trabajador
+`e4f2571c-8d46-41c4-ba09-8d9624e2a986` sigue en `trabajadores` con el payload en el campo `nombre`.
 No es peligrosa —el payload ya no se ejecuta, que es justamente lo que se arregló— pero es un dato
-de prueba con contenido raro en una base de producción con datos personales reales. Queda anotado
-con su id para poder borrarlo cuando exista la vía.
+de prueba con contenido raro en una base con datos personales reales.
 
-**Es la primera consecuencia concreta de mantener el grupo `database` desactivado.** No invalida
-la decisión: sin ella no habría barrera del lado del servidor para `apply_migration`. Pero conviene
-saber que el precio se paga en residuos como este, y que crecerá con cada hallazgo que necesite
-datos de prueba.
+**Corrección (12/08):** aquí se afirmó que «no hay forma de borrarla». Es falso. **Se borra desde
+el editor SQL del panel.** El error fue mío y se propagó a varias iteraciones: confundí «el agente
+no puede borrarla, porque el grupo `database` del conector está desactivado» con «no se puede
+borrar». Lo primero es cierto; lo segundo no. La consecuencia no fue técnica sino de método: se
+descartaron variantes de prueba por «no dejar residuo» cuando el residuo era limpiable en un minuto.
 
 ---
 
@@ -423,7 +426,7 @@ de verificación llevan la clave literal y `throw` si no cuadra.
 
 ## Cadena de validación de documentos · incluye H-22
 
-🔴 Crítica · SEG/FUNC · **Estado: 🟡 EN CURSO** — desplegado y fase A demostrada; B, C y D pendientes
+🔴 Crítica · SEG/FUNC · **Estado: ✅ CERRADO** (12/08/2026)
 
 ### De dónde salió
 
@@ -503,9 +506,26 @@ validaciones, dos envíos, solo la vigente se muestra—.
 - [x] Migración aplicada y comprobada
 - [x] Código desplegado, con aprobación explícita
 - [x] Prueba A: el fallo existía, demostrado en producción sobre `11.111.111-1`
-- [ ] **B, C y D pendientes**
+- [x] Camino feliz intacto — fase B
+- [x] Lo caducado deja de mostrarse — fase C
+- [x] No regresión — fase D
 - [x] Respaldos regenerados y `MANIFEST.md` al día
-- [ ] Visto bueno del dueño
+- [x] Visto bueno del dueño
+
+### Verificación en producción — 12/08
+
+| Fase | Prueba | Obtenido | Estado |
+|------|--------|----------|:------:|
+| **B.1** | `13.435.655-3`, ya validado antes de la migración | `validado`/`validado`, 3 empleos, 2 años. **La migración no rompió lo vigente** | ✅ |
+| **B.2** | Ciclo nuevo con `11.111.111-1`, validado como válido | `validado`/`validado`, 1 empleo, 5 años, visible en la ficha | ✅ |
+| **C.1** | Resubir sin validar | `pendiente_validacion` en ambos, `cert_empleos: null`. En pantalla «Pendiente de validación» en las tres tarjetas; **los números anteriores desaparecieron** | ✅ |
+| **C.2** | Validar marcando ambos como no válidos | «No válido — ‹motivo›» y la insignia roja **✗ NO VALIDADA**. El motivo del certificado llega y se muestra | ✅ |
+| **C.3** | `19.114.926-2`, nunca validado | `pendiente_validacion`, sin datos caducados | ✅ |
+| **D** | Ciclo completo | Salieron M-1, M-2 y M-3. `estado.html` con `token_consulta` muestra lo mismo que el panel | ✅ |
+| **D** | Trabajador nuevo sin documentos (`44.444.444-4`) | `sin_documento` en ambos, sin errores | ✅ |
+
+**C.2 es la prueba que cierra los cuatro defectos a la vez.** La insignia roja apareció por primera
+vez desde que existe el código que la dibuja: hasta hoy el `|| null` la hacía inalcanzable.
 
 ### Pendiente decidido aparte
 
@@ -655,9 +675,9 @@ desplegar. Después ya no hay decisión que tomar.
 - [x] Respaldos regenerados y `MANIFEST.md` al día
 - [x] Visto bueno del dueño
 
-### Residuos en producción
+### Datos de prueba que dejó esta verificación
 
-Ninguno es limpiable hoy, por el hallazgo N-2 de abajo.
+Se borran desde el editor SQL del panel. Ver la corrección en «Estado general».
 
 | Qué | Dónde | De qué prueba viene |
 |-----|-------|---------------------|
@@ -665,8 +685,7 @@ Ninguno es limpiable hoy, por el hallazgo N-2 de abajo.
 | Invitación pendiente `dc2c4b41-24c5-4173-baa0-cc3ad35f9b3e`, RUT `22.222.222-2` | El mismo proceso | Fase B de H-10 |
 | Trabajador `e4f2571c-8d46-41c4-ba09-8d9624e2a986`, con payload XSS en el nombre | Proceso de Andotek | Fase A de H-07 |
 
-El residuo de H-07 ya no es solo un dato raro: ahora se sabe que **tampoco se puede quitar del
-proceso**, no solo que no se puede borrar de `trabajadores`.
+Lo que UX-22 impide no es borrarlos, sino **quitar un candidato de un proceso desde el producto**.
 
 ---
 
@@ -698,15 +717,16 @@ recuerde haberlos visto.
 | # | Dónde | Qué pasa | Detectado en | Estado |
 |---|-------|----------|--------------|--------|
 | N-1 | `crear-solicitud`, líneas 254, 294 y 337 del respaldo | Interpola `${trabajador.nombre}` sin escapar en el HTML de los correos **M-1, M-2 y M-3**. No es XSS —los clientes de correo no ejecutan scripts— pero sí inyección de HTML en el correo a contacto frío que `FUNCIONAL.md` §7 llama el más frágil del sistema | H-07 | Abierto, sin pedido |
-| N-2 | Producto, no una función concreta | **No existe forma de quitar un candidato de un proceso.** Ni por interfaz ni por edge function: `gestionar-proceso` solo borra filas de `candidatos_proceso` como parte de `eliminar` el proceso entero | H-10 | Abierto, sin pedido |
+| UX-22 | Producto, no una función concreta | **No existe forma de quitar un candidato de un proceso.** Ni por interfaz ni por edge function: `gestionar-proceso` solo borra filas de `candidatos_proceso` como parte de `eliminar` el proceso entero. Se anotó primero como «N-2» | H-10 | Abierto, sin pedido |
+| N-3 | `dashboard.html`, las tres tarjetas de la ficha | **Las tarjetas están diseñadas para un número grande** («3», «5 años») y desde la cadena de validación reciben frases. «No válido — ‹motivo›» desborda, y el motivo lo escribe el validador **sin límite de largo**. La causal muestra un guion con la insignia debajo. El dato es correcto; el formato no | Fase C de la cadena de validación | Abierto, sin pedido |
 
 **Por qué N-1 no se arregló en H-07:** es una edge function, y el pedido de H-07 acotaba el
 alcance a `dashboard.html` y `admin.html`. Se deja para decisión del dueño.
 
-**N-2 es funcional antes que técnico.** Es la razón de que los tres residuos de prueba sigan en
-producción, pero el problema real no son las pruebas: un reclutador que agrega un candidato por
-error no tiene forma de deshacerlo salvo borrar el proceso completo, lo que se lleva por delante a
-todos los demás candidatos. Cualquier arreglo tiene que decidir antes qué significa "quitar":
+**UX-22 es funcional antes que técnico**, y **no** tiene que ver con limpiar datos de prueba —eso
+se hace por SQL—. El problema real: un reclutador que agrega un candidato por error no tiene forma
+de deshacerlo salvo borrar el proceso completo, lo que se lleva por delante a todos los demás
+candidatos. Cualquier arreglo tiene que decidir antes qué significa "quitar":
 borrar la fila, o marcarla como retirada conservando la trazabilidad del consentimiento
 (`FUNCIONAL.md` §6.3). Es decisión de producto, no de implementación.
 
