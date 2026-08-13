@@ -182,7 +182,12 @@ Tres cosas que no son obvias y cuestan un hallazgo si se olvidan:
   antes de que el motor de JS lo vea. Los `onclick` del panel interpolan UUID de la base y eso es
   lo que los protege. Si alguno pasara a llevar texto de usuario, la solución no es escapar: es
   dejar de interpolarlo ahí.
-- Los otros diez HTML no tienen `escapeHtml` porque hoy no inyectan dato de usuario con
+- **`estado.html` también tiene `escapeHtml` desde el 13/08**, y por la razón que este apartado
+  anticipaba: al rehacer sus tarjetas, el motivo del rechazo pasó a inyectarse con `innerHTML`.
+  Son ya **tres** funciones `escapeHtml` duplicadas a propósito, una por archivo. La de
+  `estado.html` está escrita con una tabla de reemplazo en vez de cinco `.replace` encadenados;
+  el resultado es el mismo y cubre los mismos cinco caracteres.
+- Los otros nueve HTML no tienen `escapeHtml` porque hoy no inyectan dato de usuario con
   `innerHTML`. Comprobado en H-07; si se añade uno, hay que añadir también la función.
 
 ### Imagen de marca: favicon y los dos logos (desde UX-19 y UX-20, 13/08)
@@ -241,6 +246,42 @@ Dos cosas que cuestan un rato si se olvidan:
 durante meses. Antes de dar por bueno un reemplazo, `file <archivo>` dice qué es de verdad, y el
 arnés `pedidos/maqueta-UX-19-UX-20.mjs` mide la caja del logo en los 12 HTML contra `origin/main`
 y avisa si se mueve.
+
+### Las tarjetas de `estado.html` (desde el 13/08)
+
+Tres tarjetas con **cuatro zonas de altura fija** —título 32 px, valor 58 px, insignia 22 px, y el
+motivo debajo sin altura fija—. Las alturas existen para que **las insignias queden alineadas entre
+las tres tarjetas** pase lo que pase con el valor.
+
+La regla que lo ordena todo: **el valor grande se reserva para el dato y el estado va siempre en la
+insignia.** Antes, «Pendiente de validación» y «No válido — ‹motivo›» entraban en el valor, en
+24 px y negrita, y desbordaban.
+
+| Estado | Insignia | Valor |
+|--------|----------|-------|
+| `sin_documento` | `SIN DOCUMENTO`, gris | Guion gris `#C3CBD6`, 24 px |
+| `pendiente_validacion` | `PENDIENTE DE VALIDACIÓN`, ámbar | Igual |
+| `no_valido` | `✗ NO VÁLIDO`, rojo | Igual, y el motivo en 11 px bajo la insignia |
+| `validado` | `✓ VALIDADO`, verde | El dato |
+
+Tres cosas que no son obvias:
+
+- **Las dos primeras tarjetas leen el estado del certificado; la tercera, el del finiquito.**
+  Pueden diferir, porque los documentos **no son obligatorios** en `trabajador.html`: se puede
+  enviar sin ninguno o con uno solo.
+- **La causal es texto, no cifra:** 15 px y peso 500, para distinguirla de los números. Se traduce
+  con `formatearCausal`, pero **solo si hay causal**: esa función devuelve `'—'` para los valores
+  vacíos, y ese guion es una cadena con contenido que `valorTexto` tomaría por dato bueno y
+  pintaría en 15 px. El guion de "no hay dato" lo pone `valorTexto`, en gris y a 24 px.
+- **El aviso sobre las tarjetas** solo aparece si algún documento es `no_valido`, y lleva un botón
+  a `trabajador.html`. Los estados negativos se muestran a propósito: `estado.html` es
+  **seguimiento**, y el trabajador los necesita para actuar.
+
+**`causal_validada` ya no se usa en esta pantalla.** Lo que se muestra es el estado del documento,
+no el de la causal. Consecuencia con nombre: un finiquito `validado` cuya causal **no** coincide
+llega con `causal_texto: null` desde `obtener-estado`, y la tarjeta queda como «✓ VALIDADO» sobre
+un guion, sin explicar por qué no hay causal. Antes salía una insignia roja «✗ NO VALIDADA».
+Anotado como **UX-26**.
 
 ## 6. Modelo de datos
 

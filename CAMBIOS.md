@@ -16,8 +16,7 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 
 **Cerrados:** H-01, H-07, H-04, H-05 y H-10 el 11/08; H-02, H-03 y H-35 el 12/08.
 
-**En curso:** **M-2**, un cambio de texto que el dueño hizo **a mano en el panel de Supabase** y que
-se importó al repo después. Ya está en producción y verificado; falta fusionar el PR.
+**En curso:** las **tarjetas de `estado.html`** —la mitad de N-3—, en PR sin fusionar.
 
 **Cerrados también:** UX-19 y UX-20 el 13/08 (PR #9). M-4 y M-5 el 13/08 (PR #10). M-1 el 13/08
 (PR #11). La cadena de validación de documentos, que incluye H-22, se cerró el 12/08.
@@ -1173,6 +1172,107 @@ pisado el cambio del dueño. El orden fue leer producción primero, escribir el 
 
 ---
 
+## Tarjetas de `estado.html` · el valor grande deja de llevar el estado
+
+🔵 Presentación · UX · Esfuerzo S · **Estado: ⏸️ EN PR, sin fusionar** (13/08/2026)
+
+### El problema
+
+Las tres tarjetas del resumen estaban diseñadas para un número —«3», «5 años»— y desde la cadena
+de validación reciben frases: «Pendiente de validación», «No válido — ‹motivo›». En 24 px y
+negrita, el texto desbordaba y dominaba la pantalla. Es el hallazgo que se anotó como **N-3**.
+
+Las tres tampoco eran consistentes entre sí: las dos primeras metían el estado en el valor grande;
+la tercera ya usaba el patrón correcto —valor arriba, insignia debajo—.
+
+### La decisión
+
+**El valor grande se reserva para el dato; el estado va siempre en la insignia.** Cuatro estados,
+cuatro insignias. Y **alturas fijas por zona** para que las insignias queden alineadas entre las
+tres tarjetas pase lo que pase con el valor.
+
+Los estados negativos **se muestran**, y no es un descuido: `estado.html` es **seguimiento**, no
+una carta de presentación —decisión del 13/08, la misma que motivó el cambio del texto de M-2—. El
+trabajador necesita saber que un documento fue rechazado para poder volver a subirlo, y por eso el
+aviso lleva botón a `trabajador.html`.
+
+El diseño no se reinterpretó: el pedido traía un archivo con las tarjetas dibujadas por las mismas
+funciones que debían quedar en `estado.html`, y **se copió ese código**.
+
+### El cambio
+
+Solo `estado.html`. Ni funciones, ni despliegue, ni migración.
+
+| Qué | Antes | Ahora |
+|-----|-------|-------|
+| `ETIQUETA_DOC` | Tres textos planos | Cuatro entradas con texto, color y fondo |
+| `textoValidacion` | Metía el estado en el valor | Sustituida por `valorNumero` y `valorTexto` |
+| `insigniaCausal` | Leía `causal_validada` | Sustituida por `insignia(estado)` |
+| Marcado de las tarjetas | Sin alturas fijas, alineado a la izquierda | Cuatro zonas de altura fija, centrado |
+| Los tres rellenos | `textContent` | `innerHTML`, con escapado |
+| — | — | Aviso nuevo, oculto salvo que algo sea `no_valido` |
+
+`formatearCausal` y `CAUSAL_LABELS` se mantienen. **`escapeHtml` es nueva en este archivo**, y
+obligatoria: el motivo lo escribe el validador en un campo libre y ahora se inyecta con
+`innerHTML`.
+
+### Verificación
+
+Sin fase A: el problema está observado en producción y en capturas.
+
+Los siete casos del pedido se corrieron **sobre el `estado.html` real**, no sobre la maqueta:
+Chromium carga el archivo, se intercepta la llamada a `obtener-estado` y se responde con cada caso.
+
+| Qué se comprobó | Resultado |
+|-----------------|-----------|
+| Los siete casos | ✅ 7/7 |
+| **Insignias alineadas entre las tres tarjetas** | ✅ Misma `y` en las tres, en los siete casos |
+| Desbordes | ✅ Ninguno: `scrollWidth ≤ clientWidth` en las tres |
+| Tamaños | ✅ Números 24 px, causal 15 px, guiones 24 px en gris |
+| Caso 7 · escapado | ✅ Texto literal, **0** elementos creados, **0** alertas |
+| Aviso | ✅ Visible solo en los casos 3, 4 y 7 |
+| El resto de la pantalla | ✅ Cabecera con nombre y RUT, contador y descripción intactos |
+| **Control: ¿sabe fallar?** | ✅ Con `escapeHtml` quitado del motivo: **1 `<img>` creado, 1 alerta**, y el arnés da ❌ |
+
+La última fila es la que sostiene a la del caso 7. El arnés queda en `pedidos/estado-7-casos.mjs`.
+
+### Un caso que el archivo de referencia no cubría — UX-26
+
+Al sustituir `insigniaCausal` por `insignia(finiq_estado)`, **`causal_validada` deja de usarse en
+esta pantalla**. Eso es lo que pide el diseño —la insignia describe el documento, cuatro estados,
+cuatro insignias— pero deja un hueco que conviene tener escrito.
+
+`obtener-estado` devuelve `causal_texto: causalValidada === true ? causal : null`. Así que un
+finiquito **`validado` cuya causal no coincide** llega con `finiq_estado: 'validado'` y
+`causal_texto: null`, y la tarjeta queda:
+
+> «✓ VALIDADO» sobre un guion gris, sin decir por qué no hay causal.
+
+Antes salía «✗ NO VALIDADA» en rojo. **Se pierde información**, y no es un estado teórico: es la
+opción negativa del formulario de validación, «No - Finiquito inválido o causal no coincide».
+
+Se implementó como pide el pedido y se anota en vez de improvisar. Las opciones, para cuando haya
+pedido: una quinta insignia para «causal no coincide», o una línea de motivo bajo la insignia
+verde. **La segunda es más barata** y reutiliza la zona de motivo que ya existe.
+
+### Criterio de cierre
+
+| Requisito | Estado |
+|-----------|--------|
+| Código en la rama | ✅ Solo `estado.html` |
+| Prueba A | — No aplica, el pedido la excluye |
+| Los siete casos | ✅ Sobre el archivo real, con control que falla |
+| No regresión | ✅ Cabecera, contador, lista, carga y error sin tocar |
+| Documentación | ✅ `CAMBIOS.md` y `TECNICO.md` §5 |
+| PR abierto, sin fusionar | ✅ |
+| Comprobación en producción | ⏳ **Pendiente del dueño**, tras fusionar |
+
+**Se despliega al fusionar**, porque Vercel publica `main`. No hay edge function que aprobar.
+
+---
+
+---
+
 ## Decisiones de producto tomadas durante el trabajo
 
 Decisiones que no son de un solo hallazgo y que afectan cómo se abordan los siguientes.
@@ -1203,7 +1303,8 @@ recuerde haberlos visto.
 | N-1 | `crear-solicitud`, líneas 254, 294 y 337 del respaldo | Interpola `${trabajador.nombre}` sin escapar en el HTML de los correos **M-1, M-2 y M-3**. No es XSS —los clientes de correo no ejecutan scripts— pero sí inyección de HTML en el correo a contacto frío que `FUNCIONAL.md` §7 llama el más frágil del sistema | H-07 | Abierto, sin pedido |
 | UX-22 | Producto, no una función concreta | **No existe forma de quitar un candidato de un proceso.** Ni por interfaz ni por edge function: `gestionar-proceso` solo borra filas de `candidatos_proceso` como parte de `eliminar` el proceso entero. Se anotó primero como «N-2» | H-10 | Abierto, sin pedido |
 | UX-25 | Proceso, no código | **Un cambio hecho en el editor del panel de Supabase no deja rastro en el repositorio, y nada lo detecta solo.** El 13/08 producción tuvo durante un rato una versión de `crear-solicitud` que no existía en ninguna rama. El siguiente despliegue desde el repo la habría pisado en silencio. Lo único que lo evitó fue que el dueño avisara | Cambio manual de M-2 | Abierto, sin pedido |
-| N-3 | `dashboard.html`, las tres tarjetas de la ficha | **Las tarjetas están diseñadas para un número grande** («3», «5 años») y desde la cadena de validación reciben frases. «No válido — ‹motivo›» desborda, y el motivo lo escribe el validador **sin límite de largo**. La causal muestra un guion con la insignia debajo. El dato es correcto; el formato no | Fase C de la cadena de validación | Abierto, sin pedido |
+| UX-26 | `estado.html`, tercera tarjeta | **Un finiquito válido cuya causal no coincide se ve como «✓ VALIDADO» sobre un guion, sin explicación.** `obtener-estado` manda `causal_texto: null` cuando `causal_validada` es `false`, y desde el rediseño la insignia describe el documento, no la causal. Antes salía «✗ NO VALIDADA» en rojo | Tarjetas de `estado.html` | Abierto, sin pedido |
+| N-3 | `dashboard.html`, las tres tarjetas de la ficha | **Las tarjetas están diseñadas para un número grande** («3», «5 años») y desde la cadena de validación reciben frases. «No válido — ‹motivo›» desborda, y el motivo lo escribe el validador **sin límite de largo**. La causal muestra un guion con la insignia debajo. El dato es correcto; el formato no. **Resuelto en `estado.html` el 13/08; sigue abierto en `dashboard.html`**, que tiene el mismo problema en la ficha del candidato y en la tabla | Fase C de la cadena de validación | Parcial: falta `dashboard.html` |
 
 **Por qué N-1 no se arregló en H-07:** es una edge function, y el pedido de H-07 acotaba el
 alcance a `dashboard.html` y `admin.html`. Se deja para decisión del dueño.
