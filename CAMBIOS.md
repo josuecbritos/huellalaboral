@@ -12,19 +12,22 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 
 | | Cerrados | En curso | Pendientes | Total |
 |---|:---:|:---:|:---:|:---:|
-| Hallazgos | 5 | 0 | 45 | 50 |
+| Hallazgos | 8 | 0 | 42 | 50 |
 
-**En curso:** ninguno. Cerrados el 11/08/2026: H-01, H-07, H-04, H-05 y H-10.
+**Cerrados:** H-01, H-07, H-04, H-05 y H-10 el 11/08; H-02, H-03 y H-35 el 12/08.
 
 **Residuos de prueba en producción, ninguno limpiable hoy.** Tres filas creadas por pruebas de
 verificación que no tienen vía de borrado: el trabajador con payload XSS de H-07 y los dos
-candidatos de H-10. Detalle en cada hallazgo. La causa común es N-2.
+candidatos de H-10. La causa común es N-2. Detalle en cada hallazgo.
+
+El trabajador de H-07, `e4f2571c-8d46-41c4-ba09-8d9624e2a986`, quedó además con
+`estado: 'documentos_validados'` **falso**, puesto por la fase A de H-03. No es explotable —el
+agujero está cerrado— pero es un dato incorrecto en producción y hay que saberlo si alguien lo mira.
 
 **Punto de retorno.** Las 19 funciones de `backup/edge-functions/` coinciden con producción en
-versión y `ezbr_sha256`. Cinco archivos se han regenerado tras un despliegue y llevan su propia
-comprobación: `crear-reclutador.ts` está verificada **byte a byte** contra el fuente desplegado,
-y las cuatro de H-04/H-05/H-10 por lectura de vuelta desde producción y comparación. Las otras
-14 mantienen literalidad **inferida** del respaldo del 08/08. No es un pendiente de ningún
+versión y `ezbr_sha256`. Ocho archivos se han regenerado tras un despliegue y llevan su propia
+comprobación, con tres grados distintos de rigor que el `MANIFEST` detalla uno a uno. Las otras
+11 mantienen literalidad **inferida** del respaldo del 08/08. No es un pendiente de ningún
 hallazgo: es el estado del respaldo. Detalle en `backup/edge-functions/MANIFEST.md`.
 
 ---
@@ -284,6 +287,134 @@ con su id para poder borrarlo cuando exista la vía.
 la decisión: sin ella no habría barrera del lado del servidor para `apply_migration`. Pero conviene
 saber que el precio se paga en residuos como este, y que crecerá con cada hallazgo que necesite
 datos de prueba.
+
+---
+
+## H-02, H-03 y H-35 · El token de validación no era un token
+
+🔴 Crítica (H-02, H-03) · 🟠 Funcional (H-35) · SEG · **Estado: ✅ CERRADOS** (12/08/2026)
+
+### El problema
+
+`validar.html?token=<valor>` recibía el **`trabajadores.id`**. No es una credencial: es la clave
+primaria, y `crear-solicitud` la devolvía a llamantes anónimos en `{ success: true, trabajadorId }`.
+Ambas funciones lo llevaban anotado en el código: `// TODO: Implementar tokens de validación separados`.
+
+| Hallazgo | Qué permitía, sin autenticación de ninguna clase |
+|----------|--------------------------------------------------|
+| **H-02** · `obtener-validacion` | Leer nombre, RUT y correo, y obtener URLs firmadas al certificado de cotizaciones y al finiquito. Historial laboral y previsional completo |
+| **H-03** · `validar-documentos` | Insertar en `validaciones_documentos` y dejar al trabajador en `documentos_validados`: **falsificar la verificación que el producto vende** |
+| **H-35** | Al resubir documentos, quedaban en `validado: false` pero `trabajadores.estado` no se tocaba: quien ya estaba en `documentos_validados` seguía figurando como validado con papeles sin revisar |
+
+`validar-documentos` era aún peor de lo que decía la auditoría: **no comprobaba siquiera que el
+trabajador existiera**. Tomaba el token como id y operaba.
+
+### La decisión
+
+Credencial propia: `trabajadores.token_validacion` (UUID, único, no nulo) más
+`token_validacion_usado`. Se descartó reusar `token_consulta` porque va al trabajador por correo
+y le permitiría validar sus propios documentos.
+
+Tres decisiones que no son obvias:
+
+**Se consume al enviar la validación, no al abrir la página.** El validador tiene que poder abrir
+el enlace, revisar los PDF, cerrar la pestaña y volver. Consumirlo al leer rompería el uso normal.
+
+**No caduca.** El reenvío del correo ocurre con o sin caducidad, y si alguien puede leer la base el
+problema es otro. Lo que invalida el token es usarlo o resubir documentos.
+
+**Resubir documentos regenera el token**, aunque el anterior nunca se hubiera usado. Si el validador
+tiene dos correos en la bandeja, el viejo no puede aprobar documentos que ya fueron sustituidos.
+
+### El cambio
+
+- **Rama:** `fix/H-02-H-03` · PR #6
+- **Migración:** `supabase/migrations/20260811_token_validacion.sql`, aplicada por el dueño desde el
+  panel. Comprobación posterior: 3 filas, 3 con token, **3 distintos**, 0 usados
+- **Frontend:** `validar.html`, solo texto
+
+| Función | Versión | `ezbr_sha256` |
+|---------|:-------:|---------------|
+| `obtener-validacion` | 2 → **3** | `b5e8f62d4d781b9e…` |
+| `validar-documentos` | 4 → **5** | `51fb897e60b4d043…` |
+| `crear-solicitud` | 26 → **27** | `4143653c738b6a3c…` |
+
+`verify_jwt: true` en las tres, sin cambios. Las otras 16 funciones no se tocaron.
+
+**El orden de despliegue se eligió, no salió así.** Primero las dos lectoras y `crear-solicitud` al
+final: cierra el agujero de inmediato. Al revés, durante la ventana entre despliegues el ataque
+habría seguido funcionando. Y la migración fue antes que todo, porque desplegar `crear-solicitud`
+contra una tabla sin las columnas habría roto el alta de solicitudes, que es el flujo público.
+
+**Por qué el `UPDATE` de la migración no sobra.** Rellena las filas existentes una a una en vez de
+confiar en que el motor evalúe `gen_random_uuid()` por fila al añadir la columna. Si lo evaluara
+una sola vez, las tres filas compartirían token y cualquiera podría validar los documentos de
+cualquiera: el mismo agujero, pero peor. Los `3 distintos` de la comprobación son la prueba de que
+quedó bien.
+
+**`validaciones_documentos.validador_id` no se escribió**, y es una decisión, no un olvido. La
+función no autentica a nadie y el validador interno es un buzón de correo, no un rol con cuenta.
+Cualquier valor habría sido inventado. Para que la columna signifique algo hay que decidir antes
+quién es el validador.
+
+**Dos textos de `validar.html` contradecían el diseño nuevo** y se corrigieron: el bloque de error
+decía «o ha expirado» cuando el token no expira, y el mensaje de envío decía «Intenta nuevamente»,
+que tras consumir el token es un callejón sin salida. Solo texto, sin tocar lógica.
+
+### Verificación
+
+**Fase A — el dueño hizo una variante mejor que las dos que le propuse.** Yo ofrecía crear un
+trabajador de prueba —que habría dejado un residuo nuevo imborrable— o usar el residuo de H-07 con
+evidencia a medias. Él usó una tercera: abrió un correo antiguo de «Nuevos documentos para validar»
+de la bandeja de `contacto@` y pegó su enlace en una ventana de incógnito.
+
+| Fase | Prueba | Obtenido | Estado |
+|------|--------|----------|:------:|
+| **A** | Enlace antiguo (con `trabajador_id`) en incógnito, sin sesión | Pantalla completa: nombre, RUT, correo y los dos PDF abriendo | ✅ |
+| **A** | `validar-documentos` con `e4f2571c…` (residuo de H-07) | `200` · `{success: true}`. Validación falsificada sobre un trabajador ajeno | ✅ |
+| **B** | Solicitud nueva con RUT `11.111.111-1`; llega el M-3 | Token del enlace **distinto** del `trabajador_id` | ✅ |
+| **B** | El enlace abre con datos y los dos PDF | Abre | ✅ |
+| **B** | Cerrar la pestaña y reabrir el mismo enlace | **Sigue funcionando** — no se consume al leer | ✅ |
+| **B** | Enviar la validación | Pantalla de éxito | ✅ |
+| **C** | Seis llamadas: `trabajador_id`, token usado, inexistente y mal formado, leer y validar | Las seis `404 {"error":"Token inválido o ya utilizado"}`, **idénticas** | ✅ |
+| **D** | Resubir con el mismo RUT | M-3 nuevo con token distinto; el anterior sigue dando `404`; el nuevo abre | ✅ |
+| **D** | `estado.html` con `token_consulta` | Sigue funcionando | ✅ |
+| **D** | H-35 comprobado **por SQL**: `19.114.926-2` | `estado: 'pendiente'`, y `fecha_validacion: null` en certificado y finiquito | ✅ |
+
+Demostró los dos fallos **sobre la pantalla real y sin crear ningún dato nuevo**. Es el mejor
+método de fase A de las cuatro iteraciones: usó evidencia que ya existía en producción en vez de
+fabricarla.
+
+**El patrón, para los hallazgos que vienen:** antes de generar datos de prueba en una base con
+datos personales reales, mirar si el sistema ya contiene la evidencia. Un correo viejo en una
+bandeja es un artefacto de producción tan válido como una llamada nueva, y no deja residuo.
+
+**Antes de entregar** se ejercitó el código real —transpilado con `tsc` desde
+`supabase/functions/`, sin reescribirlo— contra una base simulada: **40 comprobaciones en verde**,
+incluidas las cuatro de los criterios de aceptación y el paso 2 de `crear-solicitud`, que no se
+tocó. No sustituye a B/C/D contra producción; sirve para no entregar algo roto.
+
+### Criterio de cierre — **incompleto a propósito**
+
+- [x] Migración aplicada y comprobada — 3 filas, 3 tokens distintos
+- [x] Código desplegado — las tres, con aprobación explícita
+- [x] Prueba A: los dos fallos existían, demostrados en producción
+- [ ] Camino feliz, hostiles y no regresión — **pendientes: B, C y D**
+- [x] Respaldos regenerados y `MANIFEST.md` al día
+- [ ] Visto bueno del dueño
+
+**H-02, H-03 y H-35 quedan cerrados.**
+
+**H-35 se comprobó por SQL, no por inspección del código.** El trabajador `19.114.926-2`, validado
+y luego resubido, quedó en `estado: 'pendiente'` con `fecha_validacion: null` en los dos documentos.
+Es la diferencia entre "el código lo hace" y "la base lo refleja".
+
+**Un fallo del bloque de pruebas que entregué, anotado porque el patrón importa.** El preámbulo
+extraía la clave anon de la página con un regex y en `validar.html` capturó 347 caracteres en vez de
+208; las seis llamadas murieron con `401 UNAUTHORIZED_LEGACY_JWT` y el bloque imprimió un
+`❌ C FALLA` **falso**. La comprobación de longitud estaba puesta, pero era un `console.log`: avisó
+y dejó seguir. **Una comprobación que no aborta no es una comprobación.** En adelante, los bloques
+de verificación llevan la clave literal y `throw` si no cuadra.
 
 ---
 

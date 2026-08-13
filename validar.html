@@ -370,8 +370,9 @@
         <!-- Token Error -->
         <div class="token-error" id="tokenError">
             <div class="token-error-icon">⚠️</div>
-            <h2>Link inválido o expirado</h2>
-            <p>El link de validación no es válido o ha expirado. Por favor, contacta al administrador.</p>
+            <h2>Link inválido o ya utilizado</h2>
+            <p>Este link de validación no es válido, o la validación ya se envió y el link dejó de
+               servir. Si hacen falta cambios, pide que se reenvíe la solicitud de validación.</p>
         </div>
 
         <!-- Main Content -->
@@ -676,7 +677,7 @@
 
             } catch (err) {
                 console.error('Error:', err);
-                mostrarMsg('error', 'Ha ocurrido un error al enviar la validación. Intenta nuevamente.');
+                mostrarMsg('error', 'No se pudo enviar la validación. Si ya la enviaste antes, este link dejó de servir y hay que reenviar la solicitud. Si no, intenta nuevamente.');
                 btn.disabled = false;
                 btn.textContent = 'Validar y Aprobar';
             }

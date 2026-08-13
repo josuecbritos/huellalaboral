@@ -7,9 +7,10 @@ qué la protege. Se consulta para saber **dónde tocar**. El porqué está en `F
 desactualizada miente con autoridad.
 
 **Actualizado:** 11 de agosto de 2026 · **Estado del código:** cerrados H-01 (`crear-reclutador`
-v15), H-07 (`dashboard.html` y `admin.html`) y H-04/H-05/H-10 (`obtener-proceso` v3,
-`gestionar-proceso` v3, `agregar-candidato` v11, `obtener-stats` v3). Todos desplegados y
-verificados en producción.
+v15), H-07 (`dashboard.html` y `admin.html`), H-04/H-05/H-10 (`obtener-proceso` v3,
+`gestionar-proceso` v3, `agregar-candidato` v11, `obtener-stats` v3) y H-02/H-03/H-35
+(`crear-solicitud` v27, `obtener-validacion` v3, `validar-documentos` v5, más una migración).
+Todos desplegados y verificados en producción.
 
 ---
 
@@ -56,10 +57,19 @@ válido, así que pasa el gateway.
 | `hl_token` | Reclutador, admin | JWT de Supabase Auth | 1 h, sin renovación |
 | `token` (empleador) | Evaluador | UUID único en `empleadores_solicitados` | 30 días, un solo uso |
 | `token_consulta` | Trabajador | UUID en `trabajadores` | **No caduca ni se revoca** |
-| "token" de validación | Validador interno | **Es el `trabajador_id`** — no es un token | No aplica |
+| `token_validacion` | Validador interno | UUID único en `trabajadores` | **No caduca**, un solo uso |
 
-El cuarto no es una credencial: es un identificador que `crear-solicitud` entrega a anónimos.
-Es la raíz de H-02 y H-03.
+**El cuarto era el `trabajador_id` hasta H-02/H-03 (11/08).** No era una credencial: era la clave
+primaria, y `crear-solicitud` la devolvía a cualquier llamante anónimo en `{ success, trabajadorId }`.
+Ahora es una columna propia con su `token_validacion_usado`.
+
+Dos diferencias con los otros tres que conviene tener presentes:
+
+- **No caduca, y es decisión tomada.** Lo que lo invalida es usarlo, o que el trabajador vuelva a
+  subir documentos. Poner caducidad no habría cambiado nada: el reenvío del correo ocurre igual, y
+  si alguien lee la base el problema es otro.
+- **Se consume al enviar la validación, no al abrir la página.** El validador tiene que poder abrir
+  el enlace, revisar los PDF, cerrar la pestaña y volver. Consumirlo al leer rompería ese uso.
 
 ## 4. Las 19 edge functions
 
@@ -84,15 +94,19 @@ Es la raíz de H-02 y H-03.
 | 14 | `obtener-estado` | `estado.html` | 🔑 `token_consulta` | Por token | — |
 | 15 | `obtener-evaluacion` | `evaluar.html` | 🔑 UUID | Token + `!completado` + `!expirado` | — |
 | 16 | `guardar-evaluacion` | `evaluar.html` | 🔑 UUID | Token + `!completado` | — |
-| 17 | `obtener-validacion` | `validar.html` | ⛔ | ⛔ | — |
-| 18 | `validar-documentos` | `validar.html` | ⛔ | ⛔ | — |
+| 17 | `obtener-validacion` | `validar.html` | 🔑 `token_validacion` | Token + `!usado` | — |
+| 18 | `validar-documentos` | `validar.html` | 🔑 `token_validacion` | Token + `!usado`, se consume | — |
 | 19 | `auth-test` | **huérfana** | ✅ | 👤 | — |
 
 `crear-solicitud` es pública **por diseño**: el trabajador no tiene cuenta. `auth-test` no la
 invoca ningún HTML; es un artefacto de prueba que quedó en producción (H-14).
 
-Quedan tres filas con AuthZ ⛔: `crear-solicitud` (intencional), `obtener-validacion` y
-`validar-documentos` (H-02 y H-03, pendientes).
+**Queda una sola fila con AuthZ ⛔: `crear-solicitud`, y es intencional** (`FUNCIONAL.md` §4 y §5:
+el trabajador no tiene cuenta). Cerrarla con autenticación rompe el flujo, no lo arregla.
+
+`crear-solicitud` sigue devolviendo `trabajadorId` a llamantes anónimos. Desde H-02/H-03 eso ya no
+abre nada —el validador usa `token_validacion`— pero es un identificador interno que sale al
+exterior sin necesidad, y conviene no volver a construir nada encima.
 
 ### `filtrarProcesosPropios` está duplicado a propósito en cuatro funciones
 
@@ -181,7 +195,14 @@ usuarios ──1:N──▶ procesos ──1:N──▶ candidatos_proceso ─�
 | `empleadores_solicitados` | 2 ⚠️ | Evaluadores invitados | `token` unique, `fecha_expiracion`, `completado` |
 | `evaluaciones` | 2 ⚠️ | Las referencias | Notas 1-5 con CHECK. `comentarios` es **texto libre de terceros** |
 | `documentos` | 4 ⚠️ | Certificado y finiquito | `storage_path` a los buckets |
-| `validaciones_documentos` | 2 ⚠️ | Resultado de la validación | **`validador_id` existe y nunca se escribe** |
+| `validaciones_documentos` | 2 ⚠️ | Resultado de la validación | **`validador_id` existe y sigue sin escribirse** — ver abajo |
+
+**`validaciones_documentos.validador_id` sigue vacío, y en H-02/H-03 se decidió no rellenarlo.**
+El pedido pedía escribirlo «si hay un identificador razonable disponible; si no, dejarlo y decirlo,
+no inventar un valor». No lo hay: `validar-documentos` no autentica a nadie —es token, anónimo por
+diseño— y el validador interno es un buzón de correo, no un rol con cuenta (`FUNCIONAL.md` §4).
+Cualquier valor sería inventado. **Para que la columna signifique algo hace falta antes decidir
+quién es el validador**, y eso es diseño de producto, no implementación.
 
 **Sobre los recuentos.** ⚠️ = **no verificado.** Esas cifras vienen de la auditoría del 31/07 y
 no se han comprobado desde entonces. No son de fiar para decidir: `usuarios` decía 2 y el listado
@@ -219,7 +240,10 @@ Los siete correos salen por Resend con `fetch` directo. Hechos transversales:
   HTTP con error, no lanzan excepción: la función responde `success: true` igual (H-06).
 - `crear-solicitud` espacia los envíos con `await delay(600)`. Es el único control de ritmo, y
   es intra-petición.
-- El único destinatario codificado es `contacto@huellalaboral.cl` (M-3).
+- El único destinatario codificado es `contacto@huellalaboral.cl` (M-3). Es el correo que lleva el
+  enlace de validación; desde H-02/H-03 ese enlace usa `token_validacion` y no el `trabajador_id`.
+  **Ojo con la nomenclatura:** los pedidos de auditoría llaman «M-8» a este mismo correo. No hay un
+  octavo correo — son siete, y este es el M-3.
 - DMARC está configurado.
 
 ## 8. Reglas de trabajo sobre este código

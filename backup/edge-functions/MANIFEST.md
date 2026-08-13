@@ -7,8 +7,10 @@ Regenerados después:
 - `crear-reclutador.ts` el **11/08** al cerrar H-01 (versión 14 → 15).
 - `obtener-proceso.ts`, `gestionar-proceso.ts`, `agregar-candidato.ts` y `obtener-stats.ts` el
   **11/08** al cerrar H-04, H-05 y H-10.
+- `crear-solicitud.ts`, `obtener-validacion.ts` y `validar-documentos.ts` el **11/08** al cerrar
+  H-02, H-03 y H-35.
 
-**19 funciones · 2,690 líneas · 99,156 bytes (96.8 KB)**
+**19 funciones · 2,771 líneas · 103,147 bytes (100.7 KB)**
 
 Contenido íntegro y literal de cada `index.ts` desplegado, un archivo por función,
 sin resumir ni reformatear. `version` es la versión activa en producción al momento
@@ -16,7 +18,7 @@ del respaldo; `ezbr_sha256` es el hash que reporta Supabase para ese despliegue.
 
 | Archivo | Versión | Líneas | Bytes | ezbr_sha256 |
 |---------|--------:|-------:|------:|-------------|
-| `crear-solicitud.ts` | 26 | 369 | 15,620 | `e98e255beb35d065…` |
+| `crear-solicitud.ts` | 27 | 393 | 17,005 | `4143653c738b6a3c…` |
 | `agregar-candidato.ts` | 11 | 357 | 14,124 | `bca77d9e7c7e9d23…` |
 | `crear-reclutador.ts` | 15 | 235 | 9,784 | `61f1889065d7fb7b…` |
 | `obtener-candidato.ts` | 9 | 162 | 5,810 | `dcd511dabb97f863…` |
@@ -25,12 +27,12 @@ del respaldo; `ezbr_sha256` es el hash que reporta Supabase para ese despliegue.
 | `gestionar-usuario.ts` | 6 | 112 | 3,907 | `3bbb34491e55c9b9…` |
 | `listar-procesos.ts` | 5 | 72 | 2,304 | `e6755386155abbb8…` |
 | `obtener-evaluacion.ts` | 4 | 81 | 2,657 | `338cd97b8dc8057f…` |
-| `validar-documentos.ts` | 4 | 126 | 3,931 | `3a8b84a2d37997d7…` |
+| `validar-documentos.ts` | 5 | 163 | 5,476 | `51fb897e60b4d043…` |
 | `crear-proceso.ts` | 4 | 82 | 2,489 | `f77e34079efb1e7f…` |
 | `autenticar.ts` | 3 | 108 | 3,646 | `89407d4afe037367…` |
 | `listar-usuarios.ts` | 3 | 64 | 2,180 | `da020c2b3433b0ff…` |
 | `obtener-estado.ts` | 3 | 104 | 3,504 | `81a431f3297027b9…` |
-| `obtener-validacion.ts` | 2 | 94 | 3,062 | `5ea07f36a8943354…` |
+| `obtener-validacion.ts` | 3 | 114 | 4,123 | `b5e8f62d4d781b9e…` |
 | `obtener-proceso.ts` | 3 | 116 | 4,295 | `f3c1110b5adc901a…` |
 | `obtener-stats.ts` | 3 | 144 | 5,394 | `579d2aaea7922de9…` |
 | `gestionar-proceso.ts` | 3 | 136 | 4,905 | `76d6df201f16825f…` |
@@ -41,14 +43,12 @@ del respaldo; `ezbr_sha256` es el hash que reporta Supabase para ese despliegue.
 | Qué se comprobó | Alcance | Resultado |
 |-----------------|---------|-----------|
 | Versión y `ezbr_sha256` de la tabla vs. `list_edge_functions` | Las 19 | Coinciden. Producción no se movió desde el respaldo |
-| Líneas y bytes de la tabla vs. el archivo en disco | Las 19 | Coinciden. 2.475 líneas, 89.921 bytes |
+| Líneas y bytes de la tabla vs. el archivo en disco | Las 19 | Coinciden. 2.771 líneas, 103.147 bytes |
 | Fuente de producción vs. el archivo, byte a byte | `crear-reclutador.ts` | **Idéntico.** sha256 `dcd8ba6d80cd2425759a163c3261dbb96a73856c111fa7330f81edf36f264189` |
 
 La tercera fila es la que convierte la literalidad de inferida en comprobada, y por ahora solo
-cubre `crear-reclutador.ts`. Para las otras 18, lo comprobado es que producción sigue en la misma
-versión y con el mismo `ezbr_sha256` que tenía al respaldar: eso descarta que hayan cambiado
-después del 8 de agosto, pero **no** verifica que la copia se tomara sin pérdida ese día. Mientras
-esa comparación no se rehaga función por función, la literalidad de esas 18 sigue siendo inferida.
+cubre `crear-reclutador.ts`. Para el resto, lo comprobado es que producción está en la misma
+versión y con el mismo `ezbr_sha256` que registra la tabla. El detalle por archivo está abajo.
 
 ## Notas
 
@@ -62,24 +62,33 @@ esa comparación no se rehaga función por función, la literalidad de esas 18 s
   regenerados después son distintos: se regeneran **tras** el despliegue, copiando el fuente que
   quedó vivo, y por eso llevan su propia comprobación abajo.
 
-## Los cinco archivos regenerados, y cómo se comprobaron
+## Los ocho archivos regenerados, y con qué rigor se comprobó cada uno
 
-| Archivo | Hallazgo | Fecha | Cómo se comprobó que es copia de producción |
-|---------|----------|-------|---------------------------------------------|
-| `crear-reclutador.ts` | H-01 | 11/08 | **Byte a byte.** `cmp` y `diff -u` sin diferencias contra `get_edge_function` |
-| `obtener-proceso.ts` | H-04 | 11/08 | Leído de vuelta de producción tras desplegar y comparado con el archivo |
-| `gestionar-proceso.ts` | H-05 | 11/08 | Igual |
-| `agregar-candidato.ts` | H-10 | 11/08 | Igual |
-| `obtener-stats.ts` | H-10 | 11/08 | Igual |
+No todos tienen el mismo respaldo detrás. La columna dice exactamente qué se hizo, para que nadie
+lea más garantía de la que hay.
 
-Las cuatro de H-04/H-05/H-10 se comprobaron con un grado menos de rigor que `crear-reclutador.ts`:
-se leyó el fuente vivo con `get_edge_function` y se comparó con el archivo, pero no se hizo el
-`cmp` byte a byte. Tres cosas sostienen la equivalencia igualmente:
+| Archivo | Hallazgo | Cómo se comprobó que es copia de producción |
+|---------|----------|---------------------------------------------|
+| `crear-reclutador.ts` | H-01 | **Byte a byte.** `cmp` y `diff -u` sin diferencias contra `get_edge_function` |
+| `obtener-proceso.ts` | H-04 | Leído de vuelta de producción tras desplegar y comparado |
+| `gestionar-proceso.ts` | H-05 | Igual |
+| `agregar-candidato.ts` | H-10 | Igual |
+| `obtener-stats.ts` | H-10 | Igual |
+| `crear-solicitud.ts` | H-02/H-03 | **Solo copia del fuente enviado a desplegar.** No leída de vuelta |
+| `obtener-validacion.ts` | H-02 | Igual |
+| `validar-documentos.ts` | H-03 | Igual |
 
-- El archivo del respaldo es copia del que se envió a desplegar, no una reconstrucción.
-- Ninguna de las cuatro termina en salto de línea, igual que el fuente que devuelve producción.
+Las tres últimas son las de menor rigor y conviene decir por qué: son la misma tanda de despliegue
+y releerlas habría costado mucho contexto sin añadir gran cosa. Lo que sostiene la equivalencia:
+
+- El archivo del respaldo es copia literal del que se envió a desplegar, no una reconstrucción:
+  `cmp` contra `supabase/functions/<nombre>/index.ts` sin diferencias.
+- Ninguno termina en salto de línea, igual que el fuente que devuelve producción.
 - En H-01 se demostró que el viaje de ida y vuelta por el MCP es fiel: lo enviado volvió idéntico.
 
-**Las 14 funciones no tocadas siguen con literalidad inferida** del respaldo del 08/08: se ha
+Si en algún momento hace falta el punto de retorno con garantía plena, la comprobación pendiente
+es un `get_edge_function` y un `cmp` por archivo. No es urgente, pero tampoco está hecha.
+
+**Las 11 funciones no tocadas siguen con literalidad inferida** del respaldo del 08/08: se ha
 comprobado que su versión y su `ezbr_sha256` no se han movido, lo que descarta que hayan cambiado
 después, pero no que la copia se tomara sin pérdida ese día.
