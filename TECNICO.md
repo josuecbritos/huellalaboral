@@ -6,8 +6,10 @@ qué la protege. Se consulta para saber **dónde tocar**. El porqué está en `F
 **Este documento describe el estado actual y se actualiza en cada iteración.** Documentación
 desactualizada miente con autoridad.
 
-**Actualizado:** 11 de agosto de 2026 · **Estado del código:** H-01 cerrado (`crear-reclutador`
-versión 15, desplegada y verificada en producción)
+**Actualizado:** 11 de agosto de 2026 · **Estado del código:** cerrados H-01 (`crear-reclutador`
+v15), H-07 (`dashboard.html` y `admin.html`) y H-04/H-05/H-10 (`obtener-proceso` v3,
+`gestionar-proceso` v3, `agregar-candidato` v11, `obtener-stats` v3). Todos desplegados y
+verificados en producción.
 
 ---
 
@@ -73,10 +75,10 @@ Es la raíz de H-02 y H-03.
 | 5 | `gestionar-usuario` | `admin.html` | ✅ | 🏷️ | — |
 | 6 | `crear-proceso` | `dashboard.html` | ✅ | 👤 | — |
 | 7 | `listar-procesos` | `dashboard.html` | ✅ | 🔒 | — |
-| 8 | `obtener-proceso` | `dashboard.html` | ✅ | ⛔ | — |
-| 9 | `gestionar-proceso` | `dashboard.html` | ✅ | ⛔ | — |
-| 10 | `obtener-stats` | `dashboard.html` | ✅ | ⛔ | — |
-| 11 | `agregar-candidato` | `dashboard.html` | ✅ | ⛔ | M-4, M-5 |
+| 8 | `obtener-proceso` | `dashboard.html` | ✅ | 🔒 | — |
+| 9 | `gestionar-proceso` | `dashboard.html` | ✅ | 🔒 | — |
+| 10 | `obtener-stats` | `dashboard.html` | ✅ | 🔒 (filtra el array) | — |
+| 11 | `agregar-candidato` | `dashboard.html` | ✅ | 🔒 | M-4, M-5 |
 | 12 | `obtener-candidato` | `dashboard.html` | ✅ | 👤 (cualquier RUT) | — |
 | 13 | `crear-solicitud` | `trabajador.html` | ⛔ | ⛔ | M-1, M-2, M-3 |
 | 14 | `obtener-estado` | `estado.html` | 🔑 `token_consulta` | Por token | — |
@@ -88,6 +90,38 @@ Es la raíz de H-02 y H-03.
 
 `crear-solicitud` es pública **por diseño**: el trabajador no tiene cuenta. `auth-test` no la
 invoca ningún HTML; es un artefacto de prueba que quedó en producción (H-14).
+
+Quedan tres filas con AuthZ ⛔: `crear-solicitud` (intencional), `obtener-validacion` y
+`validar-documentos` (H-02 y H-03, pendientes).
+
+### `filtrarProcesosPropios` está duplicado a propósito en cuatro funciones
+
+Desde H-04/H-05/H-10, las funciones **8, 9, 10 y 11** llevan el mismo bloque de comprobación de
+propiedad: `filtrarProcesosPropios` y su envoltorio `esProcesoPropio`. **Es el mismo código, copiado
+cuatro veces**, no un módulo compartido: cada edge function se despliega por separado y no hay
+build que resuelva imports entre ellas.
+
+**Un cambio en ese bloque va en las cuatro, y las cuatro se redespliegan.** Cambiarlo en una sola
+deja el sistema en un estado peor que el original, porque la documentación diría que la
+comprobación existe y sería cierto solo en parte.
+
+Para comprobar que siguen siendo idénticas:
+
+```
+for f in obtener-proceso gestionar-proceso agregar-candidato obtener-stats; do
+  sed -n '/─── Comprobación de propiedad/,/^}$/p' supabase/functions/$f/index.ts | sha256sum
+done
+```
+
+Los cuatro hashes tienen que coincidir. Al cerrar H-04/H-05/H-10 valían `6df77bf555422d38…`.
+
+**Lo que devuelve cada una cuando el proceso no es del llamante:**
+
+- Funciones 8, 9 y 11 → `404` con `{error: 'Proceso no encontrado'}`, **idéntico** al de un
+  proceso inexistente. Nunca `403`: un `403` confirmaría que el proceso existe.
+- Función 10 no deniega, **filtra**: devuelve `200` con los recuentos de los procesos propios que
+  hubiera en el array, o `{candidatos: 0, evaluaciones: 0}` si no había ninguno. Un cero ahí puede
+  significar "no tienes datos" o "ninguno de esos procesos es tuyo", y no se distinguen a propósito.
 
 ## 5. Los 12 HTML
 
