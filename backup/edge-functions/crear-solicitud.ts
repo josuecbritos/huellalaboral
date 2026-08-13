@@ -50,20 +50,41 @@ serve(async (req) => {
 
     let trabajadorId: string
     let tokenConsulta: string
+    // H-02/H-03: el enlace de validación deja de llevar el `id` del trabajador y
+    // pasa a llevar esta credencial. Solo se rellena cuando va a hacer falta,
+    // que es exactamente cuando se envía M-8 (paso 7): si no vienen documentos,
+    // queda en null y el paso 7 tampoco se ejecuta.
+    let tokenValidacion: string | null = null
+    const hayDocumentos = !!(certificado_base64 || finiquito_base64)
 
     if (trabajadorExistente) {
       console.log('🔁 Trabajador existe, actualizando datos...')
       trabajadorId = trabajadorExistente.id
       tokenConsulta = trabajadorExistente.token_consulta
 
+      const camposActualizados: Record<string, unknown> = {
+        nombre: trabajador.nombre,
+        email: trabajador.email,
+        whatsapp: trabajador.whatsapp,
+        comuna: trabajador.comuna,
+      }
+
+      if (hayDocumentos) {
+        // Documentos nuevos ⇒ token nuevo. Invalida el anterior aunque nunca se
+        // hubiera usado: si el validador recibe dos correos, el primero deja de
+        // servir y no puede aprobar documentos que ya fueron sustituidos.
+        tokenValidacion = crypto.randomUUID()
+        camposActualizados.token_validacion = tokenValidacion
+        camposActualizados.token_validacion_usado = false
+        // H-35: el estado vuelve atrás. Antes se quedaba en
+        // 'documentos_validados' con documentos sin revisar debajo, así que el
+        // trabajador figuraba como validado por unos papeles que ya no estaban.
+        camposActualizados.estado = 'pendiente'
+      }
+
       const { error: updateError } = await supabase
         .from('trabajadores')
-        .update({
-          nombre: trabajador.nombre,
-          email: trabajador.email,
-          whatsapp: trabajador.whatsapp,
-          comuna: trabajador.comuna,
-        })
+        .update(camposActualizados)
         .eq('id', trabajadorId)
 
       if (updateError) throw updateError
@@ -86,6 +107,9 @@ serve(async (req) => {
       if (trabajadorError) throw trabajadorError
       trabajadorId = trabajadorData.id
       tokenConsulta = trabajadorData.token_consulta
+      // Trabajador nuevo: el token lo pone el default de la columna, así que se
+      // lee del insert en vez de generarlo aquí.
+      tokenValidacion = trabajadorData.token_validacion
     }
 
     // ─────────────────────────────────────────────
@@ -336,7 +360,7 @@ serve(async (req) => {
                 <h1 style="color: #0E2A47;">Documentos para Validar</h1>
                 <p>Trabajador: <strong>${trabajador.nombre}</strong> (${trabajador.rut})</p>
                 <div style="margin: 30px 0;">
-                  <a href="https://huellalaboral.cl/validar.html?token=${trabajadorId}"
+                  <a href="https://huellalaboral.cl/validar.html?token=${tokenValidacion}"
                     style="display: inline-block; background: #0E2A47; color: white; padding: 14px 28px;
                     text-decoration: none; border-radius: 4px; font-weight: 600;">
                     Validar Documentos

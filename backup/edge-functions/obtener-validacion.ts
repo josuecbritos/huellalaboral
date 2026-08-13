@@ -17,7 +17,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     const url = new URL(req.url)
-    const token = url.searchParams.get('token') // Por ahora es el trabajador_id
+    const token = url.searchParams.get('token')
 
     if (!token) {
       return new Response(
@@ -26,18 +26,38 @@ serve(async (req) => {
       )
     }
 
-    // Buscar trabajador por ID (token)
-    const { data: trabajador, error: trabajadorError } = await supabase
+    // H-02: se busca por `token_validacion`, no por `id`. El `id` es la clave
+    // primaria y `crear-solicitud` se la devuelve a llamantes anónimos, así que
+    // no era una credencial: cualquiera que hiciera una solicitud podía leer el
+    // historial laboral y previsional de otro.
+    //
+    // Un token inexistente, uno mal formado y uno ya usado devuelven la MISMA
+    // respuesta. Distinguirlos diría si el token existe.
+    // Función y no una constante: un objeto Response solo se puede devolver una
+    // vez, y reutilizarlo si alguien añade un tercer camino de rechazo sería un
+    // fallo silencioso.
+    const tokenInvalido = () => new Response(
+      JSON.stringify({ error: 'Token inválido o ya utilizado' }),
+      { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
+    // Sin esto, un token que no sea UUID hace fallar la comparación en Postgres
+    // y la función responde 500 en vez de 404 — otra forma de distinguir.
+    const ES_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (!ES_UUID.test(token)) {
+      return tokenInvalido()
+    }
+
+    const { data: trabajador } = await supabase
       .from('trabajadores')
       .select('*')
-      .eq('id', token)
-      .single()
+      .eq('token_validacion', token)
+      .maybeSingle()
 
-    if (trabajadorError || !trabajador) {
-      return new Response(
-        JSON.stringify({ error: 'Token inválido o trabajador no encontrado' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+    // No se consume el token aquí: el validador tiene que poder abrir la
+    // página, revisar los PDF, cerrarla y volver. Se consume al enviar.
+    if (!trabajador || trabajador.token_validacion_usado) {
+      return tokenInvalido()
     }
 
     // Obtener documentos del trabajador

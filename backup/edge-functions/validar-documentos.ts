@@ -25,11 +25,37 @@ serve(async (req) => {
       )
     }
 
-    // Buscar trabajador por token de validación
-    // Por ahora usamos el trabajador_id directamente
-    // TODO: Implementar tokens de validación separados
-    
-    const trabajadorId = token // Temporal: el token ES el trabajador_id
+    // H-03: antes el token ERA el trabajador_id, y la función ni siquiera
+    // comprobaba que el trabajador existiera. Con un id que `crear-solicitud`
+    // entrega a cualquier anónimo se podían insertar filas en
+    // `validaciones_documentos` y dejar al trabajador en 'documentos_validados':
+    // falsificar el sello que el producto vende.
+    //
+    // Misma respuesta para token inexistente, mal formado y ya usado.
+    const tokenInvalido = () => new Response(
+      JSON.stringify({ error: 'Token inválido o ya utilizado' }),
+      { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
+    const ES_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (!ES_UUID.test(token)) {
+      return tokenInvalido()
+    }
+
+    const { data: trabajador } = await supabase
+      .from('trabajadores')
+      .select('id, token_validacion_usado')
+      .eq('token_validacion', token)
+      .maybeSingle()
+
+    if (!trabajador || trabajador.token_validacion_usado) {
+      return tokenInvalido()
+    }
+
+    // El id sale de la fila encontrada, nunca del body: si viniera del cliente,
+    // el token serviría para escribir sobre el trabajador que el atacante
+    // quisiera.
+    const trabajadorId = trabajador.id
 
     // Obtener documentos del trabajador
     const { data: documentos, error: docError } = await supabase
@@ -107,6 +133,17 @@ serve(async (req) => {
         .update({ estado: 'documentos_validados' })
         .eq('id', trabajadorId)
     }
+
+    // Consumir el token. Va al final a propósito: si algo hubiera fallado antes,
+    // se lanza y el token sigue sirviendo, de modo que el validador puede
+    // reintentar. Quemarlo al principio dejaría los documentos sin validar y sin
+    // forma de volver a intentarlo salvo reenviando el correo.
+    const { error: consumoError } = await supabase
+      .from('trabajadores')
+      .update({ token_validacion_usado: true })
+      .eq('id', trabajadorId)
+
+    if (consumoError) throw consumoError
 
     return new Response(
       JSON.stringify({ 
