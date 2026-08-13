@@ -165,19 +165,33 @@
                 <div style="font-size:12px; color:var(--subtitulo); margin-top:4px;">Elaborado con los antecedentes disponibles en Huella Laboral</div>
             </div>
 
+            <!-- Solo si algún documento quedó como no válido. El trabajador necesita
+                 saberlo para actuar: esta pantalla es seguimiento, no vitrina. -->
+            <div id="avisoNoValido" style="display:none; background:rgba(217,119,6,0.08); border:1px solid rgba(217,119,6,0.25); border-radius:4px; padding:14px 18px; margin-bottom:20px; font-size:13px; color:var(--texto); line-height:1.6;">
+                <strong>Revisamos tus documentos y algunos no cumplen con los requisitos de validación.</strong> Puedes volver a subirlos desde el formulario y los revisaremos de nuevo.
+                <div style="margin-top:10px;"><a href="trabajador.html" style="display:inline-block; background:var(--azul); color:#fff; padding:9px 18px; text-decoration:none; border-radius:4px; font-size:13px; font-weight:600;">Volver a subir mis documentos</a></div>
+            </div>
+
+            <!-- Las cuatro zonas llevan altura fija para que las insignias queden
+                 alineadas entre las tres tarjetas pase lo que pase con el valor. -->
             <div class="grid-datos" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
-                <div style="background:var(--fondo); border:1px solid var(--borde); border-radius:4px; padding:20px;">
-                    <div style="font-size:12px; font-weight:500; color:var(--subtitulo); margin-bottom:8px; min-height:32px;">Empleos formales en los últimos 5 años</div>
-                    <div style="font-size:24px; font-weight:700; color:var(--azul);" id="certEmpleos">—</div>
+                <div style="background:var(--fondo); border:1px solid var(--borde); border-radius:4px; padding:20px 16px; text-align:center;">
+                    <div style="font-size:12px; font-weight:500; color:var(--subtitulo); min-height:32px;">Empleos formales en los últimos 5 años</div>
+                    <div style="min-height:58px; display:flex; align-items:center; justify-content:center;" id="certEmpleos"></div>
+                    <div style="min-height:22px;" id="certEmpleosBadge"></div>
+                    <div style="font-size:11px; color:var(--subtitulo); line-height:1.4; margin-top:6px;" id="certEmpleosMotivo"></div>
                 </div>
-                <div style="background:var(--fondo); border:1px solid var(--borde); border-radius:4px; padding:20px;">
-                    <div style="font-size:12px; font-weight:500; color:var(--subtitulo); margin-bottom:8px; min-height:32px;">Mayor permanencia en un empleo</div>
-                    <div style="font-size:24px; font-weight:700; color:var(--azul);" id="certPermanencia">—</div>
+                <div style="background:var(--fondo); border:1px solid var(--borde); border-radius:4px; padding:20px 16px; text-align:center;">
+                    <div style="font-size:12px; font-weight:500; color:var(--subtitulo); min-height:32px;">Mayor permanencia en un empleo</div>
+                    <div style="min-height:58px; display:flex; align-items:center; justify-content:center;" id="certPermanencia"></div>
+                    <div style="min-height:22px;" id="certPermanenciaBadge"></div>
+                    <div style="font-size:11px; color:var(--subtitulo); line-height:1.4; margin-top:6px;"></div>
                 </div>
-                <div style="background:var(--fondo); border:1px solid var(--borde); border-radius:4px; padding:20px;">
-                    <div style="font-size:12px; font-weight:500; color:var(--subtitulo); margin-bottom:8px; min-height:32px;">Última causal de término de contrato</div>
-                    <div style="font-size:16px; font-weight:500; color:var(--texto); margin-top:8px;" id="causalTexto">—</div>
-                    <div style="margin-top:8px;" id="causalBadge"></div>
+                <div style="background:var(--fondo); border:1px solid var(--borde); border-radius:4px; padding:20px 16px; text-align:center;">
+                    <div style="font-size:12px; font-weight:500; color:var(--subtitulo); min-height:32px;">Última causal de término de contrato</div>
+                    <div style="min-height:58px; display:flex; align-items:center; justify-content:center;" id="causalTexto"></div>
+                    <div style="min-height:22px;" id="causalBadge"></div>
+                    <div style="font-size:11px; color:var(--subtitulo); line-height:1.4; margin-top:6px;"></div>
                 </div>
             </div>
 
@@ -216,27 +230,50 @@
         // `estado` lo calcula la edge function. Si no viniera —respuesta vieja en
         // caché mientras Vercel propaga— se cae al comportamiento anterior en vez
         // de romper la pantalla.
+        // El valor grande se reserva para el dato. El estado va SIEMPRE en la
+        // insignia, nunca en el valor: antes «Pendiente de validación» y
+        // «No válido — <motivo>» entraban en 24 px y negrita, desbordaban la
+        // tarjeta y dominaban la pantalla.
         const ETIQUETA_DOC = {
-            sin_documento: '—',
-            pendiente_validacion: 'Pendiente de validación',
-            no_valido: 'No válido',
+            sin_documento:        { txt: 'SIN DOCUMENTO',           color: '#5A6C7F', fondo: 'rgba(90,108,127,0.10)' },
+            pendiente_validacion: { txt: 'PENDIENTE DE VALIDACIÓN', color: '#92400e', fondo: 'rgba(217,119,6,0.12)' },
+            no_valido:            { txt: '✗ NO VÁLIDO',             color: '#dc2626', fondo: 'rgba(220,38,38,0.12)' },
+            validado:             { txt: '✓ VALIDADO',              color: '#166534', fondo: 'rgba(47,191,113,0.12)' },
         };
-        function textoValidacion(estado, valor, sufijo, razon) {
-            if (estado && estado !== 'validado') {
-                const base = ETIQUETA_DOC[estado] || '—';
-                return (estado === 'no_valido' && razon) ? base + ' — ' + razon : base;
-            }
-            return (valor !== null && valor !== undefined) ? valor + (sufijo || '') : '—';
+
+        function insignia(estado) {
+            const e = ETIQUETA_DOC[estado];
+            if (!e) return '';
+            return '<span style="font-size:10px; font-weight:700; color:' + e.color +
+                   '; background:' + e.fondo + '; padding:3px 8px; border-radius:2px;">' + e.txt + '</span>';
         }
-        function insigniaCausal(finiqEstado, causalValidada) {
-            if (finiqEstado === 'sin_documento') return '';
-            if (finiqEstado === 'pendiente_validacion')
-                return '<span style="font-size:10px; font-weight:700; color:#92400e; background:rgba(217,119,6,0.12); padding:3px 8px; border-radius:2px;">PENDIENTE DE VALIDACIÓN</span>';
-            if (causalValidada === true)
-                return '<span style="font-size:10px; font-weight:700; color:#166534; background:rgba(47,191,113,0.12); padding:3px 8px; border-radius:2px;">✓ VALIDADA</span>';
-            if (causalValidada === false)
-                return '<span style="font-size:10px; font-weight:700; color:#dc2626; background:rgba(220,38,38,0.12); padding:3px 8px; border-radius:2px;">✗ NO VALIDADA</span>';
-            return '';
+
+        // Valor grande: el numero si el documento esta validado, un guion si no.
+        function valorNumero(estado, valor, sufijo) {
+            if (estado === 'validado' && valor !== null && valor !== undefined)
+                return '<span style="font-size:24px; font-weight:700; color:var(--azul);">' +
+                       escapeHtml(String(valor)) + (sufijo || '') + '</span>';
+            return '<span style="font-size:24px; font-weight:700; color:#C3CBD6;">—</span>';
+        }
+
+        // La causal es texto, no cifra: 15 px sin negrita.
+        function valorTexto(estado, texto) {
+            if (estado === 'validado' && texto)
+                return '<span style="font-size:15px; font-weight:500; color:var(--texto); line-height:1.35;">' +
+                       escapeHtml(texto) + '</span>';
+            return '<span style="font-size:24px; font-weight:700; color:#C3CBD6;">—</span>';
+        }
+
+        function motivo(estado, razon) {
+            if (estado !== 'no_valido' || !razon) return '';
+            return escapeHtml(razon);
+        }
+
+        // El motivo lo escribe el validador en un campo libre y desde aquí se
+        // inyecta con innerHTML. Mismo criterio que `dashboard.html` (H-07).
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>"']/g, c =>
+                ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         }
 
         function formatearCausal(valor) {
@@ -263,13 +300,35 @@
                 document.getElementById('nombreTrabajador').textContent = data.trabajador.nombre;
                 document.getElementById('metaTrabajador').textContent = data.trabajador.rut;
 
-                document.getElementById('certEmpleos').textContent =
-                    textoValidacion(data.documentos?.cert_estado, data.documentos?.cert_empleos, '', data.documentos?.cert_razon_invalido);
-                document.getElementById('certPermanencia').textContent =
-                    textoValidacion(data.documentos?.cert_estado, data.documentos?.cert_permanencia, ' años');
-                document.getElementById('causalTexto').textContent = formatearCausal(data.documentos?.causal_texto);
-                document.getElementById('causalBadge').innerHTML =
-                    insigniaCausal(data.documentos?.finiq_estado, data.documentos?.causal_validada);
+                const doc = data.documentos || {};
+                const certEstado = doc.cert_estado;
+                const finiqEstado = doc.finiq_estado;
+
+                // Las dos primeras tarjetas leen el estado del CERTIFICADO; la
+                // tercera, el del FINIQUITO. Pueden diferir: los documentos no son
+                // obligatorios en `trabajador.html`, así que se puede haber subido
+                // uno solo, o ninguno.
+                document.getElementById('certEmpleos').innerHTML =
+                    valorNumero(certEstado, doc.cert_empleos);
+                document.getElementById('certEmpleosBadge').innerHTML = insignia(certEstado);
+                document.getElementById('certEmpleosMotivo').innerHTML =
+                    motivo(certEstado, doc.cert_razon_invalido);
+
+                document.getElementById('certPermanencia').innerHTML =
+                    valorNumero(certEstado, doc.cert_permanencia, ' años');
+                document.getElementById('certPermanenciaBadge').innerHTML = insignia(certEstado);
+
+                // `formatearCausal` solo se aplica si hay causal: devuelve '—' para
+                // los valores vacíos, y ese guion es una cadena con contenido que
+                // `valorTexto` tomaría por dato bueno y pintaría en 15 px. El guion
+                // de "no hay dato" lo pone `valorTexto`, en gris y a 24 px.
+                document.getElementById('causalTexto').innerHTML =
+                    valorTexto(finiqEstado, doc.causal_texto ? formatearCausal(doc.causal_texto) : null);
+                document.getElementById('causalBadge').innerHTML = insignia(finiqEstado);
+
+                if (certEstado === 'no_valido' || finiqEstado === 'no_valido') {
+                    document.getElementById('avisoNoValido').style.display = 'block';
+                }
 
                 const totalEvals = (data.evaluaciones?.lista || []).filter(e => !e.rechazo).length;
                 document.getElementById('evalCount').textContent = totalEvals;
