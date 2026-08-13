@@ -343,11 +343,14 @@ con tres postulaciones abiertas recibía un nombre de persona suelto y no podía
 
 | | M-4 · ya tiene referencias | M-5 · trabajador nuevo |
 |---|---|---|
-| **Asunto** | `${empresa} te agregó a un proceso de selección` | `${empresa} te invita a un proceso de selección` |
+| **Asunto** | `${empresa} te agregó a un proceso de selección` | `${empresa} te invitó a un proceso de selección` |
 | **Apertura** | `<strong>${reclutador}</strong>, de <strong>${empresa}</strong>, te ha agregado a un proceso de selección para el cargo de <strong>${cargo}</strong>.` | Igual, con «te ha invitado a participar en». |
 
 **El verbo se mantiene distinto entre los dos a propósito** —«agregó» frente a «invitó»—: son
 situaciones distintas y uniformarlas perdería información.
+
+**Los dos asuntos van en pretérito.** M-5 decía «te invita»: presente, que sonaba a publicidad y
+desentonaba con el «te agregó» de M-4. Los dos describen un hecho que ya ocurrió.
 
 **El cargo no sube al asunto.** Casi la mitad de los correos se abren en el móvil, donde el asunto
 se corta entre los 35 y 50 caracteres; con el cargo pasaría de 80 y se cortaría justo donde está
@@ -355,11 +358,14 @@ el dato útil.
 
 Tres cosas que no son obvias:
 
-- **Los respaldos son por campo, no todo o nada.** Sin empresa, el asunto vuelve al de antes
-  —firma el reclutador— y la apertura omite el inciso. Sin cargo, se omite su cola y la frase
-  termina en «un proceso de selección.». Se trata como ausente lo mismo `null` que la cadena
-  vacía tras recortar: los dos campos son obligatorios en sus formularios, pero eso no impide que
-  lleguen en blanco, y «para el cargo de  .» es peor que una frase corta.
+- **Los respaldos son por campo, no todo o nada.** Sin empresa, firma el reclutador y la apertura
+  omite el inciso. Sin cargo, se omite su cola y la frase termina en «un proceso de selección.».
+  Se trata como ausente lo mismo `null` que la cadena vacía tras recortar: los dos campos son
+  obligatorios en sus formularios, pero eso no impide que lleguen en blanco, y «para el cargo de
+   .» es peor que una frase corta.
+  **Ojo con M-5:** su asunto de respaldo ya no es el original —`te invita a solicitar tus
+  referencias laborales`— sino `${reclutador_nombre} te invitó a un proceso de selección`. El
+  verbo es decisión de redacción y no depende de qué campos haya; solo cambia quién firma.
 - **El asunto lleva los valores en crudo y el cuerpo los lleva escapados.** El asunto de Resend es
   texto plano: escaparlo mostraría «Fábrica &amp;amp; Cía» literal en la bandeja de entrada. El
   cuerpo es HTML y sigue el criterio de H-07. Se escapan los tres —reclutador, empresa y cargo—,

@@ -352,10 +352,18 @@ serve(async (req) => {
           body: JSON.stringify({
             from: 'Huella Laboral <noreply@contacto.huellalaboral.cl>',
             to: email,
-            // M-5. Mismo criterio que M-4: sin empresa, el asunto es el de antes.
+            // M-5. Mismo criterio que M-4: sin empresa, firma el reclutador.
+            //
+            // Pretérito, no presente. «Te invita» sonaba a publicidad y
+            // desentonaba con el «te agregó» de M-4, que describe un hecho que
+            // ya ocurrió. El asunto de respaldo también cambia: el verbo es
+            // decisión de redacción, no consecuencia de qué campos hay.
+            //
+            // Solo el asunto. La apertura del cuerpo sigue diciendo «te ha
+            // invitado a participar», que ya estaba en pretérito.
             subject: empresa
-              ? `${empresa} te invita a un proceso de selección`
-              : `${reclutador_nombre} te invita a solicitar tus referencias laborales`,
+              ? `${empresa} te invitó a un proceso de selección`
+              : `${reclutador_nombre} te invitó a un proceso de selección`,
             html: `
               <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                 <h1 style="color: #0E2A47;">Te invitaron a un proceso de selección</h1>

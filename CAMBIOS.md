@@ -17,16 +17,25 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 **Cerrados:** H-01, H-07, H-04, H-05 y H-10 el 11/08; H-02, H-03 y H-35 el 12/08.
 
 **En curso:** **M-4 y M-5** (nombrar empresa y cargo en los correos de `agregar-candidato`),
-desplegado el 13/08 y pendiente de la verificación por bandeja de entrada del dueño.
+desplegado y verificado el 13/08. Solo falta que se fusione el PR #10.
 
 **Cerrados también:** UX-19 y UX-20 el 13/08, fusionados en el PR #9. La cadena de validación de
 documentos, que incluye H-22, se cerró el 12/08.
 
-**La tabla cuenta solo los `H-nn`, y por eso no se ha movido** desde el 12/08 pese a haber cerrado
-UX-19 y UX-20 y estar en curso M-4/M-5. Ni los `UX-nn` ni los `M-n` aparecen en `AUDITORIA.md`:
-vienen de la numeración que el dueño lleva aparte, así que no consta si son parte de los 41
-pendientes o se suman a ellos. Se deja el número como está en lugar de ajustarlo a ojo. **Si el
-dueño confirma cómo se numeran, la tabla se corrige de una vez.**
+### Qué cuenta la tabla, y qué no
+
+Aclarado por el dueño el 13/08, porque la numeración se prestaba a confusión:
+
+| Identificador | De dónde sale | ¿Entra en los 50? |
+|---------------|---------------|-------------------|
+| `H-01` … `H-34` | Auditoría del 31/07 | **Sí** |
+| `UX-01` … `UX-16` | Auditoría del 31/07 | **Sí** |
+| `UX-17` en adelante | Detectados **usando el producto**, después de la auditoría | **No.** Van aparte; al 13/08 son ocho |
+| `M-1` … `M-7` | **No son hallazgos.** Son los identificadores de los siete correos en `TECNICO.md` §7 | No |
+
+Por eso la tabla no se movió al cerrar UX-19 y UX-20: son de los detectados usando el producto, no
+de los 50. Y «M-4 y M-5» no es un hallazgo con número propio —es el trabajo sobre dos de los siete
+correos—, así que tampoco cuenta. Los 41 pendientes siguen siendo `H-nn` y `UX-01`…`UX-16`.
 
 ### Datos de prueba en producción
 
@@ -42,6 +51,8 @@ variantes de prueba por «no dejar residuo» cuando el residuo era limpiable en 
 | Candidato con RUT `11.111.111-1` en el proceso ImmerX `165a911f-…` | — | Fase A de H-10 |
 | Invitación pendiente, RUT `22.222.222-2` | `dc2c4b41-24c5-4173-baa0-cc3ad35f9b3e` | Fase B de H-10 |
 | Trabajador «sin documentos» con RUT `44.444.444-4` | `e2fccdec-891d-4017-9e14-c6a98aafa5bc` | Fase D de la cadena de validación |
+| Trabajador con RUT `55.555.555-5`, correo `josuebrito+m5@gmail.com` | — | Bloque B de M-4/M-5, el 13/08 |
+| Proceso «Analista Comercial — Agosto 2026» (Yokono), con `11.111.111-1` y `55.555.555-5` dentro | — | Bloques A, B y D de M-4/M-5, el 13/08 |
 
 **Punto de retorno.** Las 19 funciones de `backup/edge-functions/` coinciden con producción en
 versión y `ezbr_sha256`. Diez archivos se han regenerado tras un despliegue y llevan su propia
@@ -852,7 +863,7 @@ es lo único pendiente.
 
 ## M-4 y M-5 · Los correos no decían de qué empresa ni a qué cargo
 
-🔵 Presentación · UX · Esfuerzo S · **Estado: 🚀 DESPLEGADO, pendiente de verificación** (13/08/2026)
+🔵 Presentación · UX · Esfuerzo S · **Estado: ✅ VERIFICADO, a la espera de fusión** (13/08/2026)
 
 ### El problema
 
@@ -872,6 +883,17 @@ justo donde está el dato útil. El cargo va en el cuerpo, que tiene espacio.
 
 **El verbo se mantiene distinto entre los dos correos** —«agregó» en M-4, «invitó» en M-5—. Son
 situaciones distintas y uniformarlas perdería información.
+
+**Los dos asuntos van en pretérito, y eso se corrigió después de desplegar.** La primera versión
+dejó M-5 en presente —«te invita»—, que sonaba a publicidad y desentonaba con el «te agregó» de
+M-4. Los dos correos describen un hecho que ya ocurrió. Se desplegó una v14 solo para el asunto:
+la apertura del cuerpo ya decía «te ha invitado a participar» y no se tocó.
+
+**El asunto de respaldo de M-5 deja de ser el original.** Antes de este hallazgo era «te invita a
+solicitar tus referencias laborales»; ahora, sin empresa, es `${reclutador_nombre} te invitó a un
+proceso de selección`. Es la única parte de M-4/M-5 donde el respaldo **no** reproduce el texto
+previo, y es deliberado: el verbo es decisión de redacción, no consecuencia de qué campos hay.
+Lo que el respaldo decide es quién firma, no cómo se conjuga.
 
 **Los respaldos son por campo, no todo o nada.** Sin empresa el asunto vuelve al de antes y firma
 el reclutador; sin cargo se omite su cola. Se trata como ausente lo mismo `null` que la cadena
@@ -947,18 +969,39 @@ enlaces, los estilos y el pie quedaron literalmente iguales.
 | `Fábrica & Cía <SA>` | `Fábrica & Cía <SA> …` crudo | `Fábrica &amp;amp; Cía &amp;lt;SA&amp;gt;` |
 | Reclutador `<img src=x onerror=alert(1)>` | No aparece | Escapado, sin etiqueta viva en el HTML |
 
+### La verificación en producción
+
+Corrida por el dueño sobre el proceso «Analista Comercial — Agosto 2026», reclutador Josué Brito,
+empresa Yokono.
+
+| Bloque | Qué se comprobó | Resultado |
+|--------|-----------------|-----------|
+| **A · M-4** | Candidato `11.111.111-1` | Asunto «Yokono te agregó a un proceso de selección»; apertura «Josué Brito, de Yokono, te ha agregado a un proceso de selección para el cargo de Analista Comercial — Agosto 2026» ✅ |
+| **B · M-5** | Candidato nuevo `55.555.555-5` | Apertura «Josué Brito, de Yokono, te ha invitado a participar en un proceso de selección para el cargo de Analista Comercial — Agosto 2026» ✅ |
+| **C · Respaldos** | Cargo o empresa ausentes | ⚠️ **No se marca en verde.** No es reproducible por interfaz |
+| **D · No regresión** | Los dos candidatos en el proceso, botón de M-5 | ✅ Abre `trabajador.html` |
+
+**El cargo con guion y fecha se lee bien en los dos.** No es un detalle menor: «Analista
+Comercial — Agosto 2026» lleva una raya y una fecha dentro de un `<strong>`, y era el caso donde
+un escapado mal hecho se habría notado.
+
 ### Criterio de cierre
 
 | Requisito | Estado |
 |-----------|--------|
-| Código desplegado | ✅ v13, `verify_jwt: true` |
+| Código desplegado | ✅ v14, `verify_jwt: true` |
 | Prueba A | — No aplica, el pedido la excluye |
-| Camino feliz | ⏳ **Pendiente del dueño**: bloques A y B por bandeja de entrada |
+| Camino feliz | ✅ Bloques A y B por bandeja de entrada |
 | Respaldos | ⚠️ Probados sobre el fuente real; **no reproducibles por interfaz**, ver abajo |
-| No regresión | ✅ Una línea cambia por correo, medido contra `origin/main` |
-| Respaldo regenerado | ✅ v13, `MANIFEST.md` actualizado |
+| No regresión | ✅ Bloque D, y una sola línea cambia por correo medido contra `origin/main` |
+| Respaldo regenerado | ✅ v14, `MANIFEST.md` actualizado |
 | Documentación | ✅ `CAMBIOS.md` y `TECNICO.md` §7 |
-| PR abierto, sin fusionar | ✅ |
+| PR abierto, sin fusionar | ✅ PR #10 |
+
+**El asunto en pretérito de M-5 no se ha visto en una bandeja de entrada.** Se desplegó después de
+que el dueño corriera A y B, así que lo verificado es el asunto en presente. El cambio es de una
+línea, no toca el cuerpo y se comprobó sobre el fuente real, pero conviene que conste: lo que pasó
+por bandeja fue la v13.
 
 **Sobre el bloque C.** El pedido pedía comprobar al menos el caso de cargo ausente y decirlo si no
 se podía provocar desde la interfaz. **No se puede:** `cargo` es obligatorio en el formulario de
