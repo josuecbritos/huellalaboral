@@ -185,6 +185,52 @@ Tres cosas que no son obvias y cuestan un hallazgo si se olvidan:
 - Los otros diez HTML no tienen `escapeHtml` porque hoy no inyectan dato de usuario con
   `innerHTML`. Comprobado en H-07; si se añade uno, hay que añadir también la función.
 
+### Imagen de marca: favicon y los dos logos (desde UX-19 y UX-20, 13/08)
+
+**El archivo antiguo `Huella_Laboral.png` era un JPEG con extensión `.png`.** No un PNG mal
+comprimido: JPEG en el contenido, `.png` solo en el nombre. `file` lo confirma —
+`JPEG image data, JFIF standard 1.01 … 704x192`—. Como el JPEG no admite canal alfa, el logo
+llevaba el fondo blanco incrustado, y eso es lo que dibujaba el recuadro blanco en las dos
+pantallas donde va sobre azul. La extensión no lo delataba y el navegador tampoco: sirve la
+imagen igual, guiándose por los bytes y no por el nombre.
+
+Se sustituye por dos PNG con transparencia, de las mismas dimensiones (704×192), **uno por
+color de fondo**:
+
+| Fondo del contenedor | Archivo | Pantallas |
+|----------------------|---------|-----------|
+| `var(--azul)` | `logo-huella-laboral-blanco.png` | `dashboard.html` (`.sidebar`), `estado.html` (`nav`) |
+| Claro | `logo-huella-laboral.png` | Las otras diez |
+
+`Huella_Laboral.png` **se conserva** como punto de retorno hasta que la fusión esté verificada.
+Ya no lo referencia ningún HTML.
+
+**El bloque de favicon es idéntico en los 12**, y es un requisito, no una coincidencia: cambiar
+el icono en el futuro debe ser sustituir tres archivos en la raíz y nada más. Va justo después
+del `</title>`, que es la única posición común a los 12 archivos.
+
+```html
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+```
+
+Las rutas son **absolutas** (`/favicon.ico`) a propósito: los 12 HTML están en la raíz del
+despliegue de Vercel, y una ruta relativa se rompería si alguno pasara a colgar de un
+subdirectorio.
+
+Dos cosas que cuestan un rato si se olvidan:
+
+- **Las dimensiones son lo que sostiene la maquetación.** Diez páginas fijan `height: 36px` con
+  `width: auto`, `crear-password.html` fija `height: 40px` y `validar.html` fija `width: 180px`
+  con alto libre. En los tres casos el navegador deriva la otra dimensión de la proporción
+  intrínseca del archivo. Un reemplazo que no sea 704×192 **mueve la caja**, y en
+  `crear-password.html` además desplaza el logo en horizontal porque su contenedor está centrado.
+  Si algún día se cambia el logo, se comprueba antes su tamaño.
+- **El favicon elegido es un círculo blanco con la huella azul.** En pestañas de tema claro el
+  círculo se funde con el fondo y queda flotando la huella. Está aceptado; es la razón por la
+  que el bloque debe poder cambiarse de un tirón.
+
 ## 6. Modelo de datos
 
 ```

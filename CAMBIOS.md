@@ -16,7 +16,14 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 
 **Cerrados:** H-01, H-07, H-04, H-05 y H-10 el 11/08; H-02, H-03 y H-35 el 12/08.
 
-**En curso:** ninguno. La cadena de validación de documentos, que incluye H-22, se cerró el 12/08.
+**En curso:** **UX-19 y UX-20** (favicon y logo por fondo), en PR sin fusionar desde el 13/08,
+bloqueados por cuatro archivos de imagen que todavía no están en el repo. Detalle en su sección.
+La cadena de validación de documentos, que incluye H-22, se cerró el 12/08.
+
+El recuento de la tabla no se movió, y conviene decir por qué: los identificadores `UX-nn` no
+aparecen en `AUDITORIA.md` —vienen de la numeración que el dueño lleva aparte—, así que no consta
+si UX-19 y UX-20 son dos de los 41 pendientes o se suman a ellos. Se deja el número como está en
+lugar de ajustarlo a ojo.
 
 ### Datos de prueba en producción
 
@@ -686,6 +693,122 @@ Se borran desde el editor SQL del panel. Ver la corrección en «Estado general�
 | Trabajador `e4f2571c-8d46-41c4-ba09-8d9624e2a986`, con payload XSS en el nombre | Proceso de Andotek | Fase A de H-07 |
 
 Lo que UX-22 impide no es borrarlos, sino **quitar un candidato de un proceso desde el producto**.
+
+---
+
+## UX-19 y UX-20 · Favicon en las 12 pantallas, y logo según el fondo
+
+🔵 Presentación · UX · Esfuerzo S · **Estado: ⏸️ EN PR, sin fusionar** (13/08/2026)
+
+### El problema
+
+**UX-19 — ninguna de las 12 páginas tenía favicon.** Cero coincidencias de `favicon` o
+`rel="icon"` en el repo, comprobado antes de tocar nada. La pestaña salía con el icono genérico
+del navegador en pantallas donde a un desconocido se le pide su RUT y se le piden documentos.
+
+**UX-20 — el logo llevaba el fondo blanco incrustado, y la causa estaba en el archivo, no en el
+CSS.** `Huella_Laboral.png` era un **JPEG con extensión `.png`**: `file` devuelve
+`JPEG image data, JFIF standard 1.01 … 704x192`. El JPEG no admite canal alfa, así que el fondo
+blanco viajaba dentro de la imagen. Se veía como un recuadro blanco en las dos pantallas donde
+el logo va sobre azul.
+
+Las dos pantallas, verificadas leyendo el CSS de las 12 y no dando por buena la lista del pedido:
+
+| Pantalla | Contenedor | Fondo |
+|----------|------------|-------|
+| `dashboard.html` | `.sidebar` | `var(--azul)` |
+| `estado.html` | `nav` | `var(--azul)` |
+
+Las otras diez usan `var(--fondo)` o el fondo claro de la página, y ahí el recuadro no se nota.
+
+### La decisión
+
+**Un archivo por color de fondo, no un solo PNG transparente.** Un logo azul sobre `var(--azul)`
+sería ilegible aunque el fondo fuera transparente: el problema no se agota quitando el recuadro.
+De ahí el negativo blanco para las dos pantallas oscuras.
+
+**El bloque de favicon queda idéntico en los 12**, byte a byte. Es la parte del pedido que más
+fácil se degrada con el tiempo —una variante por página, y cambiar el icono pasa de tocar tres
+archivos a revisar doce—. Va después del `</title>`, que es la única línea presente y en la misma
+forma en los 12 archivos.
+
+**Rutas absolutas** (`/favicon.ico`), no relativas. Los 12 HTML están hoy en la raíz del
+despliegue, pero una ruta relativa ata el bloque a esa suposición y el requisito es justo el
+contrario: que el bloque no dependa de la página.
+
+**`Huella_Laboral.png` no se borra.** Queda como punto de retorno hasta que la fusión esté
+verificada en producción. Ya no lo referencia ningún HTML.
+
+### El cambio
+
+Cuatro líneas por archivo, en los 12: tres de favicon y una de logo. Ni una más — ningún tamaño,
+ninguna posición, ninguna clase y ningún atributo `style` se tocaron; el diff conserva cada uno
+literalmente.
+
+| Archivo | Logo | Bloque de favicon |
+|---------|------|-------------------|
+| `dashboard.html`, `estado.html` | → `logo-huella-laboral-blanco.png` | Idéntico |
+| Los otros diez | → `logo-huella-laboral.png` | Idéntico |
+
+### Verificación
+
+No lleva fases A/B/C/D: no hay comportamiento que capturar, es presentación. Lo que sí se puede
+medir es la maquetación, y se midió con Chromium: los 12 HTML de `origin/main` contra los 12 de
+la rama, misma ventana, comparando la caja del logo al centipíxel.
+
+| Qué | Resultado |
+|-----|-----------|
+| Caja del logo (ancho × alto × posición) antes vs. después | **Idéntica en las 12**, al centipíxel |
+| El bloque de favicon es el mismo en los 12 | ✅ Un solo `sha256` para las 12 copias |
+| Tres `<link rel="icon">` por página, ninguno antes | ✅ 12/12 |
+| Ningún archivo referenciado que no cargue | ✅ 12/12 |
+| **Control: ¿la comprobación sabe fallar?** | ✅ Con un logo de 600×192 en vez de 704×192, las 12 dan ❌ y `crear-password.html` además desplaza el logo 11 px en horizontal |
+
+La última fila es la que hace útiles a las otras. Una comparación que da ✅ pase lo que pase no
+comprueba nada; ya pasó en la cadena de validación con una comprobación que detectaba el problema
+y no abortaba. El control se corrió de verdad, no se razonó.
+
+El arnés queda en `pedidos/maqueta-UX-19-UX-20.mjs` para poder repetirlo cuando lleguen los
+archivos que faltan.
+
+### Lo que la verificación **no** cubre, y por qué
+
+**Cuatro de los cinco binarios no están en el repo.** El dueño subió `favicon.ico` (commit
+`a948f7e`); `logo-huella-laboral.png`, `logo-huella-laboral-blanco.png`, `favicon-32.png` y
+`apple-touch-icon.png` siguen sin subir. Llegaron como imágenes pegadas en el chat, y de una
+imagen renderizada no se reconstruye el binario original.
+
+La medición se hizo con un PNG de relleno de 704×192 con alfa, que es lo único que la maquetación
+mira del archivo: sus dimensiones. Eso deja **una afirmación condicionada, y conviene leerla como
+lo que es**:
+
+> La maquetación no cambia **siempre que los dos logos sean 704×192**, como dice el pedido. Si
+> alguno viniera con otras dimensiones, la caja se mueve — el control lo demuestra.
+
+Lo que **no** se ha comprobado y no se puede comprobar sin los archivos: que el negativo blanco
+se lea bien sobre `var(--azul)`, que el fondo sea realmente transparente, y qué aspecto tiene el
+favicon en la pestaña. Son las tres cosas que motivaron el pedido, y quedan para la revisión
+visual del dueño tras subir los archivos.
+
+### Criterio de cierre
+
+| Requisito | Estado |
+|-----------|--------|
+| Los cinco archivos en la raíz | ⚠️ **1 de 5.** Falta que el dueño suba los otros cuatro |
+| Favicon idéntico en los 12 | ✅ |
+| Logo por fondo, 2 blancos y 10 azules | ✅ |
+| Maquetación intacta | ✅ condicionado a que los PNG sean 704×192 |
+| Revisión visual sobre el azul | ⏸️ Requiere los archivos |
+| `Huella_Laboral.png` conservado | ✅ |
+| Documentación | ✅ `CAMBIOS.md` y `TECNICO.md` §5 |
+| PR abierto, sin fusionar | ✅ |
+
+**No se puede fusionar todavía.** Los 12 HTML apuntan a dos archivos que no están en `main`: en
+cuanto Vercel despliegue, las 12 pantallas quedan sin logo. Es el único orden posible —el PR no
+puede traer los binarios— y por eso el requisito de fusión es explícito: **primero los cuatro
+archivos en `main`, después el PR.**
+
+Ni edge functions ni migración: el cambio es solo de frontend.
 
 ---
 
