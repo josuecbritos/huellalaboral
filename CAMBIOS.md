@@ -12,12 +12,9 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 
 | | Cerrados | En curso | Pendientes | Total |
 |---|:---:|:---:|:---:|:---:|
-| Hallazgos | 5 | 3 | 42 | 50 |
+| Hallazgos | 8 | 0 | 42 | 50 |
 
-**Cerrados** el 11/08/2026: H-01, H-07, H-04, H-05 y H-10.
-
-**En curso:** H-02, H-03 y H-35. Código desplegado y fase A demostrada, pero **B, C y D pendientes**.
-No se cuentan como cerrados hasta que pasen.
+**Cerrados:** H-01, H-07, H-04, H-05 y H-10 el 11/08; H-02, H-03 y H-35 el 12/08.
 
 **Residuos de prueba en producción, ninguno limpiable hoy.** Tres filas creadas por pruebas de
 verificación que no tienen vía de borrado: el trabajador con payload XSS de H-07 y los dos
@@ -295,7 +292,7 @@ datos de prueba.
 
 ## H-02, H-03 y H-35 · El token de validación no era un token
 
-🔴 Crítica (H-02, H-03) · 🟠 Funcional (H-35) · SEG · **Estado: 🟡 EN CURSO** — desplegado y fase A demostrada; B, C y D pendientes
+🔴 Crítica (H-02, H-03) · 🟠 Funcional (H-35) · SEG · **Estado: ✅ CERRADOS** (12/08/2026)
 
 ### El problema
 
@@ -375,6 +372,14 @@ de la bandeja de `contacto@` y pegó su enlace en una ventana de incógnito.
 |------|--------|----------|:------:|
 | **A** | Enlace antiguo (con `trabajador_id`) en incógnito, sin sesión | Pantalla completa: nombre, RUT, correo y los dos PDF abriendo | ✅ |
 | **A** | `validar-documentos` con `e4f2571c…` (residuo de H-07) | `200` · `{success: true}`. Validación falsificada sobre un trabajador ajeno | ✅ |
+| **B** | Solicitud nueva con RUT `11.111.111-1`; llega el M-3 | Token del enlace **distinto** del `trabajador_id` | ✅ |
+| **B** | El enlace abre con datos y los dos PDF | Abre | ✅ |
+| **B** | Cerrar la pestaña y reabrir el mismo enlace | **Sigue funcionando** — no se consume al leer | ✅ |
+| **B** | Enviar la validación | Pantalla de éxito | ✅ |
+| **C** | Seis llamadas: `trabajador_id`, token usado, inexistente y mal formado, leer y validar | Las seis `404 {"error":"Token inválido o ya utilizado"}`, **idénticas** | ✅ |
+| **D** | Resubir con el mismo RUT | M-3 nuevo con token distinto; el anterior sigue dando `404`; el nuevo abre | ✅ |
+| **D** | `estado.html` con `token_consulta` | Sigue funcionando | ✅ |
+| **D** | H-35 comprobado **por SQL**: `19.114.926-2` | `estado: 'pendiente'`, y `fecha_validacion: null` en certificado y finiquito | ✅ |
 
 Demostró los dos fallos **sobre la pantalla real y sin crear ningún dato nuevo**. Es el mejor
 método de fase A de las cuatro iteraciones: usó evidencia que ya existía en producción en vez de
@@ -398,11 +403,18 @@ tocó. No sustituye a B/C/D contra producción; sirve para no entregar algo roto
 - [x] Respaldos regenerados y `MANIFEST.md` al día
 - [ ] Visto bueno del dueño
 
-**H-02, H-03 y H-35 no están cerrados.** El código está desplegado y la fase A demostró los dos
-fallos en producción, pero mientras B, C y D no se corran no consta que el camino legítimo del
-validador siga funcionando. Si B fallara, se revierte: los respaldos de las tres funciones y la
-migración son aditivos, así que volver atrás es redesplegar desde `backup/edge-functions/` — las
-columnas nuevas pueden quedarse, no molestan.
+**H-02, H-03 y H-35 quedan cerrados.**
+
+**H-35 se comprobó por SQL, no por inspección del código.** El trabajador `19.114.926-2`, validado
+y luego resubido, quedó en `estado: 'pendiente'` con `fecha_validacion: null` en los dos documentos.
+Es la diferencia entre "el código lo hace" y "la base lo refleja".
+
+**Un fallo del bloque de pruebas que entregué, anotado porque el patrón importa.** El preámbulo
+extraía la clave anon de la página con un regex y en `validar.html` capturó 347 caracteres en vez de
+208; las seis llamadas murieron con `401 UNAUTHORIZED_LEGACY_JWT` y el bloque imprimió un
+`❌ C FALLA` **falso**. La comprobación de longitud estaba puesta, pero era un `console.log`: avisó
+y dejó seguir. **Una comprobación que no aborta no es una comprobación.** En adelante, los bloques
+de verificación llevan la clave literal y `throw` si no cuadra.
 
 ---
 
