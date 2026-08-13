@@ -204,6 +204,38 @@
             'caso_fortuito':       'Caso fortuito o fuerza mayor',
             'otro':                'Otro'
         };
+
+        // ─── Cadena de validación · cómo se muestran las cuatro situaciones ──────
+        // Antes las cuatro se veían igual: un '—' que podía significar "no entregó
+        // documentos", "aún no los revisan" o "se los rechazaron". El reclutador no
+        // podía distinguir un candidato sin papeles de uno con papeles rechazados.
+        //
+        // `estado` lo calcula la edge function. Si no viniera —respuesta vieja en
+        // caché mientras Vercel propaga— se cae al comportamiento anterior en vez
+        // de romper la pantalla.
+        const ETIQUETA_DOC = {
+            sin_documento: '—',
+            pendiente_validacion: 'Pendiente de validación',
+            no_valido: 'No válido',
+        };
+        function textoValidacion(estado, valor, sufijo, razon) {
+            if (estado && estado !== 'validado') {
+                const base = ETIQUETA_DOC[estado] || '—';
+                return (estado === 'no_valido' && razon) ? base + ' — ' + razon : base;
+            }
+            return (valor !== null && valor !== undefined) ? valor + (sufijo || '') : '—';
+        }
+        function insigniaCausal(finiqEstado, causalValidada) {
+            if (finiqEstado === 'sin_documento') return '';
+            if (finiqEstado === 'pendiente_validacion')
+                return '<span style="font-size:10px; font-weight:700; color:#92400e; background:rgba(217,119,6,0.12); padding:3px 8px; border-radius:2px;">PENDIENTE DE VALIDACIÓN</span>';
+            if (causalValidada === true)
+                return '<span style="font-size:10px; font-weight:700; color:#166534; background:rgba(47,191,113,0.12); padding:3px 8px; border-radius:2px;">✓ VALIDADA</span>';
+            if (causalValidada === false)
+                return '<span style="font-size:10px; font-weight:700; color:#dc2626; background:rgba(220,38,38,0.12); padding:3px 8px; border-radius:2px;">✗ NO VALIDADA</span>';
+            return '';
+        }
+
         function formatearCausal(valor) {
             return CAUSAL_LABELS[valor] || valor || '—';
         }
@@ -229,17 +261,12 @@
                 document.getElementById('metaTrabajador').textContent = data.trabajador.rut;
 
                 document.getElementById('certEmpleos').textContent =
-                    data.documentos?.cert_empleos !== null && data.documentos?.cert_empleos !== undefined
-                    ? data.documentos.cert_empleos : '—';
+                    textoValidacion(data.documentos?.cert_estado, data.documentos?.cert_empleos, '', data.documentos?.cert_razon_invalido);
                 document.getElementById('certPermanencia').textContent =
-                    data.documentos?.cert_permanencia !== null && data.documentos?.cert_permanencia !== undefined
-                    ? data.documentos.cert_permanencia + ' años' : '—';
+                    textoValidacion(data.documentos?.cert_estado, data.documentos?.cert_permanencia, ' años');
                 document.getElementById('causalTexto').textContent = formatearCausal(data.documentos?.causal_texto);
-                document.getElementById('causalBadge').innerHTML = data.documentos?.causal_validada === true
-                    ? '<span style="font-size:10px; font-weight:700; color:#166534; background:rgba(47,191,113,0.12); padding:3px 8px; border-radius:2px;">✓ VALIDADA</span>'
-                    : data.documentos?.causal_validada === false
-                    ? '<span style="font-size:10px; font-weight:700; color:#dc2626; background:rgba(220,38,38,0.12); padding:3px 8px; border-radius:2px;">✗ NO VALIDADA</span>'
-                    : '';
+                document.getElementById('causalBadge').innerHTML =
+                    insigniaCausal(data.documentos?.finiq_estado, data.documentos?.causal_validada);
 
                 const totalEvals = (data.evaluaciones?.lista || []).filter(e => !e.rechazo).length;
                 document.getElementById('evalCount').textContent = totalEvals;

@@ -43,6 +43,34 @@ async function esProcesoPropio(
   return propios.length === 1
 }
 
+// ─── Validación vigente · cadena de validación de documentos ─────────────────
+// Bloque IDÉNTICO en obtener-estado, obtener-candidato y agregar-candidato.
+// Cada edge function se despliega por separado, así que se duplica físicamente:
+// si se cambia, se cambia en las tres.
+//
+// Antes se leía `validaciones_documentos[0]`: sin ordenar, sin filtrar y sin
+// mirar si el documento se resubió después. Como la fila de `documentos` se
+// ACTUALIZA al resubir conservando su `id`, las validaciones viejas siguen
+// colgando de ella y no se distinguen de las nuevas por la relación. El panel
+// mostraba como verificado lo que el validador ya había rechazado.
+//
+// `envio_id` es la llave que faltaba: una validación cuenta solo si se hizo
+// sobre el envío que hoy está en la tabla.
+function validacionVigente(documento: any) {
+  if (!documento?.envio_id) return null
+  const validaciones = documento.validaciones_documentos ?? []
+  return validaciones.find((v: any) => v.envio_id === documento.envio_id) ?? null
+}
+
+// Cuatro situaciones que hoy se ven iguales, todas como un '—' indistinguible.
+// Devolver el estado explícito es lo que permite al frontend separarlas sin
+// tener que adivinar a partir de nulls.
+function estadoDocumento(documento: any, validacion: any): string {
+  if (!documento) return 'sin_documento'
+  if (!validacion) return 'pendiente_validacion'
+  return validacion.valido === true ? 'validado' : 'no_valido'
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -332,8 +360,15 @@ async function obtenerDatosCandidato(supabase: any, trabajadorId: string) {
   const certificado = documentos?.find(d => d.tipo === 'certificado')
   const finiquito = documentos?.find(d => d.tipo === 'finiquito')
   
-  const validacionCert = certificado?.validaciones_documentos?.[0]
-  const validacionFiniq = finiquito?.validaciones_documentos?.[0]
+  // Solo cuenta la validación hecha sobre el envío que hoy está en la tabla.
+  const validacionCert = validacionVigente(certificado)
+  const validacionFiniq = validacionVigente(finiquito)
+  const certEstado = estadoDocumento(certificado, validacionCert)
+  const finiqEstado = estadoDocumento(finiquito, validacionFiniq)
+  // H-22: el motivo del rechazo se escribía y no se leía en ninguna parte.
+  const certRazonInvalido = validacionCert && validacionCert.valido !== true
+    ? (validacionCert.razon_invalido || null)
+    : null
 
   let estado = 'Invitado'
   if (evaluacionesValidas.length > 0) {
@@ -350,7 +385,11 @@ async function obtenerDatosCandidato(supabase: any, trabajadorId: string) {
     estado: estado,
     cert_empleos: validacionCert?.valido ? validacionCert.empleos_ultimos_5_anos : null,
     cert_permanencia: validacionCert?.valido ? validacionCert.tiempo_maximo_un_empleador_anos : null,
-    causal_validada: validacionFiniq?.finiquito_valido_y_coincide || false,
+    cert_estado: certEstado,
+    cert_razon_invalido: certRazonInvalido,
+    finiq_estado: finiqEstado,
+    // `??` y no `||`: un `false` explícito del validador se perdía.
+    causal_validada: validacionFiniq?.finiquito_valido_y_coincide ?? null,
     causal_texto: finiquito?.causal_salida || null,
     pendiente: false
   }
