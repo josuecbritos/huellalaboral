@@ -9,8 +9,9 @@ desactualizada miente con autoridad.
 **Actualizado:** 11 de agosto de 2026 · **Estado del código:** cerrados H-01 (`crear-reclutador`
 v15), H-07 (`dashboard.html` y `admin.html`), H-04/H-05/H-10 (`obtener-proceso` v3,
 `gestionar-proceso` v3, `agregar-candidato` v11, `obtener-stats` v3) y H-02/H-03/H-35
-(`crear-solicitud` v27, `obtener-validacion` v3, `validar-documentos` v5, más una migración).
-Todos desplegados y verificados en producción.
+(`obtener-validacion` v3, más una migración) y la cadena de validación de documentos
+(`crear-solicitud` v28, `validar-documentos` v6, `obtener-estado` v4, `obtener-candidato` v10,
+`agregar-candidato` v12, más una segunda migración). Todos desplegados en producción.
 
 ---
 
@@ -137,6 +138,21 @@ Los cuatro hashes tienen que coincidir. Al cerrar H-04/H-05/H-10 valían `6df77b
   hubiera en el array, o `{candidatos: 0, evaluaciones: 0}` si no había ninguno. Un cero ahí puede
   significar "no tienes datos" o "ninguno de esos procesos es tuyo", y no se distinguen a propósito.
 
+### `validacionVigente` está duplicado a propósito en tres funciones
+
+Misma razón que el bloque de arriba, distintas funciones: **14, 12 y 11** —`obtener-estado`,
+`obtener-candidato` y `agregar-candidato`— llevan idénticos `validacionVigente` y
+`estadoDocumento`. Un cambio va en las tres.
+
+```
+for f in obtener-estado obtener-candidato agregar-candidato; do
+  sed -n '/─── Validación vigente/,/^}$/p' supabase/functions/$f/index.ts | sha256sum
+done
+```
+
+Al cerrar la cadena de validación valían `02cc749e091bff9b…`. **`agregar-candidato` lleva los dos
+bloques**, el de propiedad y el de vigencia: es la única función en las dos listas.
+
 ## 5. Los 12 HTML
 
 | Archivo | Actor | Sesión |
@@ -195,7 +211,23 @@ usuarios ──1:N──▶ procesos ──1:N──▶ candidatos_proceso ─�
 | `empleadores_solicitados` | 2 ⚠️ | Evaluadores invitados | `token` unique, `fecha_expiracion`, `completado` |
 | `evaluaciones` | 2 ⚠️ | Las referencias | Notas 1-5 con CHECK. `comentarios` es **texto libre de terceros** |
 | `documentos` | 4 ⚠️ | Certificado y finiquito | `storage_path` a los buckets |
-| `validaciones_documentos` | 2 ⚠️ | Resultado de la validación | **`validador_id` existe y sigue sin escribirse** — ver abajo |
+| `validaciones_documentos` | — | Resultado de la validación | Una fila **por cada** validación; las viejas no se borran. `envio_id` dice cuál es la vigente. **`validador_id` existe y sigue sin escribirse** — ver abajo |
+
+### La cadena de validación: `envio_id`
+
+`documentos` se **actualiza** al resubir, conservando su `id`. `validaciones_documentos`
+**inserta** una fila por validación y nunca borra. Sin más, las validaciones viejas siguen
+colgando del mismo `documento_id` que las nuevas y no se distinguen por la relación: leer
+`validaciones_documentos[0]` devolvía cualquiera de ellas.
+
+**`envio_id` es la llave que las separa.** Lo pone `crear-solicitud` en cada fila de `documentos`
+con el valor de `token_validacion`, y `validar-documentos` lo copia a cada validación que inserta.
+Una validación es **vigente** solo si su `envio_id` coincide con el del documento.
+
+- `envio_id` nulo en un documento = subido pero sin validación vigente. Es un estado legítimo.
+- Los cuatro estados que las funciones de lectura devuelven ahora: `sin_documento`,
+  `pendiente_validacion`, `no_valido`, `validado`. Antes los cuatro se veían como un `—`.
+- **No se compara por fecha**, a propósito: sería implícito y frágil.
 
 **`validaciones_documentos.validador_id` sigue vacío, y en H-02/H-03 se decidió no rellenarlo.**
 El pedido pedía escribirlo «si hay un identificador razonable disponible; si no, dejarlo y decirlo,

@@ -12,9 +12,12 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 
 | | Cerrados | En curso | Pendientes | Total |
 |---|:---:|:---:|:---:|:---:|
-| Hallazgos | 8 | 0 | 42 | 50 |
+| Hallazgos | 8 | 1 | 41 | 50 |
 
 **Cerrados:** H-01, H-07, H-04, H-05 y H-10 el 11/08; H-02, H-03 y H-35 el 12/08.
+
+**En curso:** la cadena de validación de documentos (incluye H-22). Desplegada y fase A demostrada;
+**B, C y D pendientes**.
 
 **Residuos de prueba en producción, ninguno limpiable hoy.** Tres filas creadas por pruebas de
 verificación que no tienen vía de borrado: el trabajador con payload XSS de H-07 y los dos
@@ -415,6 +418,101 @@ extraía la clave anon de la página con un regex y en `validar.html` capturó 3
 `❌ C FALLA` **falso**. La comprobación de longitud estaba puesta, pero era un `console.log`: avisó
 y dejó seguir. **Una comprobación que no aborta no es una comprobación.** En adelante, los bloques
 de verificación llevan la clave literal y `throw` si no cuadra.
+
+---
+
+## Cadena de validación de documentos · incluye H-22
+
+🔴 Crítica · SEG/FUNC · **Estado: 🟡 EN CURSO** — desplegado y fase A demostrada; B, C y D pendientes
+
+### De dónde salió
+
+**No de la auditoría: de la fase D del Bloque 3.** Al resubir documentos y validarlos por segunda
+vez marcándolos como no válidos, `estado.html` seguía mostrando los números de la **primera**
+validación y la insignia «✓ VALIDADA». Cuatro defectos encadenados, todos anteriores al Bloque 3.
+El efecto conjunto: **el producto muestra como verificado lo que no lo está.**
+
+| # | Defecto |
+|---|---------|
+| 1.1 | Tres funciones leían `validaciones_documentos[0]`, sin ordenar ni filtrar. `documentos` se **actualiza** al resubir conservando su `id`, así que las validaciones viejas siguen colgando de la misma fila |
+| 1.2 | El finiquito se insertaba con `valido: true` **fijo** —comentario literal: «Siempre true si llegó aquí»—. No podía ser no válido, dijera lo que dijera el validador |
+| 1.3 | `causalValidada = ... \|\| null` convertía un `false` explícito en `null`, así que la insignia roja que las dos pantallas ya tenían escrita **no podía aparecer nunca** |
+| 1.4 | H-22: «no válido», «pendiente de validar» y «no entregó documentos» se veían los tres como `—` |
+
+### La evidencia de la fase A
+
+Sobre `11.111.111-1`, validado dos veces. Cuatro filas en `validaciones_documentos`: las de las
+13:22 con certificado válido y 3 empleos, las de las 13:28 con certificado **no válido** y causal
+que **no coincide**. El panel mostraba los datos de las 13:22 y la insignia «✓ VALIDADA».
+**Mostraba lo contrario de la verdad.**
+
+También quedó confirmado 1.2 en la base: la fila del finiquito de las 13:28 tiene `valido: true`
+pese a que el validador marcó que no coincide.
+
+**Mi bloque de fase A apuntaba al trabajador equivocado.** Elegí `19.114.926-2` porque sabía que
+tenía `fecha_validacion: null`, y de ahí deduje «lo que muestre es caducado». Faltaba un paso:
+`null` también es lo que se ve cuando **nunca hubo validación**, que era su caso. La prueba era
+vacua. El dueño encontró el caso real. **Saber parte del estado de un dato no es saber su estado.**
+
+### La decisión
+
+Un **código de envío** en `documentos` y en `validaciones_documentos`: `envio_id`. Una validación
+cuenta solo si su `envio_id` coincide con el del documento. El valor es `token_validacion`, que ya
+se regenera exactamente cuando se suben documentos.
+
+Se descartó **comparar por fecha**: implícito y frágil.
+
+El relleno de lo existente usa `documentos.fecha_validacion`, y no es una suposición:
+`crear-solicitud` la pone a `null` al resubir y `validar-documentos` la escribe al validar.
+
+**Para ordenar se usa `created_at` y no `fecha_validacion`**, porque
+`validaciones_documentos.fecha_validacion` no la escribe nadie: el `insert` de `validar-documentos`
+no la incluye. La migración lleva un `raise exception` que la detiene si `created_at` no existiera,
+en vez de rellenar con un orden arbitrario.
+
+**Finiquito, opción A:** `valido` se deriva de `valido_y_coincide`. `validar.html` no manda un
+campo de validez general, y la opción negativa del formulario dice literalmente «No - Finiquito
+inválido o causal no coincide», así que el campo ya cubre las dos cosas por diseño. No inventa
+nada. Separar los dos juicios queda anotado como mejora futura.
+
+### El cambio
+
+- **Rama:** `fix/validaciones-vigentes` · PR #7
+- **Migración:** `20260812_envio_id_validaciones.sql`, aplicada por el dueño. Comprobación
+  posterior: 4 documentos con envío, 2 pendientes — coincide con el conteo previo
+
+| Función | Versión | `ezbr_sha256` |
+|---------|:-------:|---------------|
+| `crear-solicitud` | 27 → **28** | `4ee7818dcb5335a5…` |
+| `validar-documentos` | 5 → **6** | `eb8d2ac25ceab54f…` |
+| `obtener-estado` | 3 → **4** | `8e9b0eb2f3e75d2b…` |
+| `obtener-candidato` | 9 → **10** | `0a2d25029e24236f…` |
+| `agregar-candidato` | 11 → **12** | `7ce3e052fb5d9d89…` |
+
+**El orden de despliegue se eligió:** `crear-solicitud` de las primeras. Si las lectoras se
+despliegan antes, los documentos subidos en la ventana quedan sin `envio_id` y se verían pendientes
+**para siempre**, aunque después se validaran. Es la única de las cinco cuyo retraso deja datos
+mal, no solo pantallas mal.
+
+### Verificación
+
+Antes de entregar: las cinco compilan, los dos HTML parsean, y el código real transpilado con `tsc`
+pasa **21 comprobaciones** contra una base simulada que reproduce el caso de producción —cuatro
+validaciones, dos envíos, solo la vigente se muestra—.
+
+- [x] Migración aplicada y comprobada
+- [x] Código desplegado, con aprobación explícita
+- [x] Prueba A: el fallo existía, demostrado en producción sobre `11.111.111-1`
+- [ ] **B, C y D pendientes**
+- [x] Respaldos regenerados y `MANIFEST.md` al día
+- [ ] Visto bueno del dueño
+
+### Pendiente decidido aparte
+
+**`reenviar-validacion`.** Tras la migración, un trabajador sin validación vigente solo puede
+revalidarse si vuelve a subir sus documentos. Se propuso una función nueva llamada desde
+`admin.html` que regenere el token y reenvíe el M-3 sin pedirle nada al trabajador. El dueño la
+dejó como **pedido aparte**, a decidir al cerrar este.
 
 ---
 

@@ -166,6 +166,12 @@ serve(async (req) => {
 
     // ─────────────────────────────────────────────
     // 4. Subir documentos a Storage y upsert en tabla documentos
+    //
+    // Cada fila se sella con `envio_id = tokenValidacion`, el mismo código que
+    // viaja en el enlace de validación. Es lo que después permite saber si una
+    // validación se hizo sobre ESTOS documentos o sobre los que había antes.
+    // Aquí siempre hay token: este bloque solo se ejecuta si vinieron
+    // documentos, que es la misma condición que lo genera o lo regenera.
     // ─────────────────────────────────────────────
     if (certificado_base64) {
       const certBytes = base64ToUint8Array(certificado_base64)
@@ -194,7 +200,7 @@ serve(async (req) => {
       if (docExistente) {
         await supabase
           .from('documentos')
-          .update({ storage_path: certPath, validado: false, fecha_validacion: null })
+          .update({ storage_path: certPath, validado: false, fecha_validacion: null, envio_id: tokenValidacion })
           .eq('id', docExistente.id)
       } else {
         await supabase
@@ -204,6 +210,7 @@ serve(async (req) => {
             tipo: 'certificado',
             storage_path: certPath,
             validado: false,
+            envio_id: tokenValidacion,
           })
       }
     }
@@ -240,6 +247,7 @@ serve(async (req) => {
             causal_salida: causal_salida || null,
             validado: false,
             fecha_validacion: null,
+            envio_id: tokenValidacion,
           })
           .eq('id', docExistente.id)
       } else {
@@ -251,6 +259,7 @@ serve(async (req) => {
             storage_path: finiqPath,
             causal_salida: causal_salida || null,
             validado: false,
+            envio_id: tokenValidacion,
           })
       }
     }
