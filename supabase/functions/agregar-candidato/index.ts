@@ -71,6 +71,51 @@ function estadoDocumento(documento: any, validacion: any): string {
   return validacion.valido === true ? 'validado' : 'no_valido'
 }
 
+// ─── Contexto de M-4 y M-5 · empresa y cargo ─────────────────────────────────
+// Los dos correos nombraban al reclutador y nada más. Un trabajador con tres
+// postulaciones abiertas recibía un nombre de persona suelto y no podía saber
+// cuál era. `procesos.cargo` y `usuarios.empresa` ya existían y no se leían.
+
+// Un campo obligatorio en su formulario puede llegar igual como cadena vacía.
+// Se trata como ausente lo mismo `null` que '   ': la alternativa es un correo
+// que dice «para el cargo de  .»
+function textoOpcional(valor: any): string | null {
+  if (typeof valor !== 'string') return null
+  const limpio = valor.trim()
+  return limpio.length ? limpio : null
+}
+
+// Mismo criterio que H-07. `empresa` y `cargo` los teclea un humano en un
+// formulario libre, y aquí acaban dentro de un HTML.
+//
+// Se usa SOLO para el cuerpo. El asunto de Resend es texto plano: escaparlo
+// mostraría «Fábrica &amp; Cía» literal en la bandeja de entrada.
+function escapeHtml(valor: any): string {
+  return String(valor)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+// La frase de apertura de M-4 y M-5. Solo cambia el verbo entre las dos, y se
+// mantiene distinto a propósito: «invitó» y «agregó» son situaciones distintas.
+//
+// Los respaldos son por campo, no todo o nada. Si falta la empresa se omite el
+// inciso; si falta el cargo se omite su cola. Una frase corta es aceptable;
+// una frase rota, no.
+function aperturaCorreo(
+  reclutadorHtml: string,
+  empresaHtml: string | null,
+  cargoHtml: string | null,
+  fraseVerbo: string
+): string {
+  const inciso = empresaHtml ? `, de <strong>${empresaHtml}</strong>,` : ''
+  const cola = cargoHtml ? ` para el cargo de <strong>${cargoHtml}</strong>` : ''
+  return `<strong>${reclutadorHtml}</strong>${inciso} ${fraseVerbo}${cola}.`
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -128,11 +173,36 @@ serve(async (req) => {
     // `usuario.nombre || usuario.email` que hacía el frontend.
     const { data: reclutador, error: reclutadorError } = await supabase
       .from('usuarios')
-      .select('nombre')
+      .select('nombre, empresa')
       .eq('id', authUser.id)
       .maybeSingle()
     if (reclutadorError) throw reclutadorError
     const reclutador_nombre = reclutador?.nombre || authUser.email
+    const empresa = textoOpcional(reclutador?.empresa)
+
+    // El cargo del proceso, para nombrarlo en el cuerpo de M-4 y M-5.
+    //
+    // Es una consulta más, y conviene decir por qué no se evitó. La única forma
+    // de ahorrarla era pedir `cargo` dentro de `filtrarProcesosPropios`, y ese
+    // bloque es IDÉNTICO en cuatro funciones a propósito: tocarlo aquí obligaría
+    // a tocar las otras tres, que están fuera del alcance de este pedido, y
+    // rompería la uniformidad de la comprobación de propiedad para ahorrar una
+    // búsqueda por clave primaria. Mal negocio sobre un invariante de seguridad.
+    //
+    // Va DESPUÉS de la comprobación de propiedad, no antes: si el proceso no es
+    // del llamante ya se devolvió 404 y esta consulta no llega a ejecutarse.
+    const { data: proceso, error: procesoError } = await supabase
+      .from('procesos')
+      .select('cargo')
+      .eq('id', proceso_id)
+      .maybeSingle()
+    if (procesoError) throw procesoError
+    const cargo = textoOpcional(proceso?.cargo)
+
+    // Escapado solo para el HTML. Los asuntos usan los valores en crudo.
+    const reclutadorHtml = escapeHtml(reclutador_nombre)
+    const empresaHtml = empresa ? escapeHtml(empresa) : null
+    const cargoHtml = cargo ? escapeHtml(cargo) : null
 
     // Buscar trabajador
     console.log('🔍 Buscando trabajador con RUT:', rut)
@@ -192,11 +262,16 @@ serve(async (req) => {
           body: JSON.stringify({
             from: 'Huella Laboral <noreply@contacto.huellalaboral.cl>',
             to: trabajador.email,
-            subject: `${reclutador_nombre} te agregó a un proceso de selección`,
+            // M-4. Sin empresa el asunto es exactamente el de antes: quien
+            // firma vuelve a ser el reclutador. El cargo no sube al asunto a
+            // propósito —se cortaría en el móvil justo donde está el dato útil—.
+            subject: empresa
+              ? `${empresa} te agregó a un proceso de selección`
+              : `${reclutador_nombre} te agregó a un proceso de selección`,
             html: `
               <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                 <h1 style="color: #0E2A47;">Te agregaron a un proceso de selección</h1>
-                <p><strong>${reclutador_nombre}</strong> te ha agregado a un proceso de selección.</p>
+                <p>${aperturaCorreo(reclutadorHtml, empresaHtml, cargoHtml, 'te ha agregado a un proceso de selección')}</p>
                 <p>Ya tienes referencias en nuestro sistema, pero es un buen momento para verificar que estén actualizadas.</p>
                 <div style="margin: 30px 0;">
                   <a href="https://huellalaboral.cl/trabajador.html" 
@@ -277,12 +352,23 @@ serve(async (req) => {
           body: JSON.stringify({
             from: 'Huella Laboral <noreply@contacto.huellalaboral.cl>',
             to: email,
-            subject: `${reclutador_nombre} te invita a solicitar tus referencias laborales`,
+            // M-5. Mismo criterio que M-4: sin empresa, firma el reclutador.
+            //
+            // Pretérito, no presente. «Te invita» sonaba a publicidad y
+            // desentonaba con el «te agregó» de M-4, que describe un hecho que
+            // ya ocurrió. El asunto de respaldo también cambia: el verbo es
+            // decisión de redacción, no consecuencia de qué campos hay.
+            //
+            // Solo el asunto. La apertura del cuerpo sigue diciendo «te ha
+            // invitado a participar», que ya estaba en pretérito.
+            subject: empresa
+              ? `${empresa} te invitó a un proceso de selección`
+              : `${reclutador_nombre} te invitó a un proceso de selección`,
             html: `
               <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                 <h1 style="color: #0E2A47;">Te invitaron a un proceso de selección</h1>
                 <p>Hola,</p>
-                <p><strong>${reclutador_nombre}</strong> te ha invitado a participar en un proceso de selección.</p>
+                <p>${aperturaCorreo(reclutadorHtml, empresaHtml, cargoHtml, 'te ha invitado a participar en un proceso de selección')}</p>
                 <p>Solicita acá tus referencias laborales:</p>
                 <div style="margin: 30px 0;">
                   <a href="https://huellalaboral.cl/trabajador.html"
