@@ -335,6 +335,24 @@ Los siete correos salen por Resend con `fetch` directo. Hechos transversales:
   octavo correo — son siete, y este es el M-3.
 - DMARC está configurado.
 
+### M-1 dice de dónde salió el correo (desde el 13/08)
+
+M-1 es **el único contacto frío del producto**: llega a un exjefe que no conoce Huella Laboral, no
+pidió nada y no gana nada. El correo se presentaba y aclaraba que el postulante no vería la
+respuesta, pero no decía **cómo se consiguió su dirección**. Un correo de un remitente desconocido
+que ya tiene tu correo personal parece una filtración de datos, y ese es el punto donde el embudo
+pierde gente: justo antes de pedirle el RUT.
+
+Una frase, dentro del párrafo que ya existía:
+
+> `<strong>${trabajador.nombre}</strong> te ha solicitado una referencia laboral para usar en su
+> proceso de postulación, y <strong>nos entregó tu correo como una de sus jefaturas
+> anteriores</strong>.`
+
+Nada más: ni el asunto, ni el botón, ni el pie, ni los estilos. **Sin imágenes ni logo** —es
+transaccional, y la relación imagen/texto y el bloqueo de imágenes por defecto no compensan.
+M-2 y M-3, que salen de la misma función, no se tocaron.
+
 ### M-4 y M-5 nombran la empresa y el cargo (desde el 13/08)
 
 Los dos correos que envía `agregar-candidato` decían solo el nombre del reclutador. Un trabajador

@@ -13,8 +13,9 @@ Regenerados después:
   `agregar-candidato.ts` el **12/08** con la cadena de validación de documentos.
 - `agregar-candidato.ts` el **13/08** al nombrar empresa y cargo en M-4 y M-5, dos veces:
   versión 12 → 13, y 13 → 14 al pasar el asunto de M-5 a pretérito. **La vigente es la 14.**
+- `crear-solicitud.ts` el **13/08** al decir en M-1 de dónde salió el correo (versión 28 → 29).
 
-**19 funciones · 3,004 líneas · 115,778 bytes (113.1 KB)**
+**19 funciones · 3,004 líneas · 115,858 bytes (113.1 KB)**
 
 Las líneas son líneas de contenido. Ningún archivo termina en salto de línea, así que `wc -l`
 devuelve una menos por archivo: 2,985 + 19 = 3,004.
@@ -25,7 +26,7 @@ del respaldo; `ezbr_sha256` es el hash que reporta Supabase para ese despliegue.
 
 | Archivo | Versión | Líneas | Bytes | ezbr_sha256 |
 |---------|--------:|-------:|------:|-------------|
-| `crear-solicitud.ts` | 28 | 402 | 17,546 | `4ee7818dcb5335a5…` |
+| `crear-solicitud.ts` | 29 | 402 | 17,626 | `995c4fd2027d4a0a…` |
 | `agregar-candidato.ts` | 14 | 482 | 20,511 | `dc96cc1e6098554f…` |
 | `crear-reclutador.ts` | 15 | 235 | 9,784 | `61f1889065d7fb7b…` |
 | `obtener-candidato.ts` | 10 | 203 | 8,073 | `0a2d25029e24236f…` |
@@ -58,8 +59,8 @@ cubre `crear-reclutador.ts`. Para el resto, lo comprobado es que producción est
 versión y con el mismo `ezbr_sha256` que registra la tabla. El detalle por archivo está abajo.
 
 **Los recuentos de esa tabla son del 11/08 y no se han rehecho.** Desde entonces se regeneró
-`agregar-candidato.ts` dos veces (13/08), así que el total vigente es el de la cabecera —3.004
-líneas, 115.778 bytes—, no el de la fila. La comprobación de versión y `ezbr_sha256` sí se repitió
+`agregar-candidato.ts` dos veces y `crear-solicitud.ts` una (13/08), así que el total vigente es el de la cabecera —3.004
+líneas, 115.858 bytes—, no el de la fila. La comprobación de versión y `ezbr_sha256` sí se repitió
 antes de desplegar el 13/08: las 19 seguían donde el respaldo decía.
 
 ## Notas
@@ -86,7 +87,7 @@ lea más garantía de la que hay.
 | `gestionar-proceso.ts` | H-05 | Igual |
 | `agregar-candidato.ts` | H-10, luego M-4/M-5 | **La v13 sí se leyó de vuelta y se comparó; la v14 que hay en el archivo, no.** Ver la nota de abajo |
 | `obtener-stats.ts` | H-10 | Igual |
-| `crear-solicitud.ts` | H-02/H-03 | **Solo copia del fuente enviado a desplegar.** No leída de vuelta |
+| `crear-solicitud.ts` | H-02/H-03, luego M-1 | **Solo copia del fuente enviado a desplegar.** No leída de vuelta. La vigente es la v29 del 13/08 |
 | `obtener-validacion.ts` | H-02 | Igual |
 | `validar-documentos.ts` | H-03 | Igual |
 | `obtener-estado.ts` | Cadena de validación | Igual |

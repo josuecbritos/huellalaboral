@@ -16,11 +16,11 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 
 **Cerrados:** H-01, H-07, H-04, H-05 y H-10 el 11/08; H-02, H-03 y H-35 el 12/08.
 
-**En curso:** **M-4 y M-5** (nombrar empresa y cargo en los correos de `agregar-candidato`),
-desplegado y verificado el 13/08. Solo falta que se fusione el PR #10.
+**En curso:** **M-1** (decir al evaluador de dónde salió su correo), desplegado el 13/08 y
+pendiente de la verificación por bandeja de entrada del dueño.
 
-**Cerrados también:** UX-19 y UX-20 el 13/08, fusionados en el PR #9. La cadena de validación de
-documentos, que incluye H-22, se cerró el 12/08.
+**Cerrados también:** UX-19 y UX-20 el 13/08, fusionados en el PR #9. M-4 y M-5 el 13/08,
+fusionados en el PR #10. La cadena de validación de documentos, que incluye H-22, se cerró el 12/08.
 
 ### Qué cuenta la tabla, y qué no
 
@@ -863,7 +863,7 @@ es lo único pendiente.
 
 ## M-4 y M-5 · Los correos no decían de qué empresa ni a qué cargo
 
-🔵 Presentación · UX · Esfuerzo S · **Estado: ✅ VERIFICADO, a la espera de fusión** (13/08/2026)
+🔵 Presentación · UX · Esfuerzo S · **Estado: ✅ CERRADOS** (13/08/2026) · PR #10 fusionado
 
 ### El problema
 
@@ -1009,6 +1009,85 @@ se podía provocar desde la interfaz. **No se puede:** `cargo` es obligatorio en
 llegar a un proceso sin cargo ni a un reclutador sin empresa. Lo que se probó son las cinco
 combinaciones sobre el fuente real, que es la única vía que queda sin `execute_sql`. **Se dice en
 vez de darlo por bueno.**
+
+Ni migración ni HTML: el cambio es solo de la función.
+
+---
+
+## M-1 · El contacto frío no decía de dónde había salido el correo
+
+🔵 Presentación · UX · Esfuerzo S · **Estado: 🚀 DESPLEGADO, pendiente de verificación** (13/08/2026)
+
+### El problema
+
+M-1 es **el único contacto frío del producto**. Llega a un exjefe que no conoce Huella Laboral, no
+pidió nada y no gana nada con responder. El correo se presentaba y aclaraba que el postulante no
+vería la respuesta —las dos cosas bien—, pero no decía **cómo se consiguió su dirección**.
+
+Un correo de un remitente desconocido que ya tiene tu correo personal parece una filtración de
+datos. Y es el punto exacto donde el embudo pierde gente: justo antes de pedirle el RUT.
+
+### El cambio
+
+Una frase, dentro del párrafo que ya existía.
+
+| | Texto |
+|---|---|
+| **Antes** | `<strong>${trabajador.nombre}</strong> te ha solicitado una referencia laboral para usar en su proceso de postulación.` |
+| **Ahora** | `…para usar en su proceso de postulación, y <strong>nos entregó tu correo como una de sus jefaturas anteriores</strong>.` |
+
+`crear-solicitud` v28 → **v29**, `verify_jwt: true` sin cambios. **Una línea de diff.** Ni el
+asunto, ni el resto del cuerpo, ni el botón, ni el pie, ni los estilos. Sin imágenes ni logo: es
+transaccional. M-2 y M-3 salen de la misma función y no se tocaron.
+
+### Verificación
+
+**Sin fase A**, y el pedido lo dice: el texto está a la vista en el código.
+
+`crear-solicitud` es la función más delicada del producto, así que la comprobación no se limitó a
+M-1: se generaron **los tres correos** con el código de `origin/main` y con el nuevo, sobre el
+fuente real transpilado, y se compararon línea a línea.
+
+| Correo | Destinatario | Asunto | Líneas del cuerpo | Líneas que cambian |
+|--------|--------------|--------|-------------------|--------------------|
+| **M-1** | evaluador | ✅ igual | 17 → 17 | **1** — la frase pedida |
+| **M-2** | trabajador | ✅ igual | 17 → 17 | **0** |
+| **M-3** | `contacto@huellalaboral.cl` | ✅ igual | 13 → 13 | **0** |
+
+Y el enlace de M-1: `https://huellalaboral.cl/evaluar.html?token=…` con el token del evaluador,
+intacto.
+
+### Dos fallos del arnés, y por qué se cuentan
+
+El arnés dio **cero correos** en la primera pasada y no se enteró: comparó 0 contra 0 y siguió.
+Es la misma lección que ya está escrita en la cadena de validación —*una comprobación que no
+aborta no es una comprobación*— y se repitió. Se corrigió con un `throw` si no sale ningún correo,
+y otro si cambia el número entre las dos versiones.
+
+Después dio **dos** correos y el resumen dijo «los tres». M-3 solo se envía si el trabajador sube
+documentos, y la petición de prueba iba sin ellos. Es un acierto de la función, no un fallo, pero
+el mensaje era falso: **una frase de resumen escrita a mano puede mentir aunque los datos estén
+bien**. Se corrigió comprobando contra una lista explícita de los tres esperados.
+
+Los dos fallos eran del arnés, no del código, y ninguno habría cambiado el resultado final. Se
+anotan porque el patrón —dar por bueno un verde que no se ganó— ya costó una falsa alarma antes.
+
+### Criterio de cierre
+
+| Requisito | Estado |
+|-----------|--------|
+| Código desplegado | ✅ v29, `verify_jwt: true` |
+| Prueba A | — No aplica, el pedido la excluye |
+| Camino feliz | ⏳ **Pendiente del dueño**: solicitud desde `trabajador.html` con evaluador con alias |
+| No regresión | ✅ M-2 y M-3 sin una línea de diferencia; el botón de M-1 conserva su token |
+| Respaldo regenerado | ✅ v29, `MANIFEST.md` actualizado |
+| Documentación | ✅ `CAMBIOS.md` y `TECNICO.md` §7 |
+| PR abierto, sin fusionar | ✅ |
+
+**H-06 y H-21 siguen abiertos en esta función y no se tocaron**, como pedía el pedido. Conviene
+recordar por qué importa aquí: con H-06, si Resend rechaza el envío de M-1 la función responde
+`success: true` igual, así que la verificación por bandeja de entrada **es** la comprobación —no
+hay otra señal.
 
 Ni migración ni HTML: el cambio es solo de la función.
 
