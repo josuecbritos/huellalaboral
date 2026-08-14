@@ -16,8 +16,8 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 
 **Cerrados:** H-01, H-07, H-04, H-05 y H-10 el 11/08; H-02, H-03 y H-35 el 12/08.
 
-**En curso:** el **ajuste de UX-28** —quitar el muro de la pantalla del trabajador—, en PR sin
-fusionar. La primera versión de UX-28 se fusionó el 13/08 en el PR #13.
+**En curso:** ninguno. **UX-28** quedó cerrado el 14/08: la primera versión en el PR #13 y el
+ajuste que quitó el muro de la pantalla del trabajador en el PR #14.
 
 **Cerrados también:** UX-19 y UX-20 el 13/08 (PR #9). M-4 y M-5 el 13/08 (PR #10). M-1 el 13/08
 (PR #11). La cadena de validación de documentos, que incluye H-22, se cerró el 12/08.
@@ -913,7 +913,7 @@ bandeja de entrada. El cuerpo es HTML y sigue el criterio de H-07.
 nombre del reclutador va en la misma frase, lo teclea un humano igual que los otros dos, y estaba
 sin escapar desde antes. Escaparlo es una línea en código que ya se estaba tocando; dejarlo fuera
 habría sido aplicar el criterio a dos de tres valores de la misma oración. **Alcance algo mayor
-que el del pedido, y se anota como tal.** No es N-1: aquel es `crear-solicitud` y sigue abierto.
+que el del pedido, y se anota como tal.** No es UX-34 —el `N-1` de entonces—: aquel es `crear-solicitud` y sigue abierto.
 
 **El cargo cuesta una consulta más.** El pedido pedía evitarla si se podía, y no se pudo sin pagar
 un precio peor: la única forma era pedir `cargo` dentro de `filtrarProcesosPropios`, que es
@@ -1184,7 +1184,7 @@ la primera versión; el ajuste que la corrige está en su propia sección, más 
 
 Las tres tarjetas del resumen estaban diseñadas para un número —«3», «5 años»— y desde la cadena
 de validación reciben frases: «Pendiente de validación», «No válido — ‹motivo›». En 24 px y
-negrita, el texto desbordaba y dominaba la pantalla. Es el hallazgo que se anotó como **N-3**.
+negrita, el texto desbordaba y dominaba la pantalla. Es el hallazgo que se anotó como `N-3` y hoy es **UX-28** aquí y **UX-29** en `dashboard.html`.
 
 Las tres tampoco eran consistentes entre sí: las dos primeras metían el estado en el valor grande;
 la tercera ya usaba el patrón correcto —valor arriba, insignia debajo—.
@@ -1279,7 +1279,7 @@ verde. **La segunda es más barata** y reutiliza la zona de motivo que ya existe
 
 ## UX-28 · Ajuste · quitar el muro de la pantalla del trabajador
 
-🔵 Presentación · UX · Esfuerzo XS · **Estado: ⏸️ EN PR, sin fusionar** (14/08/2026)
+🔵 Presentación · UX · Esfuerzo XS · **Estado: ✅ CERRADO** (14/08/2026) · PR #14 fusionado
 
 **No es un hallazgo nuevo: es un ajuste de UX-28**, cuya primera versión está fusionada en el
 PR #13 y descrita más arriba.
@@ -1407,50 +1407,75 @@ serie `UX-nn` **desde UX-23**, sea de interfaz o técnico, y **no se abren serie
 Regla del dueño del 14/08: sin código no hay trazabilidad, y los trabajos del 13/08 quedaron
 descritos en prosa sin forma de referirse a ellos.
 
-| ID | Qué | Estado |
-|----|-----|--------|
-| UX-23 | El detalle del candidato no abre desde dentro de un proceso | Abierto |
-| UX-24 | `validaciones_documentos.observaciones` y `validador_id` existen y no se usan | Abierto |
-| UX-25 | Separar «finiquito inválido» de «causal no coincide» | Abierto, con detalle abajo |
-| UX-26 | Se acumulan archivos huérfanos en Storage | Abierto |
-| UX-27 | `trabajadores.estado` dice «documentos_validados» cuando significa «revisados» | Abierto |
+| ID | Qué pasa | Estado |
+|----|----------|--------|
+| UX-23 | **El detalle del candidato no abre desde dentro de un proceso**; hubo que llegar por la búsqueda por RUT. El candidato tenía 0 evaluaciones, pero **no se ha investigado si esa es la causa** | Abierto |
+| UX-24 | `validaciones_documentos.observaciones` y `validador_id` **existen en el esquema y ninguna función las escribe ni las lee** | Abierto |
+| UX-25 | **Separar «finiquito inválido» de «causal no coincide».** Hoy son el mismo `false` y la pantalla del trabajador no puede distinguirlos. Detalle en la tabla de abajo | Abierto |
+| UX-26 | **Cada subida escribe un objeto nuevo en Storage** con marca de tiempo y el anterior no se borra. La fila de `documentos` apunta al último, así que nada se rompe, **pero crecen sin límite** | Abierto |
+| UX-27 | `validar-documentos` pone `trabajadores.estado` en `'documentos_validados'` cuando los dos documentos fueron **revisados, sin mirar el resultado**. Verificado: **nadie lo lee** —aparece una sola vez en el sistema y es la escritura—. La etiqueta miente; el riesgo es que alguien construya un filtro o un informe encima | Abierto |
 | **UX-28** | **Las tarjetas de `estado.html` se descuadran con texto** | ✅ Hecho el 13/08, **ajustado el 14/08** |
-| UX-29 | La ficha del candidato y la tabla del panel: lo mismo en `dashboard.html` | Abierto, con detalle abajo |
-| UX-30 | Si el trabajador resube un solo documento, el validador tiene que marcar los dos | Abierto |
-| UX-31 | No hay avisos al trabajador cuando avanza su solicitud | Abierto |
-| UX-32 | `estado.html` no tiene objetivo declarado: seguimiento o carta de presentación | Abierto |
-| UX-33 | El finiquito no tiene ayuda para obtenerlo; el certificado sí enlaza a `links-afp.html` | Abierto |
+| UX-29 | **Lo mismo que UX-28 en `dashboard.html`**: la ficha del candidato y la tabla del panel. Detalle en la tabla de abajo | Abierto |
+| UX-30 | `obtener-validacion` devuelve **todas** las filas de `documentos` del trabajador y `validar.html` muestra la sección de cada una, **sin distinguir cuál cambió**. Si el trabajador resube solo el rechazado, el validador tiene que marcar de nuevo el que ya estaba bueno | Abierto |
+| UX-31 | **No hay avisos al trabajador cuando avanza su solicitud**: documentos validados, un evaluador responde, proceso completo. Solo recibe M-2 al enviar, y depende de entrar por su cuenta a `estado.html` | Abierto |
+| UX-32 | `estado.html` **es seguimiento** —decidido el 13/08— pero se titula «Resumen trayectoria laboral» y su token no caduca (H-12), así que el trabajador **puede reenviarlo**. Pendiente decidir si existe una carta de presentación como pantalla aparte, con su propio enlace | Abierto |
+| UX-33 | El certificado enlaza a `links-afp.html` para saber cómo obtenerlo; **el finiquito solo dice «adjunta tu finiquito»**. El motivo de rechazo más común es que suben el documento equivocado, así que **el hueco está en el formulario** | Abierto |
+| UX-34 | `crear-solicitud` interpola `${trabajador.nombre}` **sin escapar** en el HTML de M-1, M-2 y M-3. Era el `N-1` de este documento | Abierto, **congelado hasta después del piloto** |
+| UX-35 | **Un cambio hecho en el editor del panel de Supabase no deja rastro en el repositorio**, y nada lo detecta solo. Era el `UX-25` que este documento había asignado por su cuenta | Abierto |
 
-De UX-23, UX-24, UX-26, UX-27 y UX-30 a UX-33 **solo consta el título**: los asignó el dueño y aquí
-no hay más detalle que ese. No se rellena lo que no se sabe.
+**UX-33 y UX-28 son la misma historia por los dos extremos.** UX-28 quitó el rojo de la pantalla
+para que el trabajador no abandone al ver un rechazo; UX-33 ataca la causa de que lo haya. Si el
+abandono no baja tras UX-28, **UX-33 es lo siguiente**, junto con revisar si quitar el motivo del
+rechazo fue demasiado.
 
-**Hubo que renumerar, y conviene decir por qué.** Antes de que existiera esta tabla se registraron
-dos hallazgos con códigos `UX-25` y `UX-26` que **no son** los de la lista del dueño:
+**Hubo que renumerar, y conviene dejar la equivalencia escrita** para que los commits y los PR
+anteriores al 14/08 se puedan seguir leyendo. Antes de que existiera la serie se registraron cuatro
+hallazgos con códigos propios:
 
-| Lo que decía aquí | Qué era | Qué pasa ahora |
-|-------------------|---------|----------------|
-| `UX-26` | Un finiquito válido cuya causal no coincide se ve como «✓ VALIDADO» | **Es el UX-25 del dueño** —«separar finiquito inválido de causal no coincide»—. Renumerado |
-| `UX-25` | Un cambio hecho en el editor del panel no deja rastro en el repositorio | **No está en la lista.** Queda **sin código** hasta que el dueño le asigne uno |
+| Lo que decía aquí | Qué era | Código definitivo |
+|-------------------|---------|-------------------|
+| `UX-26` | Un finiquito válido cuya causal no coincide se ve como «✓ VALIDADO» | **UX-25** |
+| `UX-25` | Un cambio en el editor del panel no deja rastro en el repositorio | **UX-35** |
+| `N-1` | `crear-solicitud` interpola `${trabajador.nombre}` sin escapar en M-1, M-2 y M-3 | **UX-34** |
 | `N-3` | Las tarjetas se descuadran con texto | Se reparte: **UX-28** en `estado.html` (hecho) y **UX-29** en `dashboard.html` (abierto) |
-| `N-1` | `crear-solicitud` interpola `${trabajador.nombre}` sin escapar en M-1, M-2 y M-3 | **No está en la lista.** Queda **sin código** |
 
-**Dos hallazgos reales se quedan sin número y eso es un problema de trazabilidad**, justo lo que la
-regla viene a evitar. Se proponen `UX-34` para el del panel y `UX-35` para el escapado de los
-correos, **pero no se asignan aquí**: la serie la lleva el dueño y abrirla por cuenta propia sería
-la misma serie paralela que la regla prohíbe.
+Los cuatro códigos los confirmó el dueño el 14/08. **La serie `N-nn` queda cerrada**: no se usa más.
 
-La serie `N-nn` queda cerrada. No se usa más.
+### UX-34 está congelado a propósito, y no por falta de tiempo
+
+`crear-solicitud` es **la función más delicada del producto**: sube documentos a Storage y envía
+los tres correos del recorrido del trabajador. Cualquier cambio ahí obliga a verificar M-1, M-2 y
+M-3 en una bandeja de entrada de verdad, porque **H-06 sigue abierto** —si Resend rechaza un envío,
+la función responde `success: true` igual— y no hay otra señal.
+
+**Decisión del dueño del 14/08: no se toca antes del piloto.** No es un olvido ni una deuda que se
+esté acumulando en silencio; es una espera con motivo. Conviene recordar además que UX-34 nunca fue
+XSS: los clientes de correo no ejecutan scripts. Es inyección de HTML en el correo que
+`FUNCIONAL.md` §7 llama el más frágil del sistema, y eso mide bien el riesgo de esperar.
+
+### UX-35 no tiene mecanismo, solo una costumbre
+
+Pasó el 13/08 con el texto de M-2. **Se compensa con que el dueño avise cada vez**, y esa vez
+funcionó: avisó antes de que se descubriera en una comparación. Pero es una costumbre, no un
+control —si un día no avisa, el siguiente despliegue desde el repo pisa el cambio en silencio—.
+
+Lo más cerca de un control que existe hoy: comparar versión y `ezbr_sha256` de las 19 contra el
+`MANIFEST` **antes de cualquier despliegue**, que ya se hace en cada iteración y habría detectado
+el caso de M-2 en la siguiente.
 
 | # | Dónde | Qué pasa | Detectado en | Estado |
 |---|-------|----------|--------------|--------|
-| **sin código** | `crear-solicitud`, líneas 254, 294 y 337 del respaldo | Interpola `${trabajador.nombre}` sin escapar en el HTML de los correos **M-1, M-2 y M-3**. No es XSS —los clientes de correo no ejecutan scripts— pero sí inyección de HTML en el correo a contacto frío que `FUNCIONAL.md` §7 llama el más frágil del sistema | H-07 | Abierto, sin pedido |
 | UX-22 | Producto, no una función concreta | **No existe forma de quitar un candidato de un proceso.** Ni por interfaz ni por edge function: `gestionar-proceso` solo borra filas de `candidatos_proceso` como parte de `eliminar` el proceso entero. Se anotó primero como «N-2» | H-10 | Abierto, sin pedido |
-| **sin código** | Proceso, no código | **Un cambio hecho en el editor del panel de Supabase no deja rastro en el repositorio, y nada lo detecta solo.** El 13/08 producción tuvo durante un rato una versión de `crear-solicitud` que no existía en ninguna rama. El siguiente despliegue desde el repo la habría pisado en silencio. Lo único que lo evitó fue que el dueño avisara | Cambio manual de M-2 | Abierto, sin pedido |
 | UX-25 | `estado.html`, tercera tarjeta, y `validar-documentos` | **Un finiquito válido cuya causal no coincide se ve como «✓ VALIDADO» sobre un guion, sin explicación.** `obtener-estado` manda `causal_texto: null` cuando `causal_validada` es `false`, y desde el rediseño la insignia describe el documento, no la causal. Antes salía «✗ NO VALIDADA» en rojo | Tarjetas de `estado.html` | Abierto, sin pedido |
 | UX-29 | `dashboard.html`, la ficha del candidato y la tabla | **Las tarjetas están diseñadas para un número grande** («3», «5 años») y desde la cadena de validación reciben frases. «No válido — ‹motivo›» desborda, y el motivo lo escribe el validador **sin límite de largo**. La causal muestra un guion con la insignia debajo. El dato es correcto; el formato no. **Resuelto en `estado.html` el 13/08; sigue abierto en `dashboard.html`**, que tiene el mismo problema en la ficha del candidato y en la tabla | Fase C de la cadena de validación | Parcial: falta `dashboard.html` |
+| UX-34 | `crear-solicitud`, líneas 254, 294 y 337 del respaldo | Interpola `${trabajador.nombre}` sin escapar en el HTML de los correos **M-1, M-2 y M-3**. No es XSS —los clientes de correo no ejecutan scripts— pero sí inyección de HTML en el correo a contacto frío que `FUNCIONAL.md` §7 llama el más frágil del sistema | H-07 | Abierto, sin pedido |
+| UX-35 | Proceso, no código | **Un cambio hecho en el editor del panel de Supabase no deja rastro en el repositorio, y nada lo detecta solo.** El 13/08 producción tuvo durante un rato una versión de `crear-solicitud` que no existía en ninguna rama. El siguiente despliegue desde el repo la habría pisado en silencio. Lo único que lo evitó fue que el dueño avisara | Cambio manual de M-2 | Abierto, sin pedido |
 
-**Por qué N-1 no se arregló en H-07:** es una edge function, y el pedido de H-07 acotaba el
-alcance a `dashboard.html` y `admin.html`. Se deja para decisión del dueño.
+**Por qué UX-34 no se arregló en H-07:** es una edge function, y el pedido de H-07 acotaba el
+alcance a `dashboard.html` y `admin.html`. **Y por qué sigue sin arreglarse:** el dueño decidió el
+14/08 congelarlo hasta después del piloto. El motivo está arriba, con la serie: tocar
+`crear-solicitud` obliga a verificar los tres correos en bandeja, y con H-06 abierto no hay otra
+señal de que hayan salido.
 
 **UX-22 es funcional antes que técnico**, y **no** tiene que ver con limpiar datos de prueba —eso
 se hace por SQL—. El problema real: un reclutador que agrega un candidato por error no tiene forma
