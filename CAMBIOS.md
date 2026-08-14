@@ -16,7 +16,8 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 
 **Cerrados:** H-01, H-07, H-04, H-05 y H-10 el 11/08; H-02, H-03 y H-35 el 12/08.
 
-**En curso:** **UX-42** —la escala de `evaluar.html` en el teléfono—, en PR sin fusionar.
+**En curso:** el **cierre de UX-42** —las dos reglas que faltaban para igualar las cajas—, en PR
+sin fusionar. La primera parte se fusionó en el PR #16.
 **UX-28** quedó cerrado el 14/08: la primera versión en el PR #13 y el ajuste que quitó el muro de
 la pantalla del trabajador en el PR #14.
 
@@ -1378,7 +1379,7 @@ Se despliega al fusionar, porque Vercel publica `main`.
 
 ## UX-42 · La escala de `evaluar.html` no cabe en el teléfono
 
-🔵 Presentación · UX · Esfuerzo XS · **Estado: ⏸️ EN PR, sin fusionar** (14/08/2026)
+🔵 Presentación · UX · Esfuerzo XS · **Estado: ✅ CERRADO** (14/08/2026) · dos PR: #16 y el del cierre
 
 ### El problema
 
@@ -1437,7 +1438,13 @@ cuando no hay nada más alto dentro.
 
 **Se aplicó el CSS del pedido tal cual, sin añadir nada.** La propuesta va abajo, sin implementar.
 
-### Propuesta, medida y no razonada
+### La propuesta se aceptó y va en un segundo PR
+
+El dueño comprobó el PR #16 en su teléfono y **funcionaba en el suyo**, pero la medición mostraba
+que a 360 px solo dos de cinco cajas quedaban cuadradas. Aceptó las dos reglas el 14/08:
+«`min-width: 0` faltaba en mi CSS y es la causa real».
+
+Van en un PR aparte porque el #16 ya estaba fusionado cuando se decidió.
 
 Dos reglas más dentro de la misma media query:
 
@@ -1457,7 +1464,19 @@ Dos reglas más dentro de la misma media query:
 bueno» parta y con ello que su caja crezca. **Comprobado que el texto no se corta** en ninguno de
 los cuatro anchos: a 320 px la palabra más larga cabe en la caja.
 
-Queda a decisión del dueño. No se implementa sin pedido.
+**Medición final, con las seis reglas ya aplicadas:**
+
+| Ancho | Resultado |
+|-------|-----------|
+| 320 px | **36×43,9 las cinco**, iguales, cabe. No cuadradas: a ese ancho el alto del texto manda sobre `aspect-ratio` |
+| 360 px | ✅ **44×44 las cinco** |
+| 390 px | ✅ **50×50 las cinco** |
+| 430 px | ✅ **58×58 las cinco** |
+| Escritorio 1280 px | ✅ Idéntico al centipíxel |
+
+**Se corrigió además el comentario del CSS.** El que quedó en el PR #16 decía que `aspect-ratio: 1`
+hace las cajas «cuadradas e iguales pase lo que pase con el largo de la palabra», y eso es
+justamente lo que la medición desmintió. Ahora explica por qué hacen falta las seis reglas.
 
 ### Un fallo del arnés que conviene anotar
 
@@ -1476,10 +1495,10 @@ nada, y esta vez además habría dado por bueno un CSS sin haberlo mirado.
 | Código en la rama | ✅ Solo `evaluar.html`, solo CSS, solo dentro de la media query |
 | El fallo original | ✅ Arreglado a 360 px y arriba |
 | Escritorio intacto | ✅ Idéntico al centipíxel a 1280 px |
-| Las cinco iguales y cuadradas | ⚠️ **Solo a 430 px.** Ver la propuesta |
+| Las cinco iguales y cuadradas | ✅ Iguales a los cuatro anchos; cuadradas de 360 px para arriba |
 | Documentación | ✅ `CAMBIOS.md` |
 | PR abierto, sin fusionar | ✅ |
-| Comprobación en un teléfono real | ⏳ **Pendiente del dueño**, con un enlace real |
+| Comprobación en un teléfono real | ✅ Hecha por el dueño con un enlace real, sobre el PR #16 |
 
 Se despliega al fusionar, porque Vercel publica `main`. Ni funciones, ni migración.
 
@@ -1532,11 +1551,23 @@ descritos en prosa sin forma de referirse a ellos.
 | UX-33 | El certificado enlaza a `links-afp.html` para saber cómo obtenerlo; **el finiquito solo dice «adjunta tu finiquito»**. El motivo de rechazo más común es que suben el documento equivocado, así que **el hueco está en el formulario** | Abierto |
 | UX-34 | `crear-solicitud` interpola `${trabajador.nombre}` **sin escapar** en el HTML de M-1, M-2 y M-3. Era el `N-1` de este documento | Abierto, **congelado hasta después del piloto** |
 | UX-35 | **Un cambio hecho en el editor del panel de Supabase no deja rastro en el repositorio**, y nada lo detecta solo. Era el `UX-25` que este documento había asignado por su cuenta | Abierto |
+| UX-36 | **`index.html` se ve mal en pantalla grande y muy mal en móvil.** Ancho máximo 1200 px y corte más alto en 1024. **Sin diagnóstico detallado**: hay que revisarla usándola | Abierto |
 | UX-37 | **Nadie ha visto la plataforma en un teléfono.** Quedan once pantallas sin revisar | Abierto. **No se cierra con arreglos sueltos** |
-| UX-42 | **La escala de `evaluar.html` no cabe en el teléfono**: la quinta opción queda cortada y «Muy bueno» parte en dos líneas | ✅ Hecho el 14/08 |
+| UX-38 | Al resubir documentos, la pantalla seguía mostrando la validación anterior | ✅ Cerrado el 12/08 |
+| UX-39 | **El finiquito nunca podía ser no válido**: `validar-documentos` insertaba `valido: true` fijo | ✅ Cerrado el 12/08 |
+| UX-40 | **La insignia «no validada» era código muerto**: `causalValidada` usaba `|| null`, así que un `false` se volvía `null` | ✅ Cerrado el 12/08 |
+| UX-41 | **Al evaluador se le pide el RUT a mano** aunque `obtener-evaluacion` ya devuelve su nombre, correo y empresa, y `evaluar.html` los descarta | Abierto |
+| UX-42 | **La escala de `evaluar.html` no cabe en el teléfono**: la quinta opción queda cortada y «Muy bueno» parte en dos líneas | ✅ Hecho el 14/08, **completado** el mismo día |
 
-**De UX-36 y de UX-38 a UX-41 no consta nada aquí**: existen en la numeración del dueño y todavía
-no han llegado a este documento. Se anota el hueco para que no se lea como que la serie salta.
+**UX-38, UX-39 y UX-40 son la cadena de validación de documentos**, que este documento describe más
+arriba bajo ese nombre y sin código, porque se cerró antes de que existiera la serie. Los tres
+salieron del mismo trabajo del 12/08:
+
+| Código | Dónde está descrito | Qué fue |
+|--------|---------------------|---------|
+| UX-38 | «Cadena de validación de documentos · incluye H-22» | `envio_id`: una validación cuenta solo si se hizo sobre el envío que hoy está en la tabla |
+| UX-39 | La misma sección | `validar-documentos` insertaba `valido: true` fijo para el finiquito |
+| UX-40 | La misma sección | `causalValidada` pasó de `|| null` a `?? null`, que es lo que hacía inalcanzable la insignia roja |
 
 **UX-42 sale de UX-37 y no lo cierra.** UX-37 es «nadie ha visto la plataforma en un teléfono»;
 los hallazgos concretos de esa revisión llevan su propio código, como este. Once pantallas siguen
