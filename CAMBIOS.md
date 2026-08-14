@@ -16,8 +16,9 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 
 **Cerrados:** H-01, H-07, H-04, H-05 y H-10 el 11/08; H-02, H-03 y H-35 el 12/08.
 
-**En curso:** ninguno. **UX-28** quedó cerrado el 14/08: la primera versión en el PR #13 y el
-ajuste que quitó el muro de la pantalla del trabajador en el PR #14.
+**En curso:** **UX-42** —la escala de `evaluar.html` en el teléfono—, en PR sin fusionar.
+**UX-28** quedó cerrado el 14/08: la primera versión en el PR #13 y el ajuste que quitó el muro de
+la pantalla del trabajador en el PR #14.
 
 **Cerrados también:** UX-19 y UX-20 el 13/08 (PR #9). M-4 y M-5 el 13/08 (PR #10). M-1 el 13/08
 (PR #11). La cadena de validación de documentos, que incluye H-22, se cerró el 12/08.
@@ -1375,6 +1376,115 @@ Se despliega al fusionar, porque Vercel publica `main`.
 
 ---
 
+## UX-42 · La escala de `evaluar.html` no cabe en el teléfono
+
+🔵 Presentación · UX · Esfuerzo XS · **Estado: ⏸️ EN PR, sin fusionar** (14/08/2026)
+
+### El problema
+
+En un teléfono, las cinco opciones de la escala se salían del recuadro: la quinta quedaba cortada
+y «Muy bueno» partía en dos líneas, lo que la dejaba más alta que las otras cuatro y desalineada.
+La media query de 600 px no tocaba la escala.
+
+Es **la pantalla del evaluador, a la que se llega desde un correo**, así que muchos la abren en el
+móvil. Detectado usándola en un teléfono.
+
+### El cambio
+
+Cuatro reglas CSS al final de `@media (max-width: 600px)` en `evaluar.html`. **Solo CSS**: ni el
+HTML, ni el escritorio, ni las etiquetas, ni ninguna otra pantalla.
+
+```css
+.escala-opciones { gap: 6px; }
+.escala-opcion label { aspect-ratio: 1; justify-content: center; gap: 4px; padding: 2px; }
+.escala-numero { font-size: 16px; }
+.escala-texto { font-size: 9px; line-height: 1.1; }
+```
+
+### Verificación
+
+Medido con Chromium a cuatro anchos de teléfono, comparando `origin/main` contra la rama. Se
+mide la caja de cada una de las cinco opciones.
+
+| Ancho | Antes | Después |
+|-------|-------|---------|
+| 320 px | Se sale del recuadro · 63/76 px de alto | **Sigue saliéndose** |
+| 360 px | Se sale · anchos 60,6 / 45 / 53,9 / 38,9 / 37,8 | Cabe · anchos 51,5 / 41 / 45,5 / 41 / 41 |
+| 390 px | Cabe · «Muy bueno» a dos líneas, 76 px de alto | Cabe · 51,5 / 49,6 / 49,6 / 49,6 / 49,6 |
+| 430 px | Cabe · «Muy bueno» a dos líneas | **58×58 las cinco, iguales y cuadradas** |
+| Escritorio 1280 px | — | **Idéntico al centipíxel.** Las cajas no cambian |
+
+**El fallo original queda arreglado a 360 px y arriba**, que es donde estaba observado. Y el
+escritorio no se movió, que era la otra condición.
+
+### Lo que el pedido decía y no se cumple del todo
+
+El pedido afirmaba que con esas cuatro reglas «las cinco cajas quedan cuadradas e iguales». **Eso
+solo ocurre a 430 px.** Por debajo:
+
+| Ancho | Cajas iguales | Cuadradas | Cabe |
+|-------|:-------------:|:---------:|:----:|
+| 320 px | No | No | **No** |
+| 360 px | No | 2 de 5 | Sí |
+| 390 px | No | 4 de 5 | Sí |
+| 430 px | Sí | Sí | Sí |
+
+**Por qué.** `.escala-opcion` es `flex: 1`, que es `flex: 1 1 0%`, pero un elemento flex no encoge
+por debajo de su contenido mientras conserve `min-width: auto`. «Insuficiente» es la palabra más
+larga, así que su caja se queda ancha y **le roba espacio a las demás**. Y «Muy bueno» son dos
+palabras: parte en dos líneas, y el contenido más alto gana a `aspect-ratio`, que solo fija el alto
+cuando no hay nada más alto dentro.
+
+**Se aplicó el CSS del pedido tal cual, sin añadir nada.** La propuesta va abajo, sin implementar.
+
+### Propuesta, medida y no razonada
+
+Dos reglas más dentro de la misma media query:
+
+```css
+.escala-opcion { min-width: 0; }
+.escala-texto  { white-space: nowrap; }   /* añadido a la regla que ya existe */
+```
+
+| Ancho | Solo el pedido | Con las dos reglas |
+|-------|----------------|--------------------|
+| 320 px | ❌ Se sale | Cabe · **36×43,9 las cinco, iguales** (no cuadradas: el texto manda) |
+| 360 px | Desiguales, 2 de 5 cuadradas | ✅ **44×44 las cinco** |
+| 390 px | Desiguales, 4 de 5 cuadradas | ✅ **50×50 las cinco** |
+| 430 px | ✅ 58×58 | ✅ 58×58 |
+
+`min-width: 0` deja que el flex reparta a partes iguales; `white-space: nowrap` impide que «Muy
+bueno» parta y con ello que su caja crezca. **Comprobado que el texto no se corta** en ninguno de
+los cuatro anchos: a 320 px la palabra más larga cabe en la caja.
+
+Queda a decisión del dueño. No se implementa sin pedido.
+
+### Un fallo del arnés que conviene anotar
+
+La primera pasada midió **todo en cero y dio verde**. `#formWrapper` nace con `display:none` y lo
+destapa el JS al cargar la evaluación; el arnés mide sin JS de página, así que no había nada que
+medir y la comparación «0 igual a 0» pasó.
+
+Es la tercera vez que aparece el mismo patrón, y por eso el arnés ahora **aborta** si las cajas
+miden cero o si no hay exactamente cinco. Una comprobación que pasa sobre la nada no comprueba
+nada, y esta vez además habría dado por bueno un CSS sin haberlo mirado.
+
+### Criterio de cierre
+
+| Requisito | Estado |
+|-----------|--------|
+| Código en la rama | ✅ Solo `evaluar.html`, solo CSS, solo dentro de la media query |
+| El fallo original | ✅ Arreglado a 360 px y arriba |
+| Escritorio intacto | ✅ Idéntico al centipíxel a 1280 px |
+| Las cinco iguales y cuadradas | ⚠️ **Solo a 430 px.** Ver la propuesta |
+| Documentación | ✅ `CAMBIOS.md` |
+| PR abierto, sin fusionar | ✅ |
+| Comprobación en un teléfono real | ⏳ **Pendiente del dueño**, con un enlace real |
+
+Se despliega al fusionar, porque Vercel publica `main`. Ni funciones, ni migración.
+
+---
+
 ## Decisiones de producto tomadas durante el trabajo
 
 Decisiones que no son de un solo hallazgo y que afectan cómo se abordan los siguientes.
@@ -1422,6 +1532,15 @@ descritos en prosa sin forma de referirse a ellos.
 | UX-33 | El certificado enlaza a `links-afp.html` para saber cómo obtenerlo; **el finiquito solo dice «adjunta tu finiquito»**. El motivo de rechazo más común es que suben el documento equivocado, así que **el hueco está en el formulario** | Abierto |
 | UX-34 | `crear-solicitud` interpola `${trabajador.nombre}` **sin escapar** en el HTML de M-1, M-2 y M-3. Era el `N-1` de este documento | Abierto, **congelado hasta después del piloto** |
 | UX-35 | **Un cambio hecho en el editor del panel de Supabase no deja rastro en el repositorio**, y nada lo detecta solo. Era el `UX-25` que este documento había asignado por su cuenta | Abierto |
+| UX-37 | **Nadie ha visto la plataforma en un teléfono.** Quedan once pantallas sin revisar | Abierto. **No se cierra con arreglos sueltos** |
+| UX-42 | **La escala de `evaluar.html` no cabe en el teléfono**: la quinta opción queda cortada y «Muy bueno» parte en dos líneas | ✅ Hecho el 14/08 |
+
+**De UX-36 y de UX-38 a UX-41 no consta nada aquí**: existen en la numeración del dueño y todavía
+no han llegado a este documento. Se anota el hueco para que no se lea como que la serie salta.
+
+**UX-42 sale de UX-37 y no lo cierra.** UX-37 es «nadie ha visto la plataforma en un teléfono»;
+los hallazgos concretos de esa revisión llevan su propio código, como este. Once pantallas siguen
+sin mirar.
 
 **UX-33 y UX-28 son la misma historia por los dos extremos.** UX-28 quitó el rojo de la pantalla
 para que el trabajador no abandone al ver un rechazo; UX-33 ataca la causa de que lo haya. Si el

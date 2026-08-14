@@ -327,6 +327,22 @@
             .page-wrapper { padding: 32px 16px 64px; }
             .form-card-body { padding: 20px; }
             .form-row { grid-template-columns: 1fr; }
+
+            /* UX-42. En un teléfono las cinco opciones se salían del recuadro:
+               la quinta quedaba cortada y «Muy bueno» partía en dos líneas, lo
+               que la dejaba más alta que las otras cuatro y desalineada.
+               `aspect-ratio: 1` las hace cuadradas e iguales pase lo que pase
+               con el largo de la palabra. Es la pantalla del evaluador, a la
+               que se llega desde un correo, así que muchos la abren en móvil. */
+            .escala-opciones { gap: 6px; }
+            .escala-opcion label {
+                aspect-ratio: 1;
+                justify-content: center;
+                gap: 4px;
+                padding: 2px;
+            }
+            .escala-numero { font-size: 16px; }
+            .escala-texto { font-size: 9px; line-height: 1.1; }
         }
     </style>
 </head>
