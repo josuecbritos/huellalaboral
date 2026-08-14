@@ -247,22 +247,39 @@ durante meses. Antes de dar por bueno un reemplazo, `file <archivo>` dice qué e
 arnés `pedidos/maqueta-UX-19-UX-20.mjs` mide la caja del logo en los 12 HTML contra `origin/main`
 y avisa si se mueve.
 
-### Las tarjetas de `estado.html` (desde el 13/08)
+### Las tarjetas de `estado.html` · UX-28 (13/08, ajustado el 14/08)
 
-Tres tarjetas con **cuatro zonas de altura fija** —título 32 px, valor 58 px, insignia 22 px, y el
-motivo debajo sin altura fija—. Las alturas existen para que **las insignias queden alineadas entre
-las tres tarjetas** pase lo que pase con el valor.
+Tres tarjetas con **zonas de altura fija** —título 32 px, valor 58 px, insignia 22 px—, para que
+**las insignias queden alineadas entre las tres** pase lo que pase con el valor. Hay una cuarta
+zona que ya no recibe contenido: llevaba el motivo del rechazo y se conserva vacía para no alterar
+el alto respecto del diseño de referencia.
 
-La regla que lo ordena todo: **el valor grande se reserva para el dato y el estado va siempre en la
+La regla que lo ordena todo: **el valor grande se reserva para el dato y el estado va en la
 insignia.** Antes, «Pendiente de validación» y «No válido — ‹motivo›» entraban en el valor, en
 24 px y negrita, y desbordaban.
 
+**Solo hay dos insignias, y las dos son neutras o positivas.** Es el ajuste del 14/08:
+
 | Estado | Insignia | Valor |
 |--------|----------|-------|
-| `sin_documento` | `SIN DOCUMENTO`, gris | Guion gris `#C3CBD6`, 24 px |
+| `sin_documento` | **Ninguna** | Guion gris `#C3CBD6`, 24 px |
+| `no_valido` | **Ninguna** | Igual |
 | `pendiente_validacion` | `PENDIENTE DE VALIDACIÓN`, ámbar | Igual |
-| `no_valido` | `✗ NO VÁLIDO`, rojo | Igual, y el motivo en 11 px bajo la insignia |
 | `validado` | `✓ VALIDADO`, verde | El dato |
+
+**Quien explica qué hacer es el subtítulo del resumen, que es dinámico** y enlaza a
+`trabajador.html`: texto base, uno para «falta algún documento» y otro para «alguno no válido»,
+y **si se dan los dos manda el de no válido**. Sustituyó a un aviso ámbar con botón que ocupaba
+mucho más y decía lo mismo.
+
+**Por qué se quitó el rojo.** Quien tiene que volver a subir un documento abandona **tres veces
+más** que quien pasa a la primera: es el punto de mayor fuga del recorrido. Tres insignias rojas,
+un aviso ámbar y el motivo escrito por el validador hacían un muro justo ahí. El objetivo de esta
+pantalla es **no perder trabajadores**, y eso decide qué se muestra.
+
+**El motivo del rechazo ya no se muestra.** `cert_razon_invalido` no se lee en ningún sitio de
+`estado.html`. Coste asumido: el trabajador no sabe **por qué** le rechazaron un documento, solo
+que no cumplió los requisitos.
 
 Tres cosas que no son obvias:
 
@@ -273,15 +290,14 @@ Tres cosas que no son obvias:
   con `formatearCausal`, pero **solo si hay causal**: esa función devuelve `'—'` para los valores
   vacíos, y ese guion es una cadena con contenido que `valorTexto` tomaría por dato bueno y
   pintaría en 15 px. El guion de "no hay dato" lo pone `valorTexto`, en gris y a 24 px.
-- **El aviso sobre las tarjetas** solo aparece si algún documento es `no_valido`, y lleva un botón
-  a `trabajador.html`. Los estados negativos se muestran a propósito: `estado.html` es
-  **seguimiento**, y el trabajador los necesita para actuar.
+- **`escapeHtml` sigue haciendo falta aunque el motivo ya no se pinte.** La causal y los valores se
+  inyectan con `innerHTML`, y la causal sale de la base. Es el único texto de usuario que queda
+  llegando ahí, así que es donde tiene que apuntar cualquier prueba de escapado.
 
-**`causal_validada` ya no se usa en esta pantalla.** Lo que se muestra es el estado del documento,
-no el de la causal. Consecuencia con nombre: un finiquito `validado` cuya causal **no** coincide
-llega con `causal_texto: null` desde `obtener-estado`, y la tarjeta queda como «✓ VALIDADO» sobre
-un guion, sin explicar por qué no hay causal. Antes salía una insignia roja «✗ NO VALIDADA».
-Anotado como **UX-26**.
+**`causal_validada` no se usa en esta pantalla.** Lo que se muestra es el estado del documento, no
+el de la causal. Consecuencia: un finiquito `validado` cuya causal **no** coincide llega con
+`causal_texto: null` desde `obtener-estado`, y la tarjeta queda como «✓ VALIDADO» sobre un guion
+sin explicar por qué no hay causal. Anotado como **UX-25**.
 
 ## 6. Modelo de datos
 
