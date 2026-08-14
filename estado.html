@@ -160,26 +160,27 @@
                 </div>
             </div>
 
+            <!-- El subtítulo es la única vía por la que esta pantalla pide al
+                 trabajador que vuelva al formulario. El aviso ámbar que había
+                 aquí se eliminó: tres insignias rojas, un recuadro de alerta y el
+                 motivo escrito por el validador hacían un muro, y el punto de
+                 mayor fuga del recorrido es justo este. -->
             <div style="margin-bottom:16px;">
                 <div style="font-size:18px; font-weight:700; color:var(--texto);">Resumen trayectoria laboral</div>
-                <div style="font-size:12px; color:var(--subtitulo); margin-top:4px;">Elaborado con los antecedentes disponibles en Huella Laboral</div>
+                <div style="font-size:12px; color:var(--subtitulo); margin-top:4px; line-height:1.5;" id="resumenSubtitulo">Elaborado con los antecedentes disponibles en Huella Laboral</div>
             </div>
 
-            <!-- Solo si algún documento quedó como no válido. El trabajador necesita
-                 saberlo para actuar: esta pantalla es seguimiento, no vitrina. -->
-            <div id="avisoNoValido" style="display:none; background:rgba(217,119,6,0.08); border:1px solid rgba(217,119,6,0.25); border-radius:4px; padding:14px 18px; margin-bottom:20px; font-size:13px; color:var(--texto); line-height:1.6;">
-                <strong>Revisamos tus documentos y algunos no cumplen con los requisitos de validación.</strong> Puedes volver a subirlos desde el formulario y los revisaremos de nuevo.
-                <div style="margin-top:10px;"><a href="trabajador.html" style="display:inline-block; background:var(--azul); color:#fff; padding:9px 18px; text-decoration:none; border-radius:4px; font-size:13px; font-weight:600;">Volver a subir mis documentos</a></div>
-            </div>
-
-            <!-- Las cuatro zonas llevan altura fija para que las insignias queden
-                 alineadas entre las tres tarjetas pase lo que pase con el valor. -->
+            <!-- Las zonas llevan altura fija para que las insignias queden
+                 alineadas entre las tres tarjetas pase lo que pase con el valor.
+                 La cuarta zona ya no recibe contenido —el motivo del rechazo dejó
+                 de mostrarse— pero se conserva para no alterar el alto de la
+                 tarjeta respecto del diseño de referencia. -->
             <div class="grid-datos" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
                 <div style="background:var(--fondo); border:1px solid var(--borde); border-radius:4px; padding:20px 16px; text-align:center;">
                     <div style="font-size:12px; font-weight:500; color:var(--subtitulo); min-height:32px;">Empleos formales en los últimos 5 años</div>
                     <div style="min-height:58px; display:flex; align-items:center; justify-content:center;" id="certEmpleos"></div>
                     <div style="min-height:22px;" id="certEmpleosBadge"></div>
-                    <div style="font-size:11px; color:var(--subtitulo); line-height:1.4; margin-top:6px;" id="certEmpleosMotivo"></div>
+                    <div style="font-size:11px; color:var(--subtitulo); line-height:1.4; margin-top:6px;"></div>
                 </div>
                 <div style="background:var(--fondo); border:1px solid var(--borde); border-radius:4px; padding:20px 16px; text-align:center;">
                     <div style="font-size:12px; font-weight:500; color:var(--subtitulo); min-height:32px;">Mayor permanencia en un empleo</div>
@@ -234,10 +235,14 @@
         // insignia, nunca en el valor: antes «Pendiente de validación» y
         // «No válido — <motivo>» entraban en 24 px y negrita, desbordaban la
         // tarjeta y dominaban la pantalla.
+        // Solo dos insignias, y las dos son neutras o positivas. `no_valido` y
+        // `sin_documento` no llevan ninguna: la tarjeta queda con el guion gris y
+        // nada más, y quien explica qué hacer es el subtítulo.
+        //
+        // El motivo del rechazo dejó de mostrarse. Lo escribe el validador en un
+        // campo libre y aparecía tal cual en la pantalla del trabajador.
         const ETIQUETA_DOC = {
-            sin_documento:        { txt: 'SIN DOCUMENTO',           color: '#5A6C7F', fondo: 'rgba(90,108,127,0.10)' },
             pendiente_validacion: { txt: 'PENDIENTE DE VALIDACIÓN', color: '#92400e', fondo: 'rgba(217,119,6,0.12)' },
-            no_valido:            { txt: '✗ NO VÁLIDO',             color: '#dc2626', fondo: 'rgba(220,38,38,0.12)' },
             validado:             { txt: '✓ VALIDADO',              color: '#166534', fondo: 'rgba(47,191,113,0.12)' },
         };
 
@@ -264,13 +269,9 @@
             return '<span style="font-size:24px; font-weight:700; color:#C3CBD6;">—</span>';
         }
 
-        function motivo(estado, razon) {
-            if (estado !== 'no_valido' || !razon) return '';
-            return escapeHtml(razon);
-        }
-
-        // El motivo lo escribe el validador en un campo libre y desde aquí se
-        // inyecta con innerHTML. Mismo criterio que `dashboard.html` (H-07).
+        // Sigue haciendo falta aunque el motivo del rechazo ya no se muestre: la
+        // causal y los valores se inyectan con `innerHTML`. Mismo criterio que
+        // `dashboard.html` (H-07).
         function escapeHtml(s) {
             return String(s).replace(/[&<>"']/g, c =>
                 ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -278,6 +279,22 @@
 
         function formatearCausal(valor) {
             return CAUSAL_LABELS[valor] || valor || '—';
+        }
+
+        // El subtítulo es lo único que le dice al trabajador que puede volver a
+        // subir. Sustituye al aviso ámbar, que ocupaba mucho más y decía lo mismo.
+        //
+        // Si falta un documento Y otro es no válido, manda el de no válido: el
+        // segundo texto ya cubre el caso de volver al formulario.
+        const SUBT_BASE = 'Elaborado con los antecedentes disponibles en Huella Laboral';
+        const LINK = '<a href="trabajador.html" style="color:var(--azul); font-weight:600;">formulario</a>';
+        const SUBT_SINDOCS  = SUBT_BASE + '. Si no subiste documentos, aún puedes hacerlo desde el ' + LINK + '.';
+        const SUBT_NOVALIDO = SUBT_BASE + '. Si subiste tus documentos y no aparecen validados, es porque no cumplieron con los requisitos. Puedes volver a subirlos desde el ' + LINK + '.';
+
+        function subtitulo(certEstado, finiqEstado) {
+            const hayNoValido = certEstado === 'no_valido' || finiqEstado === 'no_valido';
+            const faltaAlguno = certEstado === 'sin_documento' || finiqEstado === 'sin_documento';
+            return hayNoValido ? SUBT_NOVALIDO : (faltaAlguno ? SUBT_SINDOCS : SUBT_BASE);
         }
 
         async function init() {
@@ -308,11 +325,12 @@
                 // tercera, el del FINIQUITO. Pueden diferir: los documentos no son
                 // obligatorios en `trabajador.html`, así que se puede haber subido
                 // uno solo, o ninguno.
+                document.getElementById('resumenSubtitulo').innerHTML =
+                    subtitulo(certEstado, finiqEstado);
+
                 document.getElementById('certEmpleos').innerHTML =
                     valorNumero(certEstado, doc.cert_empleos);
                 document.getElementById('certEmpleosBadge').innerHTML = insignia(certEstado);
-                document.getElementById('certEmpleosMotivo').innerHTML =
-                    motivo(certEstado, doc.cert_razon_invalido);
 
                 document.getElementById('certPermanencia').innerHTML =
                     valorNumero(certEstado, doc.cert_permanencia, ' años');
@@ -325,10 +343,6 @@
                 document.getElementById('causalTexto').innerHTML =
                     valorTexto(finiqEstado, doc.causal_texto ? formatearCausal(doc.causal_texto) : null);
                 document.getElementById('causalBadge').innerHTML = insignia(finiqEstado);
-
-                if (certEstado === 'no_valido' || finiqEstado === 'no_valido') {
-                    document.getElementById('avisoNoValido').style.display = 'block';
-                }
 
                 const totalEvals = (data.evaluaciones?.lista || []).filter(e => !e.rechazo).length;
                 document.getElementById('evalCount').textContent = totalEvals;

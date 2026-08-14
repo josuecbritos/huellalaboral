@@ -48,10 +48,15 @@ for (const [nombre, documentos] of CASOS) {
         const s = t(id).querySelector('span'); return s ? getComputedStyle(s).fontSize : '?' }),
       badges: ['certEmpleosBadge','certPermanenciaBadge','causalBadge'].map(id => t(id).innerText.trim() || '(vacía)'),
       insigniasY: insignias.map(i => i.y),
-      motivo: t('certEmpleosMotivo').innerText.trim(),
-      aviso: getComputedStyle(t('avisoNoValido')).display !== 'none',
+      subtitulo: t('resumenSubtitulo').innerText.trim(),
+      enlaceSubtitulo: t('resumenSubtitulo').querySelector('a')?.getAttribute('href') || null,
+      // El aviso ambar se elimino: si reaparece, es un error.
+      aviso: !!document.getElementById('avisoNoValido'),
       // Que el motivo hostil no haya creado elementos
-      imgs: document.querySelectorAll('.grid-datos img').length,
+      imgs: document.querySelectorAll('.grid-datos img, #resumenSubtitulo img').length,
+      // Ninguna insignia puede ser roja ni gris de 'sin documento'.
+      insigniasProhibidas: [...document.querySelectorAll('#certEmpleosBadge span, #certPermanenciaBadge span, #causalBadge span')]
+        .map(x => x.textContent.trim()).filter(x => /NO VÁLIDO|SIN DOCUMENTO/.test(x)),
       // Que no se desborde
       desborda: tarjetas.some(d => d.scrollWidth > d.clientWidth + 1),
       cabecera: t('nombreTrabajador').innerText.trim() + ' · ' + t('metaTrabajador').innerText.trim(),
@@ -61,16 +66,19 @@ for (const [nombre, documentos] of CASOS) {
 
   const alineadas = new Set(r.insigniasY).size === 1
   const ok = alineadas && !r.desborda && !r.imgs && !alertas.length && !errores.length
+    && !r.aviso && !r.insigniasProhibidas.length
   if (!ok) malos++
   console.log(`\n${'═'.repeat(94)}\n${nombre}`)
   console.log(`  valores  : ${r.valores.map((v,i)=>`${JSON.stringify(v)} (${r.tamanos[i]})`).join('  |  ')}`)
   console.log(`  insignias: ${r.badges.join('  |  ')}`)
   console.log(`  alineadas: ${alineadas ? '✅ sí, y=' + r.insigniasY[0] : '❌ NO — ' + r.insigniasY.join(',')}   ·   desborda: ${r.desborda ? '❌ SÍ' : '✅ no'}`)
-  if (r.motivo) console.log(`  motivo   : ${JSON.stringify(r.motivo)}`)
-  console.log(`  aviso    : ${r.aviso ? '⚠️  visible' : 'oculto'}   ·   <img> creados: ${r.imgs}   ·   alertas: ${alertas.length}   ·   errores JS: ${errores.length}`)
+  console.log(`  subtitulo: ${JSON.stringify(r.subtitulo)}`)
+  console.log(`  enlace   : ${r.enlaceSubtitulo ?? '(ninguno)'}`)
+  console.log(`  aviso ámbar: ${r.aviso ? '❌ EXISTE' : '✅ eliminado'}   ·   <img> creados: ${r.imgs}   ·   alertas: ${alertas.length}   ·   errores JS: ${errores.length}`)
+  if (r.insigniasProhibidas.length) console.log(`  ❌ insignias prohibidas: ${r.insigniasProhibidas.join(', ')}`)
   console.log(`  no tocado: ${r.cabecera}  ·  ${r.evals}`)
   if (errores.length) console.log('  ❌', errores.join(' | '))
   await ctx.close()
 }
 await nav.close()
-console.log(`\n${malos === 0 ? '✅ 7/7 · insignias alineadas, sin desbordes, sin elementos inyectados' : `❌ ${malos}/7 con problemas`}`)
+console.log(`\n${malos === 0 ? '✅ 7/7 · solo dos insignias, sin aviso ámbar, sin motivo, sin elementos inyectados' : `❌ ${malos}/7 con problemas`}`)

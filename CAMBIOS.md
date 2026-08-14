@@ -16,7 +16,8 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 
 **Cerrados:** H-01, H-07, H-04, H-05 y H-10 el 11/08; H-02, H-03 y H-35 el 12/08.
 
-**En curso:** las **tarjetas de `estado.html`** —la mitad de N-3—, en PR sin fusionar.
+**En curso:** el **ajuste de UX-28** —quitar el muro de la pantalla del trabajador—, en PR sin
+fusionar. La primera versión de UX-28 se fusionó el 13/08 en el PR #13.
 
 **Cerrados también:** UX-19 y UX-20 el 13/08 (PR #9). M-4 y M-5 el 13/08 (PR #10). M-1 el 13/08
 (PR #11). La cadena de validación de documentos, que incluye H-22, se cerró el 12/08.
@@ -1172,9 +1173,12 @@ pisado el cambio del dueño. El orden fue leer producción primero, escribir el 
 
 ---
 
-## Tarjetas de `estado.html` · el valor grande deja de llevar el estado
+## UX-28 · Las tarjetas de `estado.html` se descuadran con texto
 
-🔵 Presentación · UX · Esfuerzo S · **Estado: ⏸️ EN PR, sin fusionar** (13/08/2026)
+🔵 Presentación · UX · Esfuerzo S · **Estado: ✅ HECHO** (13/08/2026, PR #13) · **ajustado el 14/08**, ver abajo
+
+**Este trabajo se hizo sin código y se le asignó `UX-28` a posteriori**, el 14/08. Lo que sigue es
+la primera versión; el ajuste que la corrige está en su propia sección, más abajo.
 
 ### El problema
 
@@ -1273,6 +1277,104 @@ verde. **La segunda es más barata** y reutiliza la zona de motivo que ya existe
 
 ---
 
+## UX-28 · Ajuste · quitar el muro de la pantalla del trabajador
+
+🔵 Presentación · UX · Esfuerzo XS · **Estado: ⏸️ EN PR, sin fusionar** (14/08/2026)
+
+**No es un hallazgo nuevo: es un ajuste de UX-28**, cuya primera versión está fusionada en el
+PR #13 y descrita más arriba.
+
+### Por qué se ajusta lo que se acababa de hacer
+
+La primera versión arregló el desbordamiento y ordenó las tarjetas, que era el problema planteado.
+Pero **al mirar la pantalla completa quedaba un muro**: tres insignias rojas con cruz, un aviso
+ámbar con borde, y el motivo del rechazo escrito por el validador en un campo libre. Cada pieza
+era correcta por separado; juntas, la pantalla gritaba.
+
+El dato que cambia el criterio: **quien tiene que volver a subir un documento abandona tres veces
+más** que quien pasa a la primera. Es el punto de mayor fuga del recorrido, y el diseño lo estaba
+amplificando. Es además la pantalla que verán los candidatos del piloto.
+
+**El objetivo pasa de "que se entienda el estado" a "no perder trabajadores ahí".** No es un
+matiz: es lo que decide qué se muestra y qué no.
+
+### Los cinco cambios
+
+| # | Qué | Antes | Ahora |
+|---|-----|-------|-------|
+| 1 | Insignias | Cuatro | **Dos**: `PENDIENTE DE VALIDACIÓN` y `✓ VALIDADO` |
+| 2 | `no_valido` y `sin_documento` | Insignia roja y gris | **Sin insignia.** El guion gris y nada más |
+| 3 | Aviso ámbar sobre las tarjetas | Aparecía si algo era no válido | **Eliminado por completo** |
+| 4 | Motivo del rechazo | Bajo la insignia, en 11 px | **No se pinta.** `cert_razon_invalido` no se lee |
+| 5 | Subtítulo del resumen | Fijo | **Dinámico**, con enlace a `trabajador.html` |
+
+El subtítulo es lo único que queda pidiendo al trabajador que vuelva al formulario, y hace el
+trabajo que hacía el aviso ocupando una fracción del espacio:
+
+| Cuándo | Texto |
+|--------|-------|
+| Normal | «Elaborado con los antecedentes disponibles en Huella Laboral» |
+| Falta algún documento | …«Si no subiste documentos, aún puedes hacerlo desde el **formulario**.» |
+| Alguno no válido | …«Si subiste tus documentos y no aparecen validados, es porque no cumplieron con los requisitos. Puedes volver a subirlos desde el **formulario**.» |
+
+**Si se dan los dos casos a la vez manda el de no válido**, porque su texto ya cubre volver al
+formulario.
+
+### Lo que no cambia
+
+Alturas fijas por zona, insignias alineadas entre las tres tarjetas, contenido centrado, la causal
+en 15 px sin negrita frente a los 24 en negrita de los números, y el guion gris `#C3CBD6`.
+
+**`escapeHtml` se queda, y no es simetría decorativa.** Aunque el motivo ya no se muestre, la
+causal y los valores siguen inyectándose con `innerHTML`.
+
+### Verificación
+
+Los siete casos, otra vez sobre el `estado.html` real: Chromium carga el archivo y se intercepta
+la llamada a `obtener-estado`.
+
+| Qué se comprobó | Resultado |
+|-----------------|-----------|
+| Los siete casos | ✅ 7/7 |
+| **Ninguna insignia roja ni de «sin documento»** | ✅ El arnés falla si aparece alguna |
+| **El aviso ámbar ya no existe en el DOM** | ✅ No es que esté oculto: no está |
+| El motivo no se pinta | ✅ `cert_razon_invalido` no aparece en el archivo |
+| Subtítulo por caso | ✅ Los tres textos, y el enlace a `trabajador.html` |
+| **Precedencia con los dos casos a la vez** | ✅ Manda «no válido», en los dos órdenes |
+| Insignias alineadas · sin desbordes | ✅ 7/7 |
+| El resto de la pantalla | ✅ Cabecera, contador y lista intactos |
+| **Control: ¿sabe fallar?** | ✅ Con `escapeHtml` quitado de la causal: **1 `<img>`, 1 alerta**, y el arnés da ❌ |
+
+El control cambió de sitio respecto de la primera versión, y por una razón: antes el payload
+entraba por el motivo, que ya no se pinta. **Ahora entra por la causal**, que sigue siendo el
+único texto de usuario que llega a `innerHTML`. Un control apuntando al motivo habría dado verde
+sin comprobar nada.
+
+### Lo que este ajuste se lleva por delante, y hay que decirlo
+
+**El trabajador deja de saber por qué le rechazaron un documento.** El motivo era la única vía por
+la que ese texto le llegaba, y ahora solo se le dice que «no cumplieron con los requisitos». Está
+aceptado a cambio de reducir el abandono, pero tiene un coste real: quien vuelva a subir el mismo
+documento mal escaneado repetirá el error sin saberlo.
+
+No es un pendiente que abrir por cuenta propia —es la decisión del pedido— pero conviene que
+conste, porque si el abandono no baja, esta es la primera pieza a revisar.
+
+### Criterio de cierre
+
+| Requisito | Estado |
+|-----------|--------|
+| Código en la rama | ✅ Solo `estado.html` |
+| Los siete casos | ✅ Sobre el archivo real, con control que falla |
+| No regresión | ✅ Cabecera, contador, lista, carga y error sin tocar |
+| Documentación | ✅ `CAMBIOS.md`; `TECNICO.md` §5 al día |
+| PR abierto, sin fusionar | ✅ |
+| Comprobación en producción | ⏳ **Pendiente del dueño**, tras fusionar |
+
+Se despliega al fusionar, porque Vercel publica `main`.
+
+---
+
 ## Decisiones de producto tomadas durante el trabajo
 
 Decisiones que no son de un solo hallazgo y que afectan cómo se abordan los siguientes.
@@ -1298,13 +1400,54 @@ Queda anotado para revisión futura, no como pendiente abierto.
 No estaban en la auditoría. Se anotan al encontrarlos para que no dependan de que alguien
 recuerde haberlos visto.
 
+### La serie `UX-nn`, y una renumeración que hubo que hacer
+
+**Todo hallazgo lleva código desde ahora, sin excepción.** Lo detectado usando el producto va en la
+serie `UX-nn` **desde UX-23**, sea de interfaz o técnico, y **no se abren series paralelas**.
+Regla del dueño del 14/08: sin código no hay trazabilidad, y los trabajos del 13/08 quedaron
+descritos en prosa sin forma de referirse a ellos.
+
+| ID | Qué | Estado |
+|----|-----|--------|
+| UX-23 | El detalle del candidato no abre desde dentro de un proceso | Abierto |
+| UX-24 | `validaciones_documentos.observaciones` y `validador_id` existen y no se usan | Abierto |
+| UX-25 | Separar «finiquito inválido» de «causal no coincide» | Abierto, con detalle abajo |
+| UX-26 | Se acumulan archivos huérfanos en Storage | Abierto |
+| UX-27 | `trabajadores.estado` dice «documentos_validados» cuando significa «revisados» | Abierto |
+| **UX-28** | **Las tarjetas de `estado.html` se descuadran con texto** | ✅ Hecho el 13/08, **ajustado el 14/08** |
+| UX-29 | La ficha del candidato y la tabla del panel: lo mismo en `dashboard.html` | Abierto, con detalle abajo |
+| UX-30 | Si el trabajador resube un solo documento, el validador tiene que marcar los dos | Abierto |
+| UX-31 | No hay avisos al trabajador cuando avanza su solicitud | Abierto |
+| UX-32 | `estado.html` no tiene objetivo declarado: seguimiento o carta de presentación | Abierto |
+| UX-33 | El finiquito no tiene ayuda para obtenerlo; el certificado sí enlaza a `links-afp.html` | Abierto |
+
+De UX-23, UX-24, UX-26, UX-27 y UX-30 a UX-33 **solo consta el título**: los asignó el dueño y aquí
+no hay más detalle que ese. No se rellena lo que no se sabe.
+
+**Hubo que renumerar, y conviene decir por qué.** Antes de que existiera esta tabla se registraron
+dos hallazgos con códigos `UX-25` y `UX-26` que **no son** los de la lista del dueño:
+
+| Lo que decía aquí | Qué era | Qué pasa ahora |
+|-------------------|---------|----------------|
+| `UX-26` | Un finiquito válido cuya causal no coincide se ve como «✓ VALIDADO» | **Es el UX-25 del dueño** —«separar finiquito inválido de causal no coincide»—. Renumerado |
+| `UX-25` | Un cambio hecho en el editor del panel no deja rastro en el repositorio | **No está en la lista.** Queda **sin código** hasta que el dueño le asigne uno |
+| `N-3` | Las tarjetas se descuadran con texto | Se reparte: **UX-28** en `estado.html` (hecho) y **UX-29** en `dashboard.html` (abierto) |
+| `N-1` | `crear-solicitud` interpola `${trabajador.nombre}` sin escapar en M-1, M-2 y M-3 | **No está en la lista.** Queda **sin código** |
+
+**Dos hallazgos reales se quedan sin número y eso es un problema de trazabilidad**, justo lo que la
+regla viene a evitar. Se proponen `UX-34` para el del panel y `UX-35` para el escapado de los
+correos, **pero no se asignan aquí**: la serie la lleva el dueño y abrirla por cuenta propia sería
+la misma serie paralela que la regla prohíbe.
+
+La serie `N-nn` queda cerrada. No se usa más.
+
 | # | Dónde | Qué pasa | Detectado en | Estado |
 |---|-------|----------|--------------|--------|
-| N-1 | `crear-solicitud`, líneas 254, 294 y 337 del respaldo | Interpola `${trabajador.nombre}` sin escapar en el HTML de los correos **M-1, M-2 y M-3**. No es XSS —los clientes de correo no ejecutan scripts— pero sí inyección de HTML en el correo a contacto frío que `FUNCIONAL.md` §7 llama el más frágil del sistema | H-07 | Abierto, sin pedido |
+| **sin código** | `crear-solicitud`, líneas 254, 294 y 337 del respaldo | Interpola `${trabajador.nombre}` sin escapar en el HTML de los correos **M-1, M-2 y M-3**. No es XSS —los clientes de correo no ejecutan scripts— pero sí inyección de HTML en el correo a contacto frío que `FUNCIONAL.md` §7 llama el más frágil del sistema | H-07 | Abierto, sin pedido |
 | UX-22 | Producto, no una función concreta | **No existe forma de quitar un candidato de un proceso.** Ni por interfaz ni por edge function: `gestionar-proceso` solo borra filas de `candidatos_proceso` como parte de `eliminar` el proceso entero. Se anotó primero como «N-2» | H-10 | Abierto, sin pedido |
-| UX-25 | Proceso, no código | **Un cambio hecho en el editor del panel de Supabase no deja rastro en el repositorio, y nada lo detecta solo.** El 13/08 producción tuvo durante un rato una versión de `crear-solicitud` que no existía en ninguna rama. El siguiente despliegue desde el repo la habría pisado en silencio. Lo único que lo evitó fue que el dueño avisara | Cambio manual de M-2 | Abierto, sin pedido |
-| UX-26 | `estado.html`, tercera tarjeta | **Un finiquito válido cuya causal no coincide se ve como «✓ VALIDADO» sobre un guion, sin explicación.** `obtener-estado` manda `causal_texto: null` cuando `causal_validada` es `false`, y desde el rediseño la insignia describe el documento, no la causal. Antes salía «✗ NO VALIDADA» en rojo | Tarjetas de `estado.html` | Abierto, sin pedido |
-| N-3 | `dashboard.html`, las tres tarjetas de la ficha | **Las tarjetas están diseñadas para un número grande** («3», «5 años») y desde la cadena de validación reciben frases. «No válido — ‹motivo›» desborda, y el motivo lo escribe el validador **sin límite de largo**. La causal muestra un guion con la insignia debajo. El dato es correcto; el formato no. **Resuelto en `estado.html` el 13/08; sigue abierto en `dashboard.html`**, que tiene el mismo problema en la ficha del candidato y en la tabla | Fase C de la cadena de validación | Parcial: falta `dashboard.html` |
+| **sin código** | Proceso, no código | **Un cambio hecho en el editor del panel de Supabase no deja rastro en el repositorio, y nada lo detecta solo.** El 13/08 producción tuvo durante un rato una versión de `crear-solicitud` que no existía en ninguna rama. El siguiente despliegue desde el repo la habría pisado en silencio. Lo único que lo evitó fue que el dueño avisara | Cambio manual de M-2 | Abierto, sin pedido |
+| UX-25 | `estado.html`, tercera tarjeta, y `validar-documentos` | **Un finiquito válido cuya causal no coincide se ve como «✓ VALIDADO» sobre un guion, sin explicación.** `obtener-estado` manda `causal_texto: null` cuando `causal_validada` es `false`, y desde el rediseño la insignia describe el documento, no la causal. Antes salía «✗ NO VALIDADA» en rojo | Tarjetas de `estado.html` | Abierto, sin pedido |
+| UX-29 | `dashboard.html`, la ficha del candidato y la tabla | **Las tarjetas están diseñadas para un número grande** («3», «5 años») y desde la cadena de validación reciben frases. «No válido — ‹motivo›» desborda, y el motivo lo escribe el validador **sin límite de largo**. La causal muestra un guion con la insignia debajo. El dato es correcto; el formato no. **Resuelto en `estado.html` el 13/08; sigue abierto en `dashboard.html`**, que tiene el mismo problema en la ficha del candidato y en la tabla | Fase C de la cadena de validación | Parcial: falta `dashboard.html` |
 
 **Por qué N-1 no se arregló en H-07:** es una edge function, y el pedido de H-07 acotaba el
 alcance a `dashboard.html` y `admin.html`. Se deja para decisión del dueño.
