@@ -18,8 +18,10 @@ fs.writeFileSync('/tmp/esc/despues.html', destapar(fs.readFileSync(REPO + '/eval
 fs.copyFileSync(REPO + '/logo-huella-laboral.png', '/tmp/esc/logo-huella-laboral.png')
 
 const VISTAS = [
+  ['móvil 320', { width: 320, height: 700 }],
   ['móvil 360', { width: 360, height: 780 }],
   ['móvil 390', { width: 390, height: 844 }],
+  ['móvil 430', { width: 430, height: 932 }],
   ['escritorio 1280', { width: 1280, height: 900 }],
 ]
 
@@ -74,9 +76,13 @@ for (const [nombre, viewport] of VISTAS) {
   const A = fmt(a), D = fmt(d)
 
   // En escritorio no debe cambiar NADA. En movil, las cinco iguales y cuadradas.
+  // A 320 px el alto del texto manda sobre `aspect-ratio` y las cajas quedan
+  // iguales pero no cuadradas. Se exige cuadradas de 360 para arriba.
+  const exigeCuadradas = !esc && viewport.width >= 360
   const ok = esc
     ? JSON.stringify(a.cajas) === JSON.stringify(d.cajas)
-    : (D.alturas.length === 1 && D.anchos.length === 1 && !D.seSale && !D.multilinea.length && D.cuadradas)
+    : (D.alturas.length === 1 && D.anchos.length === 1 && !D.seSale && !D.multilinea.length
+       && (!exigeCuadradas || D.cuadradas))
   if (!ok) malos++
 
   console.log(`\n${'═'.repeat(92)}\n${nombre}`)

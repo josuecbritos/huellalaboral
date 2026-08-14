@@ -330,11 +330,28 @@
 
             /* UX-42. En un teléfono las cinco opciones se salían del recuadro:
                la quinta quedaba cortada y «Muy bueno» partía en dos líneas, lo
-               que la dejaba más alta que las otras cuatro y desalineada.
-               `aspect-ratio: 1` las hace cuadradas e iguales pase lo que pase
-               con el largo de la palabra. Es la pantalla del evaluador, a la
-               que se llega desde un correo, así que muchos la abren en móvil. */
+               que la dejaba más alta que las otras cuatro y desalineada. Es la
+               pantalla del evaluador, a la que se llega desde un correo, así
+               que muchos la abren en móvil.
+
+               Hacen falta las cuatro reglas, y las dos de abajo no son adorno:
+
+               `min-width: 0` — `.escala-opcion` es `flex: 1`, o sea
+               `flex: 1 1 0%`, pero un elemento flex NO encoge por debajo de su
+               contenido mientras conserve `min-width: auto`. Sin esto,
+               «Insuficiente» —la palabra más larga— se queda ancha y le roba
+               espacio a las otras cuatro, que quedan desiguales.
+
+               `white-space: nowrap` — «Muy bueno» son dos palabras y parte en
+               dos líneas. El contenido más alto le gana a `aspect-ratio`, que
+               solo fija el alto cuando no hay nada más alto dentro, así que esa
+               caja crecía y rompía la alineación.
+
+               Medido a 320, 360, 390 y 430 px: con las seis reglas las cinco
+               cajas quedan iguales en los cuatro anchos y cuadradas de 360
+               para arriba, sin que se corte ningún texto. */
             .escala-opciones { gap: 6px; }
+            .escala-opcion { min-width: 0; }
             .escala-opcion label {
                 aspect-ratio: 1;
                 justify-content: center;
@@ -342,7 +359,7 @@
                 padding: 2px;
             }
             .escala-numero { font-size: 16px; }
-            .escala-texto { font-size: 9px; line-height: 1.1; }
+            .escala-texto { font-size: 9px; line-height: 1.1; white-space: nowrap; }
         }
     </style>
 </head>
