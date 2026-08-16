@@ -16,9 +16,8 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 
 **Cerrados:** H-01, H-07, H-04, H-05 y H-10 el 11/08; H-02, H-03 y H-35 el 12/08.
 
-**En curso:** **UX-47** —la tabla de candidatos no mostraba el estado de los documentos—, en PR sin
-fusionar. **UX-45** se cerró el 14/08 —desplegado, fusionado en el PR #18 y comprobado en el panel
-por el dueño— y **UX-42** el mismo día con los PR #16 y #17.
+**En curso:** ninguno. **UX-47** se cerró el 14/08 —PR #20 fusionado y comprobado en el panel—,
+igual que **UX-45** (PR #18) y **UX-42** (PR #16 y #17).
 
 **Siguiente trabajo agrupado: el Bloque 11 · panel del reclutador** —H-08, UX-29, UX-23 y UX-21—,
 cuatro hallazgos de `dashboard.html` para un solo despliegue. Tiene dos avisos de orden que hay que
@@ -1613,7 +1612,7 @@ y deje de llevar la cuenta.
 
 ## UX-47 · La tabla de candidatos no mostraba el estado de los documentos
 
-🔵 Presentación · UX · Esfuerzo S · **Estado: ⏸️ EN PR, sin fusionar** (14/08/2026)
+🔵 Presentación · UX · Esfuerzo S · **Estado: ✅ CERRADO** (14/08/2026) · PR #20 fusionado y comprobado en el panel
 
 ### El problema
 
@@ -1713,8 +1712,11 @@ usan—, pero conviene que conste que es una función que engaña a quien la lla
 sale un ancho de columna por la derecha, más allá del encabezado. Se ve en la captura del PR: la
 banda gris de la cabecera termina antes que las filas.
 
-Es preexistente, no es de este trabajo y está fuera de alcance. **Encaja en UX-29** —tablas
-descuadradas en `dashboard.html`, que ya está en el Bloque 11—.
+Es preexistente, no es de este trabajo y está fuera de alcance. **Queda como UX-49.**
+
+Este informe lo había mandado a UX-29 y **eso era un error**: UX-29 es el **formato del contenido**
+de las celdas y esto es la **estructura de la tabla**. Son dos cosas distintas y mezclarlas habría
+hecho que el arreglo de una diera por cubierta la otra. Corregido por el dueño el 14/08.
 
 ### Criterio de cierre
 
@@ -1728,9 +1730,9 @@ descuadradas en `dashboard.html`, que ya está en el Bloque 11—.
 | Escapado | ✅ Todo valor de la base pasa por `escapeHtml` |
 | Documentación | ✅ `CAMBIOS.md` |
 | PR abierto, sin fusionar | ✅ |
-| Comprobación en producción | ⏳ **Pendiente del dueño**, tras fusionar |
+| Comprobación en producción | ✅ Comprobado por el dueño: la tabla ya muestra el estado de los tres documentos |
 
-Ni funciones, ni migración, ni despliegue: sale por Vercel al fusionar.
+Ni funciones, ni migración, ni despliegue: salió por Vercel al fusionar.
 
 ---
 
@@ -1792,9 +1794,39 @@ descritos en prosa sin forma de referirse a ellos.
 | UX-44 | **No hay trazabilidad de nada en el recorrido.** Un solo punto de registro que cubra correos —aceptado, rechazado, rebotado—, apertura de formularios y llenado | Abierto. **Requiere migración y toca varias funciones** |
 | UX-45 | **El contador de evaluaciones muestra el mismo número dos veces**: «0 / 0» cuando hay un evaluador invitado y ninguna respuesta | ✅ **Cerrado el 14/08**, PR #18 |
 | UX-46 | **La cabecera de `TECNICO.md` lleva su propia lista de versiones**, duplicando lo que `MANIFEST.md` ya mantiene por función | Abierto. Documentación, **no afecta al producto** |
-| UX-47 | **La tabla de candidatos no muestra el estado de los documentos**: un finiquito subido y sin validar sale como un guion, y el motivo del rechazo desborda la celda | ⏸️ En PR, sin fusionar |
+| UX-47 | **La tabla de candidatos no muestra el estado de los documentos**: un finiquito subido y sin validar sale como un guion, y el motivo del rechazo desborda la celda | ✅ **Cerrado el 14/08**, PR #20 |
+| UX-48 | **`formatearCausal` mezcla traducir con rellenar ausencias.** Devuelve un guion cuando no hay causal, y esa cadena tiene contenido, así que cada llamante tiene que deshacer el relleno | Abierto |
+| UX-49 | **Los encabezados de la tabla no cuadran con las filas.** Siete columnas en la cabecera, ocho en la fila de invitación pendiente | Abierto |
 
-**La serie ya no tiene huecos entre UX-22 y UX-47.**
+**La serie ya no tiene huecos entre UX-22 y UX-49.**
+
+### UX-48 · una función que engaña a quien la llama
+
+`formatearCausal` hace `CAUSAL_LABELS[valor] || valor || '—'`: traduce el código de la causal **y
+además** rellena el hueco cuando no hay ninguna. Ese relleno es el problema. El guion que devuelve
+es una cadena con contenido, así que **quien la llama no puede distinguir «no hay causal» de «la
+causal es este texto»** sin comparar contra el guion literal.
+
+**Ha mordido tres veces, y las tres del mismo modo:** en UX-28, en la primera versión de las
+tarjetas de `estado.html` y en UX-47. En los tres sitios hubo que escribir
+`x === '—' ? null : x` para deshacer el relleno antes de decidir qué pintar. Tres veces es señal
+suficiente.
+
+**Debería traducir y devolver vacío cuando no hay dato; quien la llama decide qué pintar.** El
+arreglo es de una línea, pero **toca tres vistas** —la tabla, la ficha y la vista de proceso— y las
+tres hay que comprobarlas: hoy dependen de que la función rellene.
+
+### UX-49 no es UX-29, y conviene que no se mezclen
+
+| | Qué es |
+|---|---|
+| **UX-29** | El **formato del contenido** de las celdas: texto que desborda, estados metidos en el valor |
+| **UX-49** | La **estructura de la tabla**: 7 `<th>` en la cabecera y 8 columnas en la fila de invitación pendiente, más `colspan="8"` en el estado vacío |
+
+La fila de invitación cuelga un ancho de columna por la derecha y la banda gris de la cabecera
+termina antes que las filas. **Este informe lo había mandado a UX-29**; lo corrigió el dueño el
+14/08. Arreglar el formato del contenido no habría tocado la estructura, y darlo por cubierto
+habría dejado el descuadre vivo con el hallazgo cerrado.
 
 ### UX-43 y UX-44 no son dos hallazgos: son uno y su síntoma
 
@@ -1894,6 +1926,8 @@ el caso de M-2 en la siguiente.
 | UX-29 | `dashboard.html`, la ficha del candidato y la tabla | **Las tarjetas están diseñadas para un número grande** («3», «5 años») y desde la cadena de validación reciben frases. «No válido — ‹motivo›» desborda, y el motivo lo escribe el validador **sin límite de largo**. La causal muestra un guion con la insignia debajo. El dato es correcto; el formato no. **Resuelto en `estado.html` el 13/08; sigue abierto en `dashboard.html`**, que tiene el mismo problema en la ficha del candidato y en la tabla | Fase C de la cadena de validación | Parcial: falta `dashboard.html` |
 | UX-34 | `crear-solicitud`, líneas 254, 294 y 337 del respaldo | Interpola `${trabajador.nombre}` sin escapar en el HTML de los correos **M-1, M-2 y M-3**. No es XSS —los clientes de correo no ejecutan scripts— pero sí inyección de HTML en el correo a contacto frío que `FUNCIONAL.md` §7 llama el más frágil del sistema | H-07 | Abierto, sin pedido |
 | UX-35 | Proceso, no código | **Un cambio hecho en el editor del panel de Supabase no deja rastro en el repositorio, y nada lo detecta solo.** El 13/08 producción tuvo durante un rato una versión de `crear-solicitud` que no existía en ninguna rama. El siguiente despliegue desde el repo la habría pisado en silencio. Lo único que lo evitó fue que el dueño avisara | Cambio manual de M-2 | Abierto, sin pedido |
+| UX-48 | `dashboard.html`, `formatearCausal` | **Mezcla traducir con rellenar ausencias.** Hace `CAUSAL_LABELS[valor] || valor || '—'`: el guion que devuelve es una cadena con contenido, así que **quien la llama no puede distinguir «no hay causal» de «la causal es este texto»** sin comparar contra el guion literal. Ha obligado a escribir `x === '—' ? null : x` en tres sitios. Debería traducir y devolver vacío; quien llame decide qué pintar. **Toca tres vistas** | UX-28, tarjetas de `estado.html` y UX-47 | Abierto, sin pedido |
+| UX-49 | `dashboard.html`, la tabla de candidatos | **Los encabezados no cuadran con las filas.** 7 `<th>` en la cabecera, 8 columnas en la fila de invitación pendiente —`<td>` + `colspan="6"` + `<td>`— y `colspan="8"` en el estado vacío. La fila cuelga un ancho por la derecha y la banda gris de la cabecera termina antes. **No es UX-29:** aquello es el formato del contenido, esto la estructura de la tabla | UX-47 | Abierto, sin pedido |
 
 **Por qué UX-34 no se arregló en H-07:** es una edge function, y el pedido de H-07 acotaba el
 alcance a `dashboard.html` y `admin.html`. **Y por qué sigue sin arreglarse:** el dueño decidió el
