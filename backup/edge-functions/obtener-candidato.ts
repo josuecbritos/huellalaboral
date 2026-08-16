@@ -101,6 +101,27 @@ serve(async (req) => {
 
     if (evalError) throw evalError
 
+    // UX-45: cuántos evaluadores fueron invitados.
+    //
+    // Esta función nunca consultaba `empleadores_solicitados`, así que el panel
+    // no tenía denominador y rellenaba el hueco con el numerador: un candidato
+    // con un evaluador invitado y cero respuestas salía como «0 / 0», y nunca
+    // se veía cuántas faltaban.
+    //
+    // Se cuentan TODOS los invitados, sin filtrar por plazo ni por estado: un
+    // evaluador que nunca respondió sigue siendo alguien que falta, aunque su
+    // enlace haya vencido.
+    //
+    // Se traen los `id` y se cuenta el array en vez de usar `count: 'exact'`:
+    // son unas pocas filas por trabajador y así el resultado no depende de una
+    // opción del cliente que aquí no se puede probar antes de desplegar.
+    const { data: invitados, error: invitadosError } = await supabase
+      .from('empleadores_solicitados')
+      .select('id')
+      .eq('trabajador_id', trabajador.id)
+
+    if (invitadosError) throw invitadosError
+
     // Obtener documentos validados
     const { data: documentos, error: docError } = await supabase
       .from('documentos')
@@ -172,6 +193,9 @@ serve(async (req) => {
           total: evaluacionesValidas.length,
           verificadas: evaluacionesVerificadas.length,
           rechazos: evaluaciones?.filter(e => e.rechazo).length || 0,
+          // UX-45. Campo nuevo: ningún campo existente se quita ni se renombra,
+          // porque `dashboard.html` consume varios.
+          invitados: (invitados ?? []).length,
           lista: evaluaciones
         },
         promedios: {

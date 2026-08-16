@@ -16,8 +16,8 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 
 **Cerrados:** H-01, H-07, H-04, H-05 y H-10 el 11/08; H-02, H-03 y H-35 el 12/08.
 
-**En curso:** el **cierre de UX-42** —las dos reglas que faltaban para igualar las cajas—, en PR
-sin fusionar. La primera parte se fusionó en el PR #16.
+**En curso:** **UX-45** —el contador de evaluaciones del panel—, desplegado el 14/08 y pendiente de
+la verificación del dueño. **UX-42** se cerró el 14/08 con los PR #16 y #17.
 **UX-28** quedó cerrado el 14/08: la primera versión en el PR #13 y el ajuste que quitó el muro de
 la pantalla del trabajador en el PR #14.
 
@@ -1379,7 +1379,7 @@ Se despliega al fusionar, porque Vercel publica `main`.
 
 ## UX-42 · La escala de `evaluar.html` no cabe en el teléfono
 
-🔵 Presentación · UX · Esfuerzo XS · **Estado: ✅ CERRADO** (14/08/2026) · dos PR: #16 y el del cierre
+🔵 Presentación · UX · Esfuerzo XS · **Estado: ✅ CERRADO** (14/08/2026) · PR #16 y #17, fusionados
 
 ### El problema
 
@@ -1504,6 +1504,107 @@ Se despliega al fusionar, porque Vercel publica `main`. Ni funciones, ni migraci
 
 ---
 
+## UX-45 · El contador de evaluaciones mostraba el mismo número dos veces
+
+🔵 Presentación · UX · Esfuerzo S · **Estado: 🚀 DESPLEGADO, pendiente de verificación** (14/08/2026)
+
+### El problema
+
+La columna «Evaluaciones» del panel debe mostrar **respondidas / invitadas**. Mostraba el mismo
+número en los dos lados: un candidato con **1 evaluador invitado y 0 respuestas** aparecía como
+**«0 / 0»**. **Nunca se veía cuántas faltaban**, que es justo para lo que sirve la columna.
+
+**La causa:** `obtener-candidato` **nunca consultaba `empleadores_solicitados`**. Su respuesta traía
+`total`, `verificadas`, `rechazos` y `lista`, pero ningún recuento de invitados. Como el dato no
+llegaba, `dashboard.html` rellenaba el hueco con el número que sí tenía:
+
+```js
+c.empleadores  = data.evaluaciones?.total || 0;   // el denominador… era el numerador
+c.evaluaciones = data.evaluaciones?.total || 0;
+```
+
+**No es H-19**, que es el cálculo del estado «Completado» en `agregar-candidato` y no llega a
+ninguna pantalla. Sigue abierto.
+
+### El cambio
+
+| Dónde | Qué |
+|-------|-----|
+| `obtener-candidato` v10 → **v11** | Consulta nueva a `empleadores_solicitados` y campo `evaluaciones.invitados` |
+| `dashboard.html` | El denominador pasa a leer `invitados` en vez de `total` |
+
+**El denominador cuenta todos los invitados**, sin filtrar por plazo ni por estado: un evaluador que
+nunca respondió sigue siendo alguien que falta, aunque su enlace haya vencido.
+
+**Ningún campo existente se quitó ni se renombró.** `dashboard.html` consume varios.
+
+Se cuentan las filas con `select('id')` y `.length` en vez de `count: 'exact'`. Son unas pocas por
+trabajador, y así el resultado no depende de una opción del cliente que **sin staging no se puede
+probar antes de desplegar**.
+
+### Verificación
+
+Sin fase A: el fallo está observado y confirmado en el código.
+
+Los casos se corrieron sobre el **fuente real transpilado**, aplicando después las dos líneas de
+`dashboard.html` tal como están escritas.
+
+| Caso | Antes | Después |
+|------|-------|---------|
+| **1 invitado, 0 respuestas** — el caso observado | `0 / 0` | **`0 / 1`** |
+| 3 invitados, 2 respuestas | `2 / 2` | **`2 / 3`** |
+| 3 invitados, 3 respuestas | `3 / 3` | `3 / 3` |
+| Sin evaluadores | `0 / 0` | `0 / 0` |
+| 2 invitados, 1 respuesta y 1 rechazo | `1 / 1` | **`1 / 2`** |
+
+**No regresión, comprobada sobre la respuesta completa:** ninguna clave de `evaluaciones`
+desaparece, ninguna existente cambia de valor, la única nueva es `invitados`, y `trabajador`,
+`promedios` y `documentos` salen idénticos.
+
+### El orden de despliegue importa, y se midió
+
+`dashboard.html` sale por Vercel **al fusionar**; la función se desplegó ahora. Los dos órdenes no
+son equivalentes:
+
+| Qué está desplegado | Qué muestra |
+|---------------------|-------------|
+| HTML nuevo + función **vieja** | **`2 / 0`** ⚠️ peor que el fallo actual |
+| HTML viejo + función **nueva** | `2 / 2` — el fallo de siempre, sin empeorar |
+| Los dos nuevos | `2 / 3` ✅ |
+
+Por eso **la función va primero**, que es lo que el pedido prescribía. Entre el despliegue y la
+fusión el panel se comporta exactamente como hasta ahora.
+
+### Criterio de cierre
+
+| Requisito | Estado |
+|-----------|--------|
+| Código desplegado | ✅ `obtener-candidato` v11, `verify_jwt: true` |
+| Prueba A | — No aplica, el pedido la excluye |
+| Camino feliz | ⏳ **Pendiente del dueño**, en la tabla del panel tras fusionar |
+| No regresión | ✅ La respuesta solo gana `invitados` |
+| Respaldo regenerado | ✅ v11, `MANIFEST.md` actualizado |
+| Documentación | ✅ `CAMBIOS.md`. **`TECNICO.md` no se tocó** — ver abajo |
+| PR abierto, sin fusionar | ✅ |
+
+**`TECNICO.md` no cambia porque la respuesta de `obtener-candidato` no está documentada allí**, que
+era la condición del pedido. Lo que sí se comprobó: la función no toca ninguno de los dos bloques
+duplicados a propósito —`filtrarProcesosPropios` y `validacionVigente`—, así que las otras siguen
+idénticas y no hay que redesplegarlas.
+
+### Encontrado al abrir el archivo, no tocado
+
+**La cabecera de `TECNICO.md` lista versiones de funciones y lleva días desfasada.** Dice
+`crear-solicitud` v28 (hoy v30), `agregar-candidato` v12 (hoy v14) y `obtener-candidato` v10 (hoy
+v11). No es de este trabajo —ya estaba mal antes—, pero este despliegue la deja algo más desfasada.
+
+El pedido decía reportarlo y no tocarlo, así que aquí queda. **La solución no es corregir los
+números:** esa lista duplica lo que `backup/edge-functions/MANIFEST.md` ya mantiene por función, y
+duplicar versiones garantiza que se desincronicen. Lo barato es que la cabecera apunte al MANIFEST
+y deje de llevar la cuenta.
+
+---
+
 ## Decisiones de producto tomadas durante el trabajo
 
 Decisiones que no son de un solo hallazgo y que afectan cómo se abordan los siguientes.
@@ -1558,6 +1659,11 @@ descritos en prosa sin forma de referirse a ellos.
 | UX-40 | **La insignia «no validada» era código muerto**: `causalValidada` usaba `|| null`, así que un `false` se volvía `null` | ✅ Cerrado el 12/08 |
 | UX-41 | **Al evaluador se le pide el RUT a mano** aunque `obtener-evaluacion` ya devuelve su nombre, correo y empresa, y `evaluar.html` los descarta | Abierto |
 | UX-42 | **La escala de `evaluar.html` no cabe en el teléfono**: la quinta opción queda cortada y «Muy bueno» parte en dos líneas | ✅ Hecho el 14/08, **completado** el mismo día |
+| UX-45 | **El contador de evaluaciones muestra el mismo número dos veces**: «0 / 0» cuando hay un evaluador invitado y ninguna respuesta | ✅ Desplegado el 14/08 |
+
+**De UX-43 y UX-44 no consta nada aquí**: existen en la numeración del dueño y todavía no han
+llegado a este documento, igual que pasó con UX-36 y UX-38 a UX-41 antes de que los aportara. Se
+anota el hueco para que no se lea como que la serie salta.
 
 **UX-38, UX-39 y UX-40 son la cadena de validación de documentos**, que este documento describe más
 arriba bajo ese nombre y sin código, porque se cerró antes de que existiera la serie. Los tres

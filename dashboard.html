@@ -1198,7 +1198,10 @@
                     return {
                         ...c,
                         evaluaciones: data.evaluaciones?.total || 0,
-                        empleadores: data.evaluaciones?.total || 0,
+                        // UX-45: el denominador de la columna «Evaluaciones».
+                        // Antes repetía `total`, así que los dos lados de
+                        // «respondidas / invitadas» mostraban el mismo número.
+                        empleadores: data.evaluaciones?.invitados || 0,
                         total: {
                             count: data.evaluaciones?.total || 0,
                             promedio: data.promedios?.total?.promedio || null,
