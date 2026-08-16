@@ -16,8 +16,13 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 
 **Cerrados:** H-01, H-07, H-04, H-05 y H-10 el 11/08; H-02, H-03 y H-35 el 12/08.
 
-**En curso:** **UX-45** —el contador de evaluaciones del panel—, desplegado el 14/08 y pendiente de
-la verificación del dueño. **UX-42** se cerró el 14/08 con los PR #16 y #17.
+**En curso:** ninguno. **UX-45** se cerró el 14/08 —desplegado, fusionado en el PR #18 y comprobado
+en el panel por el dueño— y **UX-42** el mismo día con los PR #16 y #17.
+
+**Siguiente trabajo agrupado: el Bloque 11 · panel del reclutador** —H-08, UX-29, UX-23 y UX-21—,
+cuatro hallazgos de `dashboard.html` para un solo despliegue. Tiene dos avisos de orden que hay que
+leer antes de escribir el pedido; están en su sección.
+
 **UX-28** quedó cerrado el 14/08: la primera versión en el PR #13 y el ajuste que quitó el muro de
 la pantalla del trabajador en el PR #14.
 
@@ -1506,7 +1511,7 @@ Se despliega al fusionar, porque Vercel publica `main`. Ni funciones, ni migraci
 
 ## UX-45 · El contador de evaluaciones mostraba el mismo número dos veces
 
-🔵 Presentación · UX · Esfuerzo S · **Estado: 🚀 DESPLEGADO, pendiente de verificación** (14/08/2026)
+🔵 Presentación · UX · Esfuerzo S · **Estado: ✅ CERRADO** (14/08/2026) · PR #18 fusionado y comprobado en el panel
 
 ### El problema
 
@@ -1581,7 +1586,7 @@ fusión el panel se comporta exactamente como hasta ahora.
 |-----------|--------|
 | Código desplegado | ✅ `obtener-candidato` v11, `verify_jwt: true` |
 | Prueba A | — No aplica, el pedido la excluye |
-| Camino feliz | ⏳ **Pendiente del dueño**, en la tabla del panel tras fusionar |
+| Camino feliz | ✅ Comprobado por el dueño en la tabla del panel: ya muestra respondidas / invitadas |
 | No regresión | ✅ La respuesta solo gana `invitados` |
 | Respaldo regenerado | ✅ v11, `MANIFEST.md` actualizado |
 | Documentación | ✅ `CAMBIOS.md`. **`TECNICO.md` no se tocó** — ver abajo |
@@ -1659,11 +1664,49 @@ descritos en prosa sin forma de referirse a ellos.
 | UX-40 | **La insignia «no validada» era código muerto**: `causalValidada` usaba `|| null`, así que un `false` se volvía `null` | ✅ Cerrado el 12/08 |
 | UX-41 | **Al evaluador se le pide el RUT a mano** aunque `obtener-evaluacion` ya devuelve su nombre, correo y empresa, y `evaluar.html` los descarta | Abierto |
 | UX-42 | **La escala de `evaluar.html` no cabe en el teléfono**: la quinta opción queda cortada y «Muy bueno» parte en dos líneas | ✅ Hecho el 14/08, **completado** el mismo día |
-| UX-45 | **El contador de evaluaciones muestra el mismo número dos veces**: «0 / 0» cuando hay un evaluador invitado y ninguna respuesta | ✅ Desplegado el 14/08 |
+| UX-43 | **No se sabe si el evaluador llegó a abrir `evaluar.html`.** Solo consta si respondió, así que no se distingue «no llegó el correo» de «llegó y no abrió» ni de «abrió y no completó» | Abierto. **Absorbido por UX-44** |
+| UX-44 | **No hay trazabilidad de nada en el recorrido.** Un solo punto de registro que cubra correos —aceptado, rechazado, rebotado—, apertura de formularios y llenado | Abierto. **Requiere migración y toca varias funciones** |
+| UX-45 | **El contador de evaluaciones muestra el mismo número dos veces**: «0 / 0» cuando hay un evaluador invitado y ninguna respuesta | ✅ **Cerrado el 14/08**, PR #18 |
+| UX-46 | **La cabecera de `TECNICO.md` lleva su propia lista de versiones**, duplicando lo que `MANIFEST.md` ya mantiene por función | Abierto. Documentación, **no afecta al producto** |
 
-**De UX-43 y UX-44 no consta nada aquí**: existen en la numeración del dueño y todavía no han
-llegado a este documento, igual que pasó con UX-36 y UX-38 a UX-41 antes de que los aportara. Se
-anota el hueco para que no se lea como que la serie salta.
+**La serie ya no tiene huecos entre UX-22 y UX-46.**
+
+### UX-43 y UX-44 no son dos hallazgos: son uno y su síntoma
+
+**UX-44 absorbe a UX-43**, y también a **H-06**, **H-20** y **UX-13**. Todos son la misma falta:
+no hay un punto donde quede registrado qué pasó en el recorrido.
+
+| Absorbido | Qué era |
+|-----------|---------|
+| UX-43 | No se sabe si el evaluador abrió `evaluar.html` |
+| H-06 | El fallo de envío se traga: los siete correos van en `try/catch` sin mirar el status de Resend |
+| H-20 | *(de la auditoría)* |
+| UX-13 | *(de la auditoría)* |
+
+**Cómo se resuelve UX-43 está decidido, y conviene que no se pierda:** registrando la apertura de
+la página, **no midiendo en el correo**. El píxel de seguimiento no es fiable —muchos clientes
+bloquean imágenes y Apple Mail las precarga, así que da falsos positivos y falsos negativos a la
+vez— y además **afecta la entregabilidad**, que en M-1 es lo último que conviene tocar: es el único
+contacto frío del producto.
+
+**Alcance de UX-44:** cubre M-1 al evaluador, M-2 al trabajador por iniciativa propia, y M-4/M-5 al
+agregado a un proceso. **Requiere migración y toca varias funciones.**
+
+**Dos cosas sin decidir**, que hay que resolver antes de escribir el pedido: si los rebotes entran
+en la primera fase, y dónde se consulta lo registrado.
+
+### UX-46 · por qué no se arregla corrigiendo los números
+
+La cabecera de `TECNICO.md` lista versiones —`crear-solicitud` v28 cuando hoy es v30,
+`agregar-candidato` v12 cuando es v14— y **lleva días mintiendo**. Se detectó al desplegar UX-45,
+que la dejó algo más desfasada.
+
+**Corregir los números no es la solución.** Esa lista duplica lo que
+`backup/edge-functions/MANIFEST.md` ya mantiene por función, y duplicar versiones garantiza que se
+desincronicen: la próxima iteración que despliegue algo volverá a dejarla mal. **La cabecera debe
+apuntar al MANIFEST y dejar de llevar la cuenta.**
+
+Es documentación y no afecta al producto, así que **queda abierto a propósito**.
 
 **UX-38, UX-39 y UX-40 son la cadena de validación de documentos**, que este documento describe más
 arriba bajo ese nombre y sin código, porque se cerró antes de que existiera la serie. Los tres
@@ -1739,6 +1782,34 @@ de deshacerlo salvo borrar el proceso completo, lo que se lleva por delante a to
 candidatos. Cualquier arreglo tiene que decidir antes qué significa "quitar":
 borrar la fila, o marcarla como retirada conservando la trazabilidad del consentimiento
 (`FUNCIONAL.md` §6.3). Es decisión de producto, no de implementación.
+
+---
+
+## Bloque 11 · panel del reclutador
+
+Cuatro hallazgos que viven en `dashboard.html` y **conviene resolver en un solo despliegue**.
+Agrupados por el dueño el 14/08.
+
+| ID | Qué |
+|----|-----|
+| **H-08** | Sacar el buscador por RUT |
+| **UX-29** | Tablas descuadradas —la ficha del candidato y la tabla del panel, lo mismo que UX-28 arregló en `estado.html`— |
+| **UX-23** | El detalle del candidato no abre desde dentro de un proceso |
+| **UX-21** | El admin recibe un error crudo de Postgres |
+
+### Dos avisos para cuando se ejecute
+
+**UX-23 depende de H-08, y el orden puede dejar el panel inservible.** Hoy la única vía para abrir
+la ficha de un candidato es **la búsqueda por RUT**, que es justamente lo que H-08 elimina. Hacer
+uno sin el otro deja el panel **sin ninguna forma de llegar a las fichas**. Van juntos o no van.
+
+**H-08 tiene dos partes que hay que separar, y confundirlas rompe la tabla.** Se elimina **la
+pantalla de búsqueda**; **no** se elimina `obtener-candidato?rut=`, porque esa es la llamada que
+rellena cada fila de la tabla de candidatos —la misma que UX-45 acaba de tocar—. «Eliminar la
+búsqueda por RUT» se refiere a la interfaz, no al parámetro.
+
+Queda escrito aquí y no en el pedido porque el pedido todavía no existe, y es el tipo de detalle
+que se pierde entre una sesión y la siguiente.
 
 ---
 
