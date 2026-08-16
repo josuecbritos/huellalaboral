@@ -16,8 +16,9 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 
 **Cerrados:** H-01, H-07, H-04, H-05 y H-10 el 11/08; H-02, H-03 y H-35 el 12/08.
 
-**En curso:** ninguno. **UX-45** se cerró el 14/08 —desplegado, fusionado en el PR #18 y comprobado
-en el panel por el dueño— y **UX-42** el mismo día con los PR #16 y #17.
+**En curso:** **UX-47** —la tabla de candidatos no mostraba el estado de los documentos—, en PR sin
+fusionar. **UX-45** se cerró el 14/08 —desplegado, fusionado en el PR #18 y comprobado en el panel
+por el dueño— y **UX-42** el mismo día con los PR #16 y #17.
 
 **Siguiente trabajo agrupado: el Bloque 11 · panel del reclutador** —H-08, UX-29, UX-23 y UX-21—,
 cuatro hallazgos de `dashboard.html` para un solo despliegue. Tiene dos avisos de orden que hay que
@@ -1610,6 +1611,129 @@ y deje de llevar la cuenta.
 
 ---
 
+## UX-47 · La tabla de candidatos no mostraba el estado de los documentos
+
+🔵 Presentación · UX · Esfuerzo S · **Estado: ⏸️ EN PR, sin fusionar** (14/08/2026)
+
+### El problema
+
+**Observado en producción.** Una candidata subió su finiquito y en la tabla no aparecía por ningún
+lado: las tres columnas de documentos mostraban un guion. Su documento estaba esperando validación
+y el reclutador no tenía forma de saberlo desde ahí.
+
+**La tabla era la única de las cuatro vistas que ignoraba el estado del finiquito.** La columna
+«Causal término» hacía `escapeHtml(c.causal_texto || '—')`, y `causal_texto` solo trae valor cuando
+la causal fue **validada**. Así que pendiente, no válido y sin documento se pintaban igual.
+
+`insigniaCausal` —la función que sí distingue esos estados— ya existía en el archivo y la usan la
+ficha y la vista de proceso. **La tabla no la llamaba.**
+
+**El segundo problema, en las otras dos columnas.** «Empleos 5 años» y «Máx. duración» usaban
+`textoValidacion`, que **escribe el estado dentro del valor**: donde va un número aparecía
+«Pendiente de validación», y en el caso no válido se le concatenaba el motivo escrito por el
+validador **sin límite de largo**. Eso desbordaba la celda. Es UX-29 en esta vista.
+
+### El cambio
+
+Una función nueva, `celdaDocumento`, **solo para la tabla**. `textoValidacion` e `insigniaCausal`
+no se tocaron: las usan la ficha y la vista de proceso, donde el criterio es otro y hay espacio.
+
+**Regla única: o hay valor, o hay etiqueta. Nunca los dos.**
+
+| Situación | Empleos 5 años | Máx. duración | Causal término |
+|---|---|---|---|
+| Validado | `3` | `5 años` | `Renuncia del trabajador` |
+| Subido, sin validar | Etiqueta ámbar | Etiqueta ámbar | Etiqueta ámbar |
+| No válido | Etiqueta roja | Etiqueta roja | Etiqueta roja |
+| Sin documento | Guion gris | Guion gris | Guion gris |
+
+**Sin etiqueta verde** para lo validado: si aparece el número, es porque está validado. **El motivo
+del rechazo sale de la tabla** y se queda en la ficha, que es donde hay espacio. **Sin
+`white-space: nowrap`**: la etiqueta parte en dos líneas si no cabe, en vez de ensanchar la columna.
+
+Y **todas las columnas de datos van centradas**, encabezado y celda. Solo «Candidato» a la
+izquierda.
+
+### Verificación
+
+Sin fase A: observado en producción y confirmado en el código.
+
+Los cinco casos se corrieron **sobre el `dashboard.html` real**: Chromium carga el archivo, se
+interceptan `obtener-proceso` y `obtener-candidato`, y se recorre **el camino real de la página**
+—`verCandidatos()`— en vez de rellenar el estado a mano.
+
+| Caso | Antes | Después |
+|------|-------|---------|
+| **Solo finiquito** — el que motiva el pedido | `—` `—` `—` | `—` `—` **`PENDIENTE DE VALIDACIÓN`** |
+| Solo certificado | `Pendiente de validación` `Pendiente…` `—` | **etiqueta** **etiqueta** `—` |
+| Todo validado | `3` `5 años` `Renuncia del trabajador` | Igual, sin etiquetas |
+| Ambos no válidos | `No válido — El certificado está ilegible en la segunda página y no se…` | **`✗ NO VÁLIDO`** ×3, **sin el motivo** |
+| Sin documentos | `—` `—` `—` | `—` `—` `—` |
+
+| Qué más | Resultado |
+|---------|-----------|
+| Encabezados de datos centrados · «Candidato» a la izquierda | ✅ |
+| Celdas de datos centradas | ✅ |
+| Desbordes | ✅ Ninguno |
+| Etiquetas sin `nowrap`, pueden partir | ✅ Ninguna con `nowrap`; en la captura parten en dos líneas |
+| **Invitación pendiente** | ✅ Sigue igual, sin errores |
+| Resto de la tabla | ✅ Candidato, promedio, evaluaciones y botón de detalle intactos |
+
+### El arnés impidió publicar un `dashboard.html` roto
+
+**El primer intento tenía un error de sintaxis y la página entera no arrancaba.** El comentario que
+se escribió sobre la línea de la causal usaba acentos graves para citar nombres de variables —
+`` `causal_texto` `` — y ese comentario vive **dentro de una plantilla de JavaScript**. Los acentos
+graves la cerraban antes de tiempo.
+
+`SyntaxError: Unexpected identifier 'causal_texto'`, y con él **el panel completo en blanco**: no
+la tabla, el panel. Es el peor tipo de fallo posible en este archivo y no lo habría visto ninguna
+revisión de diff, porque el comentario se lee perfectamente bien.
+
+Lo cazó el arnés, que exige que la tabla tenga filas y aborta si no las tiene. **Es la cuarta vez
+en dos días que la comprobación que aborta paga**, y la primera en que evita romper producción en
+vez de solo evitar un informe falso. En el código quedó una nota diciendo por qué no se pueden usar
+acentos graves ahí.
+
+### `formatearCausal` otra vez, y ya van tres
+
+`causal_texto` llega al enriquecido pasado por `formatearCausal`, que **devuelve un guion cuando no
+hay causal**. Ese guion es una cadena con contenido: `celdaDocumento` lo habría tomado por dato
+bueno y lo habría pintado en negro en vez de gris.
+
+Es exactamente la misma trampa que en UX-28 y en la primera versión de las tarjetas. **El problema
+de fondo es `formatearCausal`**, que mezcla traducir con rellenar ausencias, y obliga a que cada
+llamante deshaga el relleno. Se resuelve en el sitio, sin tocar la función —otras dos vistas la
+usan—, pero conviene que conste que es una función que engaña a quien la llama.
+
+### Encontrado al abrir el archivo, no tocado
+
+**La tabla de candidatos tiene 7 encabezados y la fila de invitación pendiente ocupa 8 columnas**
+—`<td>` + `colspan="6"` + `<td>`—, y el estado vacío usa `colspan="8"`. La fila de invitación se
+sale un ancho de columna por la derecha, más allá del encabezado. Se ve en la captura del PR: la
+banda gris de la cabecera termina antes que las filas.
+
+Es preexistente, no es de este trabajo y está fuera de alcance. **Encaja en UX-29** —tablas
+descuadradas en `dashboard.html`, que ya está en el Bloque 11—.
+
+### Criterio de cierre
+
+| Requisito | Estado |
+|-----------|--------|
+| Código en la rama | ✅ Solo `dashboard.html`, solo la tabla de candidatos |
+| Prueba A | — No aplica, el pedido la excluye |
+| Los cinco casos | ✅ Sobre el archivo real, con guardia que aborta |
+| No regresión | ✅ Invitación pendiente, promedio, evaluaciones y botón intactos |
+| `textoValidacion` e `insigniaCausal` sin tocar | ✅ La ficha y la vista de proceso siguen igual |
+| Escapado | ✅ Todo valor de la base pasa por `escapeHtml` |
+| Documentación | ✅ `CAMBIOS.md` |
+| PR abierto, sin fusionar | ✅ |
+| Comprobación en producción | ⏳ **Pendiente del dueño**, tras fusionar |
+
+Ni funciones, ni migración, ni despliegue: sale por Vercel al fusionar.
+
+---
+
 ## Decisiones de producto tomadas durante el trabajo
 
 Decisiones que no son de un solo hallazgo y que afectan cómo se abordan los siguientes.
@@ -1668,8 +1792,9 @@ descritos en prosa sin forma de referirse a ellos.
 | UX-44 | **No hay trazabilidad de nada en el recorrido.** Un solo punto de registro que cubra correos —aceptado, rechazado, rebotado—, apertura de formularios y llenado | Abierto. **Requiere migración y toca varias funciones** |
 | UX-45 | **El contador de evaluaciones muestra el mismo número dos veces**: «0 / 0» cuando hay un evaluador invitado y ninguna respuesta | ✅ **Cerrado el 14/08**, PR #18 |
 | UX-46 | **La cabecera de `TECNICO.md` lleva su propia lista de versiones**, duplicando lo que `MANIFEST.md` ya mantiene por función | Abierto. Documentación, **no afecta al producto** |
+| UX-47 | **La tabla de candidatos no muestra el estado de los documentos**: un finiquito subido y sin validar sale como un guion, y el motivo del rechazo desborda la celda | ⏸️ En PR, sin fusionar |
 
-**La serie ya no tiene huecos entre UX-22 y UX-46.**
+**La serie ya no tiene huecos entre UX-22 y UX-47.**
 
 ### UX-43 y UX-44 no son dos hallazgos: son uno y su síntoma
 
