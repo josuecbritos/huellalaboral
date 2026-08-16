@@ -737,12 +737,14 @@
                     <table>
                         <thead>
                             <tr>
+                                <!-- UX-47: todas las columnas de datos centradas.
+                                     Solo «Candidato» queda a la izquierda. -->
                                 <th style="cursor:pointer;" onclick="ordenarCandidatos('nombre')">Candidato <span id="sort-nombre"></span></th>
-                                <th style="cursor:pointer;" onclick="ordenarCandidatos('promedio')">Promedio ↓ <span id="sort-promedio"></span></th>
-                                <th>Evaluaciones</th>
-                                <th>Empleos 5 años</th>
-                                <th>Máx. Duración</th>
-                                <th>Causal Término</th>
+                                <th style="cursor:pointer; text-align:center;" onclick="ordenarCandidatos('promedio')">Promedio ↓ <span id="sort-promedio"></span></th>
+                                <th style="text-align:center;">Evaluaciones</th>
+                                <th style="text-align:center;">Empleos 5 años</th>
+                                <th style="text-align:center;">Máx. Duración</th>
+                                <th style="text-align:center;">Causal Término</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -987,6 +989,48 @@
         if (causalValidada === false)
             return '<span style="font-size:10px; font-weight:700; color:#dc2626; background:rgba(220,38,38,0.12); padding:3px 8px; border-radius:2px;">✗ NO VALIDADA</span>';
         return '';
+    }
+
+    // ─── UX-47 · las tres columnas de documentos de la TABLA de candidatos ───
+    // Solo para la tabla. `textoValidacion` e `insigniaCausal` no se tocan: las
+    // usan la ficha del candidato y la vista de proceso, donde hay espacio.
+    //
+    // Regla única: o hay valor, o hay etiqueta. Nunca los dos. Es una tabla y
+    // tiene que poder escanearse.
+    //
+    // Antes, «Empleos 5 años» y «Máx. duración» metían el estado DENTRO del
+    // valor —donde va un número aparecía «Pendiente de validación»— y en el caso
+    // no válido le concatenaban el motivo escrito por el validador, sin límite
+    // de largo, que es lo que desbordaba la celda. El motivo sale de la tabla y
+    // se queda en la ficha.
+    //
+    // Sin etiqueta verde: si aparece el número o el texto de la causal, es
+    // porque está validado, y la etiqueta no añadiría nada.
+    //
+    // Sin `white-space: nowrap` a propósito: si la etiqueta no cabe en el ancho
+    // de la columna, parte en dos líneas. Con `nowrap` forzaría el ancho de la
+    // columna y deformaría la tabla.
+    const PILL_TABLA = 'display:inline-block; font-size:9.5px; font-weight:700;'
+        + ' padding:3px 7px; border-radius:2px; line-height:1.25; text-align:center;';
+    const ETIQUETA_TABLA = {
+        pendiente_validacion: { txt: 'PENDIENTE DE VALIDACIÓN', color: '#92400e', fondo: 'rgba(217,119,6,0.12)' },
+        no_valido:            { txt: '✗ NO VÁLIDO',             color: '#dc2626', fondo: 'rgba(220,38,38,0.12)' },
+    };
+    const GUION_TABLA = '<span style="color:var(--subtitulo);">—</span>';
+
+    // Celda de las tres columnas. `valor` ya viene formateado por el llamante.
+    function celdaDocumento(estado, valor) {
+        const e = ETIQUETA_TABLA[estado];
+        if (e) {
+            return '<span style="' + PILL_TABLA + ' color:' + e.color
+                 + '; background:' + e.fondo + ';">' + e.txt + '</span>';
+        }
+        // `validado`, o un estado que no llegó —respuesta vieja en caché
+        // mientras Vercel propaga—. En los dos casos manda el dato: si lo hay se
+        // pinta, y si no, el guion.
+        return (valor !== null && valor !== undefined && valor !== '')
+            ? escapeHtml(String(valor))
+            : GUION_TABLA;
     }
 
     const CAUSAL_LABELS = {
@@ -1269,11 +1313,18 @@
                     return `
                     <tr>
                         <td><div class="td-name">${escapeHtml(c.nombre)}</div><div class="td-sub">${escapeHtml(c.rut)}</div></td>
-                        <td><strong style="font-size:18px;color:var(--azul);">${d.promedio ? d.promedio.toFixed(1) : '—'}</strong></td>
-                        <td>${d.count} / ${c.empleadores}</td>
-                        <td>${escapeHtml(textoValidacion(c.cert_estado, c.cert_empleos, '', c.cert_razon_invalido))}</td>
-                        <td>${escapeHtml(textoValidacion(c.cert_estado, c.cert_permanencia, ' años'))}</td>
-                        <td>${escapeHtml(c.causal_texto || '—')}</td>
+                        <td style="text-align:center;"><strong style="font-size:18px;color:var(--azul);">${d.promedio ? d.promedio.toFixed(1) : '—'}</strong></td>
+                        <td style="text-align:center;">${d.count} / ${c.empleadores}</td>
+                        <td style="text-align:center;">${celdaDocumento(c.cert_estado, c.cert_empleos)}</td>
+                        <td style="text-align:center;">${celdaDocumento(c.cert_estado, c.cert_permanencia !== null && c.cert_permanencia !== undefined ? c.cert_permanencia + ' años' : null)}</td>
+                        <!-- causal_texto ya viene por formatearCausal, que devuelve
+                             un guion cuando no hay causal. Ese guion es una cadena
+                             con contenido: celdaDocumento lo tomaria por dato bueno
+                             y lo pintaria en negro. El guion de "no hay dato" lo
+                             pone celdaDocumento, en gris.
+                             Sin acentos graves aqui dentro: esto vive en una
+                             plantilla de JS y los cerraria. -->
+                        <td style="text-align:center;">${celdaDocumento(c.finiq_estado, c.causal_texto === '—' ? null : c.causal_texto)}</td>
                         <td>${c.evaluaciones > 0
                             ? `<button class="btn-accion" onclick="verResultados('${c.id}')">Ver detalle</button>`
                             : `<span style="font-size:12px;color:var(--subtitulo);">Sin evaluaciones</span>`}
