@@ -15,7 +15,12 @@
 -- No cambia el cuerpo de la función ni ninguna tabla: solo dónde busca.
 --
 -- La aplica el dueño desde el editor SQL. `apply_migration` está prohibido en
--- este proyecto.
+-- este proyecto. El bloque que comprueba que quedó aplicada y que la función
+-- sigue funcionando está en `pedidos/H-18-comprobacion.sql`.
+--
+-- OJO, y está comprobado: un `create or replace function` de esta función SIN
+-- repetir la cláusula `set search_path` **borra la ruta fijada** y deshace esto
+-- en silencio. Si alguna vez se cambia su cuerpo, hay que volver a fijarla.
 
 alter function public.update_updated_at_column() set search_path = pg_catalog, public;
 
