@@ -18,7 +18,7 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 12/10**, en el Paso 0.
 
 **En curso:** ninguno. El **Paso 0 de seguridad** —UX-34, H-15, H-18 y lo que faltaba de UX-49— se
-cerró el 12/10 en un PR; `crear-solicitud` quedó en v31. Antes se habían cerrado **UX-47**, **UX-45**
+cerró el 12/10 en el **PR #22**; `crear-solicitud` quedó en v31. Antes se habían cerrado **UX-47**, **UX-45**
 y **UX-42** el 14/08.
 
 **Pendiente de la mano del dueño:** la migración de H-18 **no está aplicada** —`apply_migration`
@@ -1744,8 +1744,8 @@ Ni funciones, ni migración, ni despliegue: salió por Vercel al fusionar.
 
 ## Paso 0 · Cierre de seguridad (12/10/2026)
 
-Cuatro hallazgos en un PR: **UX-34**, **H-15**, **H-18** y lo que faltaba de **UX-49**. Un commit
-por hallazgo. `crear-solicitud` quedó en **v31**.
+Cuatro hallazgos en un PR, el **#22**: **UX-34**, **H-15**, **H-18** y lo que faltaba de **UX-49**.
+Un commit por hallazgo. `crear-solicitud` quedó en **v31**.
 
 **Antes de nada se comprobó la deriva**, que es el único motivo para detenerse: producción tenía
 `crear-solicitud` en **v30 · `9d4f76e88eeff58e…`**, exactamente lo que registraba el `MANIFEST`. Sin
