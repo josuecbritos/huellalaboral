@@ -1856,6 +1856,27 @@ controlan y `preload` es difícil de revertir.
 
 **Se despliega al fusionar.** Revertir es revertir el commit.
 
+### El bloque de comprobación también se probó antes de mandarlo
+
+Las cabeceras no existen hasta que se fusione, y desde esta sesión no hay salida a
+`huellalaboral.cl` —el proxy devuelve 403—, así que el bloque de consola se probó **contra dos
+servidores locales que sirven los 12 HTML de verdad**: uno sin ninguna cabecera y otro con las
+seis, **leídas de `vercel.json`** y no copiadas a mano, para que un cambio en el archivo que no se
+refleje en el bloque haga fallar la prueba.
+
+| Fase | Qué se comprobó | Resultado |
+|------|-----------------|-----------|
+| **A** · sin cabeceras | Dice que falla, cuenta **las 72 que faltan**, y no dice ✅ por error | ✅ **Sabe fallar** |
+| **C** · con las seis de `vercel.json` | Dice ✅ y cuenta **72/72** —12 páginas × 6 cabeceras—, sin ningún ❌ | ✅ |
+
+El bloque queda en `pedidos/H-15-cabeceras-consola.js` y el arnés que lo prueba en
+`pedidos/H-15-cabeceras.mjs`. Esto no comprueba Vercel: comprueba que **el bloque distingue un
+sitio con cabeceras de uno sin ellas**, que es lo que hay que saber antes de fiarse de su ✅.
+
+**El aviso de origen del bloque no aborta, a propósito.** Si abortara al no estar en
+`https://huellalaboral.cl`, no habría forma de probarlo contra un servidor local, y entonces lo
+único que sostendría su ✅ sería la lectura del código.
+
 ---
 
 ## H-18 · La función de fechas no fijaba dónde busca
