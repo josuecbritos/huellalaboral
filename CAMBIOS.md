@@ -12,12 +12,18 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 
 | | Cerrados | En curso | Pendientes | Total |
 |---|:---:|:---:|:---:|:---:|
-| Hallazgos | 9 | 0 | 41 | 50 |
+| Hallazgos `H-nn` de la auditoría | 11 | 0 | 39 | 50 |
 
-**Cerrados:** H-01, H-07, H-04, H-05 y H-10 el 11/08; H-02, H-03 y H-35 el 12/08.
+**Cerrados:** H-01, H-07, H-04, H-05 y H-10 el 11/08; H-02, H-03 y H-35 el 12/08; **H-15 y H-18 el
+12/10**, en el Paso 0.
 
-**En curso:** ninguno. **UX-47** se cerró el 14/08 —PR #20 fusionado y comprobado en el panel—,
-igual que **UX-45** (PR #18) y **UX-42** (PR #16 y #17).
+**En curso:** ninguno. El **Paso 0 de seguridad** —UX-34, H-15, H-18 y lo que faltaba de UX-49— se
+cerró el 12/10 en un PR; `crear-solicitud` quedó en v31. Antes se habían cerrado **UX-47**, **UX-45**
+y **UX-42** el 14/08.
+
+**Pendiente de la mano del dueño:** la migración de H-18 **no está aplicada** —`apply_migration`
+está prohibido— y la aplica él desde el editor SQL. Hasta entonces, H-18 está corregido en el repo
+y **no en la base**.
 
 **Siguiente trabajo agrupado: el Bloque 11 · panel del reclutador** —H-08, UX-29, UX-23 y UX-21—,
 cuatro hallazgos de `dashboard.html` para un solo despliegue. Tiene dos avisos de orden que hay que
@@ -1736,6 +1742,232 @@ Ni funciones, ni migración, ni despliegue: salió por Vercel al fusionar.
 
 ---
 
+## Paso 0 · Cierre de seguridad (12/10/2026)
+
+Cuatro hallazgos en un PR: **UX-34**, **H-15**, **H-18** y lo que faltaba de **UX-49**. Un commit
+por hallazgo. `crear-solicitud` quedó en **v31**.
+
+**Antes de nada se comprobó la deriva**, que es el único motivo para detenerse: producción tenía
+`crear-solicitud` en **v30 · `9d4f76e88eeff58e…`**, exactamente lo que registraba el `MANIFEST`. Sin
+esa comprobación, desplegar desde el repo habría podido pisar un cambio hecho a mano en el panel,
+que es UX-35 y ya pasó una vez.
+
+---
+
+## UX-34 · El nombre del trabajador entraba sin neutralizar en los correos
+
+🔴 Seguridad · Esfuerzo S · **Estado: ✅ DESPLEGADO** (12/10/2026) · `crear-solicitud` v31
+
+### El problema
+
+**Era el único riesgo explotable de los cuatro.** `trabajador.html` es un formulario abierto, sin
+cuenta, y quien lo llena **elige también la dirección del «evaluador»**. El nombre que escribe ahí
+se pegaba tal cual en el HTML de los tres correos.
+
+Las dos cosas juntas son lo que lo hace explotable: cualquiera podía hacer que **Huella Laboral
+enviara a cualquier dirección un correo con HTML propio** —por ejemplo un botón hacia una página
+falsa— desde un remitente con DMARC configurado y reputación limpia. No es XSS: los clientes de
+correo no ejecutan scripts. Es suplantación con el dominio del producto detrás.
+
+| Correo | Valor sin neutralizar |
+|--------|-----------------------|
+| M-1, al evaluador | `trabajador.nombre` |
+| M-2, al trabajador | `trabajador.nombre` |
+| M-3, al validador | `trabajador.nombre` **y** `trabajador.rut` |
+
+Estaba registrado desde el 13/08 y **congelado a propósito** hasta después del piloto, porque
+tocar `crear-solicitud` obliga a verificar los tres correos. Se descongela aquí.
+
+### El cambio
+
+`escapeHtml` **copiada idéntica** de `agregar-candidato`, con su comentario, y aplicada a los
+cuatro valores. Solo en el cuerpo HTML.
+
+**El asunto de M-1 no se toca.** Es texto plano en Resend: escaparlo mostraría entidades literales
+en la bandeja de entrada. Es la misma distinción que ya se aplicó en M-4 y M-5.
+
+### Verificación
+
+Sobre el **fuente real transpilado**, sin enviar nada. El script está en
+`pedidos/UX-34-correos.mjs` y **aborta** si no salen los tres correos o si la fase A no muestra el
+fallo.
+
+Nombre hostil: `Prueba <b>UX34</b> <a href="https://example.com">enlace inyectado</a>` ·
+RUT hostil: `11.111.111-1"><b>x</b>`
+
+| Fase | Qué se comprobó | Resultado |
+|------|-----------------|-----------|
+| **A** · `main` | Las etiquetas aparecen vivas en M-1, M-2 y M-3, y el RUT rompe el atributo | ✅ **El fallo existía** |
+| **C** · la rama | Neutralizadas (`&lt;b&gt;…`) en los tres; ninguna etiqueta viva; el RUT ya no rompe el atributo | ✅ |
+| **B** · la rama, `José Ñúñez Prueba` | Tildes y eñes literales en los tres, sin entidades; el asunto de M-1 sin cambios | ✅ |
+| **D** · `main` vs. la rama, nombre inocuo | 17/17, 17/17 y 13/13 líneas, **cero diferencias**; los tres enlaces intactos | ✅ |
+
+La fase D es la que descarta daño colateral: fuera de los cuatro valores, el HTML de los tres
+correos es idéntico línea a línea.
+
+### Lo que no se tocó
+
+**H-06** —el fallo de envío se traga— y **H-21** —los evaluadores se acumulan al resubir— siguen
+abiertos en esta función, y los textos no se movieron. Conviene recordar que **con H-06 abierto no
+hay señal de que un correo haya salido**: si algo fallara aquí, la función respondería
+`success: true` igual.
+
+---
+
+## H-15 · El sitio no enviaba cabeceras de seguridad
+
+🟠 Seguridad de segunda línea · Esfuerzo XS · **Estado: ✅ EN LA RAMA** (12/10/2026)
+
+### El problema
+
+No había puerta abierta: faltaba un refuerzo. **No existía `vercel.json`**, así que el sitio no
+enviaba ninguna cabecera de seguridad.
+
+### El cambio
+
+`vercel.json` nuevo en la raíz, **solo cabeceras** —sin rutas, sin redirecciones, sin
+`cleanUrls`—, aplicadas a `/(.*)`:
+
+| Cabecera | Valor |
+|----------|-------|
+| `X-Frame-Options` | `DENY` |
+| `Content-Security-Policy` | `frame-ancestors 'none'` |
+| `X-Content-Type-Options` | `nosniff` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Strict-Transport-Security` | `max-age=63072000` |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` |
+
+### Por qué la política de contenido se limita a `frame-ancestors`
+
+**La razón se comprobó, no se dio por buena.** De los 12 HTML: **9 llevan su JavaScript dentro de
+la página** y **7 usan manejadores `onclick`/`onchange`**. Una política que restringiera scripts
+exigiría permitir el código en línea, y eso anula su protección. Queda fuera hasta que el
+JavaScript salga de las páginas, que es un trabajo aparte y mayor.
+
+También comprobado: **ninguno de los 12 usa `iframe`**, así que `DENY` no rompe nada propio.
+
+**`Referrer-Policy` es la que más importa aquí**, y conviene decir por qué: tres pantallas llevan
+su token en la URL —`estado.html`, `evaluar.html` y `validar.html`—. Sin esa cabecera, un enlace
+saliente puede llevarse la URL entera, token incluido, al sitio de destino. Es la única de las
+seis que cierra una fuga concreta de este producto.
+
+Sin `includeSubDomains` ni `preload` en HSTS, a propósito: comprometen subdominios que aquí no se
+controlan y `preload` es difícil de revertir.
+
+**Se despliega al fusionar.** Revertir es revertir el commit.
+
+---
+
+## H-18 · La función de fechas no fijaba dónde busca
+
+🟡 Seguridad, riesgo bajo · Esfuerzo XS · **Estado: ⏸️ EN LA RAMA, sin aplicar a la base** (12/10/2026)
+
+### El problema
+
+`public.update_updated_at_column` pone al día la fecha de modificación de un registro al
+actualizarlo, y **no tiene fijada la ruta de búsqueda**: el orden de lugares de la base donde
+busca lo que usa. Alguien con permiso para crear objetos podría hacerle usar una versión falsa de
+lo que invoca. **Hoy nadie de fuera tiene ese permiso**, y por eso el riesgo es bajo. El panel de
+seguridad de Supabase lo marcó como `function_search_path_mutable`.
+
+### El cambio
+
+Migración nueva, `supabase/migrations/20261012_h18_search_path_update_updated_at.sql`:
+
+```sql
+alter function public.update_updated_at_column() set search_path = pg_catalog, public;
+```
+
+**`pg_catalog, public` y no una ruta vacía.** El cuerpo de la función no se puede leer desde el
+conector, y esta ruta resuelve lo mismo que hoy. Una ruta vacía obligaría a calificar cada nombre
+dentro del cuerpo, y **sin poder leerlo no hay forma de comprobar que siguiera funcionando**. La
+reversión va comentada al pie del archivo.
+
+### ⚠️ No está aplicada
+
+**`apply_migration` está prohibido en este proyecto.** La aplica el dueño desde el editor SQL. El
+bloque de comprobación está en **`pedidos/H-18-comprobacion.sql`** y también va en el mensaje de
+cierre: busca las tablas cuyo disparador usa la función, actualiza una fila de cada una sin
+cambiar ningún dato —le asigna a su primera columna su propio valor—, compara la fila antes y
+después para ver **qué campo cambió**, y **termina con un error intencional que lo deshace todo**.
+El texto del error es el informe, y dice que el error es intencional.
+
+Hasta que se aplique, **H-18 está corregido en el repo y no en la base**.
+
+### El bloque se probó antes de mandárselo al dueño
+
+No se puede ejecutar contra el proyecto —sin el grupo `database` del conector no hay forma—, así
+que se ejecutó contra **un Postgres 16 local y desechable** con una réplica mínima: la función de
+fechas y cuatro tablas, tres con el disparador enganchado y una sin él, más una tabla vacía. El
+arnés queda en `pedidos/H-18-postgres-local.sh` y es reejecutable.
+
+| Qué se comprobó | Resultado |
+|-----------------|-----------|
+| Encuentra solo las tablas cuyo disparador usa la función | `documentos`, `trabajadores`, `vacia`. **`sin_disparador` no aparece** |
+| Dice qué campo cambió y con qué valores | `OK · solo cambió updated_at: …885226 → …041041` en las dos con filas |
+| Una tabla con disparador pero sin filas | `tabla vacía, no hay fila que actualizar`. No falla por eso |
+| **El error intencional deshace el UPDATE** | Las dos fechas, releídas después, son **idénticas** a las de antes del bloque |
+| Con el `search_path` ya fijado, la función sigue funcionando | Vuelve a dar `OK` en las dos tablas. Es lo que la migración podía romper y no rompe |
+| **Control** · con una función que no pone la fecha, ¿sigue diciendo OK? | **No.** Dice `ATENCIÓN · no cambió ningún campo`. El OK no está escrito a mano |
+
+La fila del control es la que vale: un bloque de comprobación que solo sabe decir OK no comprueba
+nada. Es la misma lección de siempre en este proyecto, aplicada al SQL.
+
+### Hallazgo lateral: un `create or replace` borra la ruta fijada
+
+Apareció al montar el control, y **no es teoría: está medido.** Al redefinir la función con
+`create or replace function` sin repetir la cláusula, `proconfig` pasó de
+`{"search_path=pg_catalog, public"}` a vacío. O sea: **si algún día se cambia el cuerpo de la
+función, H-18 se deshace solo y en silencio.** Queda anotado en el propio archivo de migración,
+en `TECNICO.md` §6 y aquí, porque es el tipo de cosa que nadie vuelve a mirar.
+
+### Dónde se ve en el panel
+
+En el panel de Supabase, **Advisors → Security**: el aviso `function_search_path_mutable` para
+`public.update_updated_at_column` **debe desaparecer** una vez aplicada la migración. Puede tardar
+en refrescar; el bloque de arriba es la comprobación que no depende de eso.
+
+---
+
+## UX-49 · Lo que faltaba, y una corrección al diagnóstico
+
+🔵 Presentación · Esfuerzo XS · **Estado: ✅ EN LA RAMA** (12/10/2026) · cerrado en dos partes
+
+### Las dos partes
+
+| Cuándo | Qué | Dónde |
+|--------|-----|-------|
+| **16/08** | La fila de invitación pendiente pasó de `colspan="6"` a `"5"` | Commit `edc3d2a`, hecho a mano desde GitHub. **Su mensaje no llevaba el código**, así que no se podía rastrear |
+| **12/10** | El estado vacío pasó de `colspan="8"` a `"7"` | Este PR |
+
+### La corrección: el síntoma ya no se reproducía
+
+El pedido decía que cuando un proceso no tiene candidatos la fila cuelga una columna por la
+derecha. **Eso era cierto antes de `edc3d2a` y hoy ya no lo es.** Medido con Chromium antes de
+afirmar nada:
+
+| | `colspan="8"` | `colspan="7"` |
+|---|---|---|
+| Ancho de la tabla | 1094 px | 1094 px |
+| Dónde termina el último `<th>` | 1367 px | 1367 px |
+| Dónde termina la fila | 1367 px | 1367 px |
+
+**Por qué.** El estado vacío es la rama alternativa de un ternario, así que es la **única** fila
+del cuerpo cuando aparece. La octava columna que declaraba no tiene contenido en ninguna otra
+fila, el navegador le da ancho cero, y la tabla se dibuja como si tuviera siete.
+
+Lo que sí colgaba era **la fila de invitación pendiente**, que declaraba `1 + 6 + 1 = 8` columnas
+reales y por eso ensanchaba la tabla de verdad. Eso es lo que se vio al cerrar UX-47 y lo que
+arregló `edc3d2a`; al arreglarlo, dejó latente el `colspan` del estado vacío.
+
+**El cambio se queda igualmente, y no por simetría:** el día que alguien añada una columna a la
+cabecera o una fila con ocho, el estado vacío volvería a descuadrar sin que nadie lo tocara. Es
+higiene, no un arreglo visible, y el registro no debería decir lo contrario.
+
+El arnés queda en `pedidos/UX-49-tabla-vacia.mjs` y aborta si no encuentra la cabecera o la fila.
+
+---
+
 ## Decisiones de producto tomadas durante el trabajo
 
 Decisiones que no son de un solo hallazgo y que afectan cómo se abordan los siguientes.
@@ -1781,7 +2013,7 @@ descritos en prosa sin forma de referirse a ellos.
 | UX-31 | **No hay avisos al trabajador cuando avanza su solicitud**: documentos validados, un evaluador responde, proceso completo. Solo recibe M-2 al enviar, y depende de entrar por su cuenta a `estado.html` | Abierto |
 | UX-32 | `estado.html` **es seguimiento** —decidido el 13/08— pero se titula «Resumen trayectoria laboral» y su token no caduca (H-12), así que el trabajador **puede reenviarlo**. Pendiente decidir si existe una carta de presentación como pantalla aparte, con su propio enlace | Abierto |
 | UX-33 | El certificado enlaza a `links-afp.html` para saber cómo obtenerlo; **el finiquito solo dice «adjunta tu finiquito»**. El motivo de rechazo más común es que suben el documento equivocado, así que **el hueco está en el formulario** | Abierto |
-| UX-34 | `crear-solicitud` interpola `${trabajador.nombre}` **sin escapar** en el HTML de M-1, M-2 y M-3. Era el `N-1` de este documento | Abierto, **congelado hasta después del piloto** |
+| UX-34 | `crear-solicitud` interpola `${trabajador.nombre}` **sin escapar** en el HTML de M-1, M-2 y M-3. Era el `N-1` de este documento | ✅ **Cerrado el 12/10**, Paso 0. Estuvo congelado hasta el piloto por decisión del 14/08 |
 | UX-35 | **Un cambio hecho en el editor del panel de Supabase no deja rastro en el repositorio**, y nada lo detecta solo. Era el `UX-25` que este documento había asignado por su cuenta | Abierto |
 | UX-36 | **`index.html` se ve mal en pantalla grande y muy mal en móvil.** Ancho máximo 1200 px y corte más alto en 1024. **Sin diagnóstico detallado**: hay que revisarla usándola | Abierto |
 | UX-37 | **Nadie ha visto la plataforma en un teléfono.** Quedan once pantallas sin revisar | Abierto. **No se cierra con arreglos sueltos** |
@@ -1796,7 +2028,7 @@ descritos en prosa sin forma de referirse a ellos.
 | UX-46 | **La cabecera de `TECNICO.md` lleva su propia lista de versiones**, duplicando lo que `MANIFEST.md` ya mantiene por función | Abierto. Documentación, **no afecta al producto** |
 | UX-47 | **La tabla de candidatos no muestra el estado de los documentos**: un finiquito subido y sin validar sale como un guion, y el motivo del rechazo desborda la celda | ✅ **Cerrado el 14/08**, PR #20 |
 | UX-48 | **`formatearCausal` mezcla traducir con rellenar ausencias.** Devuelve un guion cuando no hay causal, y esa cadena tiene contenido, así que cada llamante tiene que deshacer el relleno | Abierto |
-| UX-49 | **Los encabezados de la tabla no cuadran con las filas.** Siete columnas en la cabecera, ocho en la fila de invitación pendiente | Abierto |
+| UX-49 | **Los encabezados de la tabla no cuadran con las filas.** Siete columnas en la cabecera, ocho en la fila de invitación pendiente | ✅ **Cerrado el 12/10** en dos partes, con una corrección al diagnóstico |
 
 **La serie ya no tiene huecos entre UX-22 y UX-49.**
 
@@ -1827,6 +2059,12 @@ La fila de invitación cuelga un ancho de columna por la derecha y la banda gris
 termina antes que las filas. **Este informe lo había mandado a UX-29**; lo corrigió el dueño el
 14/08. Arreglar el formato del contenido no habría tocado la estructura, y darlo por cubierto
 habría dejado el descuadre vivo con el hallazgo cerrado.
+
+**UX-29 sigue abierto; UX-49 se cerró el 12/10.** Y con una corrección: medido el 12/10, **la fila
+de ocho columnas ya no existía** —la había quitado `edc3d2a` al rehacer la tabla en UX-47—, así
+que de las tres piezas del diagnóstico solo quedaba viva la del `colspan="8"` del estado vacío.
+Que la separación entre los dos hallazgos fuera correcta no significa que el síntoma siguiera ahí
+dos meses después: ver la sección de UX-49 en el Paso 0.
 
 ### UX-43 y UX-44 no son dos hallazgos: son uno y su síntoma
 
@@ -1897,7 +2135,12 @@ hallazgos con códigos propios:
 
 Los cuatro códigos los confirmó el dueño el 14/08. **La serie `N-nn` queda cerrada**: no se usa más.
 
-### UX-34 está congelado a propósito, y no por falta de tiempo
+### UX-34 estuvo congelado a propósito, y no por falta de tiempo
+
+> **Se descongeló el 12/10**, por decisión del dueño, y se cerró en el Paso 0. Lo que sigue es el
+> motivo por el que esperó dos meses, que conviene no perder: explica por qué el cierre se verificó
+> con un arnés que regenera los tres correos y los compara contra `origin/main`, en vez de mirar el
+> diff y confiar.
 
 `crear-solicitud` es **la función más delicada del producto**: sube documentos a Storage y envía
 los tres correos del recorrido del trabajador. Cualquier cambio ahí obliga a verificar M-1, M-2 y
@@ -1924,16 +2167,16 @@ el caso de M-2 en la siguiente.
 | UX-22 | Producto, no una función concreta | **No existe forma de quitar un candidato de un proceso.** Ni por interfaz ni por edge function: `gestionar-proceso` solo borra filas de `candidatos_proceso` como parte de `eliminar` el proceso entero. Se anotó primero como «N-2» | H-10 | Abierto, sin pedido |
 | UX-25 | `estado.html`, tercera tarjeta, y `validar-documentos` | **Un finiquito válido cuya causal no coincide se ve como «✓ VALIDADO» sobre un guion, sin explicación.** `obtener-estado` manda `causal_texto: null` cuando `causal_validada` es `false`, y desde el rediseño la insignia describe el documento, no la causal. Antes salía «✗ NO VALIDADA» en rojo | Tarjetas de `estado.html` | Abierto, sin pedido |
 | UX-29 | `dashboard.html`, la ficha del candidato y la tabla | **Las tarjetas están diseñadas para un número grande** («3», «5 años») y desde la cadena de validación reciben frases. «No válido — ‹motivo›» desborda, y el motivo lo escribe el validador **sin límite de largo**. La causal muestra un guion con la insignia debajo. El dato es correcto; el formato no. **Resuelto en `estado.html` el 13/08; sigue abierto en `dashboard.html`**, que tiene el mismo problema en la ficha del candidato y en la tabla | Fase C de la cadena de validación | Parcial: falta `dashboard.html` |
-| UX-34 | `crear-solicitud`, líneas 254, 294 y 337 del respaldo | Interpola `${trabajador.nombre}` sin escapar en el HTML de los correos **M-1, M-2 y M-3**. No es XSS —los clientes de correo no ejecutan scripts— pero sí inyección de HTML en el correo a contacto frío que `FUNCIONAL.md` §7 llama el más frágil del sistema | H-07 | Abierto, sin pedido |
+| UX-34 | `crear-solicitud`, líneas 254, 294 y 337 del respaldo | Interpola `${trabajador.nombre}` sin escapar en el HTML de los correos **M-1, M-2 y M-3**. No es XSS —los clientes de correo no ejecutan scripts— pero sí inyección de HTML en el correo a contacto frío que `FUNCIONAL.md` §7 llama el más frágil del sistema | H-07 | ✅ Cerrado el 12/10, Paso 0 |
 | UX-35 | Proceso, no código | **Un cambio hecho en el editor del panel de Supabase no deja rastro en el repositorio, y nada lo detecta solo.** El 13/08 producción tuvo durante un rato una versión de `crear-solicitud` que no existía en ninguna rama. El siguiente despliegue desde el repo la habría pisado en silencio. Lo único que lo evitó fue que el dueño avisara | Cambio manual de M-2 | Abierto, sin pedido |
 | UX-48 | `dashboard.html`, `formatearCausal` | **Mezcla traducir con rellenar ausencias.** Hace `CAUSAL_LABELS[valor] || valor || '—'`: el guion que devuelve es una cadena con contenido, así que **quien la llama no puede distinguir «no hay causal» de «la causal es este texto»** sin comparar contra el guion literal. Ha obligado a escribir `x === '—' ? null : x` en tres sitios. Debería traducir y devolver vacío; quien llame decide qué pintar. **Toca tres vistas** | UX-28, tarjetas de `estado.html` y UX-47 | Abierto, sin pedido |
-| UX-49 | `dashboard.html`, la tabla de candidatos | **Los encabezados no cuadran con las filas.** 7 `<th>` en la cabecera, 8 columnas en la fila de invitación pendiente —`<td>` + `colspan="6"` + `<td>`— y `colspan="8"` en el estado vacío. La fila cuelga un ancho por la derecha y la banda gris de la cabecera termina antes. **No es UX-29:** aquello es el formato del contenido, esto la estructura de la tabla | UX-47 | Abierto, sin pedido |
+| UX-49 | `dashboard.html`, la tabla de candidatos | **Los encabezados no cuadran con las filas.** 7 `<th>` en la cabecera, 8 columnas en la fila de invitación pendiente —`<td>` + `colspan="6"` + `<td>`— y `colspan="8"` en el estado vacío. La fila cuelga un ancho por la derecha y la banda gris de la cabecera termina antes. **No es UX-29:** aquello es el formato del contenido, esto la estructura de la tabla | UX-47 | ✅ Cerrado el 12/10, Paso 0. **La fila de ocho columnas ya no existía**: ver la corrección en la sección de UX-49 |
 
 **Por qué UX-34 no se arregló en H-07:** es una edge function, y el pedido de H-07 acotaba el
-alcance a `dashboard.html` y `admin.html`. **Y por qué sigue sin arreglarse:** el dueño decidió el
+alcance a `dashboard.html` y `admin.html`. **Y por qué tardó hasta el 12/10:** el dueño decidió el
 14/08 congelarlo hasta después del piloto. El motivo está arriba, con la serie: tocar
 `crear-solicitud` obliga a verificar los tres correos en bandeja, y con H-06 abierto no hay otra
-señal de que hayan salido.
+señal de que hayan salido. **Cerrado el 12/10 en el Paso 0.**
 
 **UX-22 es funcional antes que técnico**, y **no** tiene que ver con limpiar datos de prueba —eso
 se hace por SQL—. El problema real: un reclutador que agrega un candidato por error no tiene forma

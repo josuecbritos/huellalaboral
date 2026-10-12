@@ -19,11 +19,13 @@ Regenerados después:
   entró en él. Detalle en `CAMBIOS.md`.
 - `obtener-candidato.ts` el **14/08** al añadir `evaluaciones.invitados` para el contador del panel
   (UX-45, versión 10 → 11).
+- `crear-solicitud.ts` el **12/10** al neutralizar el nombre y el RUT del trabajador en los tres
+  correos (UX-34, versión 30 → 31).
 
-**19 funciones · 3,028 líneas · 117,032 bytes (114.3 KB)**
+**19 funciones · 3,042 líneas · 117,569 bytes (114.8 KB)**
 
 Las líneas son líneas de contenido. Ningún archivo termina en salto de línea, así que `wc -l`
-devuelve una menos por archivo: 3,009 + 19 = 3,028.
+devuelve una menos por archivo: 3,023 + 19 = 3,042.
 
 Contenido íntegro y literal de cada `index.ts` desplegado, un archivo por función,
 sin resumir ni reformatear. `version` es la versión activa en producción al momento
@@ -31,7 +33,7 @@ del respaldo; `ezbr_sha256` es el hash que reporta Supabase para ese despliegue.
 
 | Archivo | Versión | Líneas | Bytes | ezbr_sha256 |
 |---------|--------:|-------:|------:|-------------|
-| `crear-solicitud.ts` | 30 | 402 | 17,622 | `9d4f76e88eeff58e…` |
+| `crear-solicitud.ts` | 31 | 416 | 18,159 | `f7fa98f4f5372bf5…` |
 | `agregar-candidato.ts` | 14 | 482 | 20,511 | `dc96cc1e6098554f…` |
 | `crear-reclutador.ts` | 15 | 235 | 9,784 | `61f1889065d7fb7b…` |
 | `obtener-candidato.ts` | 11 | 227 | 9,251 | `3b2b68c64bb10f84…` |
@@ -65,7 +67,7 @@ versión y con el mismo `ezbr_sha256` que registra la tabla. El detalle por arch
 
 **Los recuentos de esa tabla son del 11/08 y no se han rehecho.** Desde entonces se regeneró
 `agregar-candidato.ts` dos veces y `crear-solicitud.ts` dos (13/08), y `obtener-candidato.ts` una
-(14/08), así que el total vigente es el de la cabecera —3.028 líneas, 117.032 bytes—, no el de la
+(14/08), así que el total vigente es el de la cabecera —3.042 líneas, 117.569 bytes—, no el de la
 fila. La comprobación de versión y `ezbr_sha256` sí se repitió antes de cada despliegue, incluido
 el del 14/08: las 19 seguían donde el respaldo decía.
 
@@ -93,7 +95,7 @@ lea más garantía de la que hay.
 | `gestionar-proceso.ts` | H-05 | Igual |
 | `agregar-candidato.ts` | H-10, luego M-4/M-5 | **La v13 sí se leyó de vuelta y se comparó; la v14 que hay en el archivo, no.** Ver la nota de abajo |
 | `obtener-stats.ts` | H-10 | Igual |
-| `crear-solicitud.ts` | H-02/H-03, M-1, y el cambio manual de M-2 | **Leída de vuelta de producción y reconstruida a partir de ella.** Es la única del repositorio que se hizo en ese sentido. Ver la nota de abajo |
+| `crear-solicitud.ts` | H-02/H-03, M-1, el cambio manual de M-2, y UX-34 | **Solo copia del fuente enviado a desplegar** en su v31. La v30 sí se había reconstruido leyendo producción. Ver la nota de abajo |
 | `obtener-validacion.ts` | H-02 | Igual |
 | `validar-documentos.ts` | H-03 | Igual |
 | `obtener-estado.ts` | Cadena de validación | Igual |
@@ -127,6 +129,12 @@ Lo que respalda que la reconstrucción es fiel:
   tercer cambio inadvertido habría descuadrado la cuenta.
 - Los tres correos se regeneraron con el fuente real y se compararon contra `origin/main`: M-2
   cambia dos líneas, M-1 y M-3 ninguna, y los enlaces de los dos botones siguen en pie.
+
+**Su v31, la que está hoy en el archivo, ya no es eso.** UX-34 se escribió en el repo y de ahí
+salió a producción, como todas las demás, así que el respaldo es **copia del fuente enviado a
+desplegar**, comprobada con `cmp` contra `supabase/functions/crear-solicitud/index.ts` y **no
+releída de producción**. Lo que sostiene la equivalencia es lo mismo que en las cinco de abajo,
+más un dato propio: la v30 de este mismo archivo hizo el viaje de ida y vuelta sin perder nada.
 
 Si en algún momento hace falta el punto de retorno con garantía plena, la comprobación pendiente
 es un `get_edge_function` y un `cmp` por archivo. No es urgente, pero tampoco está hecha.

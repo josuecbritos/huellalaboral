@@ -6,12 +6,18 @@ qué la protege. Se consulta para saber **dónde tocar**. El porqué está en `F
 **Este documento describe el estado actual y se actualiza en cada iteración.** Documentación
 desactualizada miente con autoridad.
 
-**Actualizado:** 11 de agosto de 2026 · **Estado del código:** cerrados H-01 (`crear-reclutador`
+**Actualizado:** 12 de octubre de 2026 · **Estado del código:** cerrados H-01 (`crear-reclutador`
 v15), H-07 (`dashboard.html` y `admin.html`), H-04/H-05/H-10 (`obtener-proceso` v3,
 `gestionar-proceso` v3, `agregar-candidato` v11, `obtener-stats` v3) y H-02/H-03/H-35
 (`obtener-validacion` v3, más una migración) y la cadena de validación de documentos
 (`crear-solicitud` v28, `validar-documentos` v6, `obtener-estado` v4, `obtener-candidato` v10,
 `agregar-candidato` v12, más una segunda migración). Todos desplegados en producción.
+
+Después, el **Paso 0 de seguridad** del 12/10: UX-34 (`crear-solicitud` **v31**, desplegada),
+H-15 (`vercel.json`, sale al fusionar), **H-18 (migración entregada y sin aplicar)** y UX-49.
+
+**Esta lista de versiones duplica lo que `MANIFEST.md` ya mantiene por función, y eso es UX-46**,
+abierto. La fuente fiable de versiones es el `MANIFEST`; esta cabecera es un resumen de lectura.
 
 ---
 
@@ -189,6 +195,44 @@ Tres cosas que no son obvias y cuestan un hallazgo si se olvidan:
   el resultado es el mismo y cubre los mismos cinco caracteres.
 - Los otros nueve HTML no tienen `escapeHtml` porque hoy no inyectan dato de usuario con
   `innerHTML`. Comprobado en H-07; si se añade uno, hay que añadir también la función.
+- **Fuera de los HTML hay dos copias más**, en `agregar-candidato` y en `crear-solicitud`, para el
+  HTML de los correos (§7). En total **cinco copias** de la misma función en el sistema, ninguna
+  compartida: no hay build ni en el frontend ni en las funciones. Si cambia el criterio de
+  escapado, cambia en cinco sitios.
+
+### La configuración del sitio en Vercel (desde el 12/10)
+
+Hasta el 12/10 **no había ningún archivo de configuración**: Vercel servía los 12 HTML y las
+imágenes de la raíz del repo con sus valores por omisión, y no se documentaba en ningún sitio.
+No hay build, ni framework, ni directorio de salida: lo que está en la raíz del repo es lo que se
+sirve. **El despliegue lo dispara la fusión a `main`**, que es la razón por la que no se commitea
+a `main` directamente (§8).
+
+`vercel.json` existe ahora y tiene **un solo propósito: cabeceras de respuesta** (H-15). Ni
+redirecciones, ni rewrites, ni `cleanUrls`. Se aplican a `/(.*)`, o sea a todo: HTML, imágenes y
+los dos PDF.
+
+| Cabecera | Valor | Qué impide |
+|----------|-------|------------|
+| `X-Frame-Options` | `DENY` | Que el sitio se cargue dentro de un iframe ajeno |
+| `Content-Security-Policy` | `frame-ancestors 'none'` | Lo mismo, con la directiva vigente |
+| `X-Content-Type-Options` | `nosniff` | Que el navegador adivine el tipo de un archivo |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | Que el token de la query string viaje a terceros |
+| `Strict-Transport-Security` | `max-age=63072000` | Volver a HTTP durante dos años |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | Pedir permisos que el producto no usa |
+
+**La CSP se limita a `frame-ancestors` a propósito.** Una CSP completa con `script-src` tumbaría
+el sitio: **9 de los 12 HTML llevan JavaScript en línea y 7 usan `onclick`/`onchange`**, así que
+haría falta `'unsafe-inline'` —que no protege de nada— o reescribir los 12. `frame-ancestors` no
+depende del contenido de la página y se puede poner hoy.
+
+**`Referrer-Policy` es la que más vale aquí**, y no es evidente: `estado.html`, `evaluar.html` y
+`validar.html` llevan el token **en la query string** (§3). Con la política por omisión de los
+navegadores modernos el origen ya no se filtra entero, pero dejarlo explícito lo fija.
+
+**No hay `X-XSS-Protection`** —retirada de los navegadores— ni `COOP`/`COEP`, que no aportan nada
+sin `SharedArrayBuffer`. **Ninguno de los 12 HTML usa `iframe`**, comprobado antes de poner
+`DENY`: la cabecera no rompe nada propio.
 
 ### Imagen de marca: favicon y los dos logos (desde UX-19 y UX-20, 13/08)
 
@@ -374,6 +418,27 @@ anon key devuelve `[]` habiendo 2 registros.
 **Storage:** solo `crear-solicitud` escribe; solo `obtener-validacion` lee, con
 `createSignedUrl(..., 3600)`.
 
+### Funciones de base: `update_updated_at_column` (H-18, 12/10)
+
+**Este documento no lista las funciones de la base, y sigue sin listarlas**: sin el grupo
+`database` del conector no hay `list_tables` ni forma de enumerarlas, así que una lista completa
+sería inventada. Lo que sí consta es la única que se conoce, porque H-18 la tocó.
+
+`public.update_updated_at_column()` pone al día la fecha de modificación de un registro al
+actualizarlo. Es un disparador: **no la llama ninguna edge function**, la llama la base. **Qué
+tablas lo tienen enganchado tampoco se sabe desde aquí** —misma razón—: lo descubre el bloque
+`pedidos/H-18-comprobacion.sql` al correrlo en el editor SQL.
+
+Desde el 12/10 tiene **la ruta de búsqueda fijada** a `pg_catalog, public`. No cambia su cuerpo ni
+ninguna tabla: solo dónde busca lo que usa. El SQL está en
+`supabase/migrations/20261012_h18_search_path_update_updated_at.sql` con su reversión, y **lo
+aplica el dueño desde el editor SQL** —`apply_migration` está prohibido (§8)—.
+
+**Un `create or replace function` de esta función sin repetir `set search_path` borra la ruta y
+deshace H-18 en silencio.** Está comprobado, no es una precaución teórica: en la prueba local, al
+redefinir el cuerpo, `proconfig` volvió a quedar vacío. Si algún día se cambia lo que hace, hay
+que volver a fijarla en el mismo `create or replace`.
+
 ## 7. Correo
 
 Los siete correos salen por Resend con `fetch` directo. Hechos transversales:
@@ -391,6 +456,33 @@ Los siete correos salen por Resend con `fetch` directo. Hechos transversales:
   **Ojo con la nomenclatura:** los pedidos de auditoría llaman «M-8» a este mismo correo. No hay un
   octavo correo — son siete, y este es el M-3.
 - DMARC está configurado.
+
+### Los tres correos de `crear-solicitud` escapan el nombre y el RUT (desde el 12/10)
+
+`crear-solicitud` envía M-1, M-2 y M-3, y los tres metían en HTML dos valores que **teclea el
+propio trabajador en un formulario público sin cuenta** (`FUNCIONAL.md` §4 y §5): `nombre` y
+`rut`. Mismo criterio que H-07 y que M-4/M-5, con una diferencia que importa: aquí el dato no lo
+escribe un reclutador con sesión, lo escribe cualquiera que abra `trabajador.html`.
+
+La función define su propia `escapeHtml`, **copia literal de la de `agregar-candidato`** —no hay
+build que resuelva imports, así que el bloque está duplicado a propósito: si se cambia, se cambia
+en los dos—. Tres puntos de aplicación, uno por correo:
+
+| Correo | Línea | Qué se escapa |
+|--------|------:|---------------|
+| M-1 · al evaluador | 301 | `trabajador.nombre` |
+| M-2 · al trabajador | 341 | `trabajador.nombre` |
+| M-3 · a validación interna | 384 | `trabajador.nombre` **y** `trabajador.rut` |
+
+**El asunto de M-1 (línea 295) está sin escapar a propósito**, igual que en M-4/M-5: el asunto de
+Resend es texto plano y escaparlo mostraría «Fábrica &amp;amp; Cía» literal en la bandeja de
+entrada. M-2 y M-3 tienen asunto fijo, sin interpolación.
+
+**El RUT era el peor de los dos.** Se comprobó en la fase A con un nombre que llevaba `<b>` y un
+`<a href>`, y con el RUT `11.111.111-1"><b>x</b>`: en los tres correos las etiquetas del nombre
+salían vivas, y en M-3 el RUT además **cerraba el atributo** en el que iba y escapaba de él. Tras
+el cambio ninguna de las dos cosas pasa, un nombre con tildes y eñes se sigue viendo literal
+—sin entidades— y el asunto de M-1 no cambió.
 
 ### M-1 dice de dónde salió el correo (desde el 13/08)
 
