@@ -24,6 +24,20 @@ function getContentType(base64String: string): string {
   return 'application/octet-stream'
 }
 
+// Mismo criterio que H-07. `empresa` y `cargo` los teclea un humano en un
+// formulario libre, y aquí acaban dentro de un HTML.
+//
+// Se usa SOLO para el cuerpo. El asunto de Resend es texto plano: escaparlo
+// mostraría «Fábrica &amp; Cía» literal en la bandeja de entrada.
+function escapeHtml(valor: any): string {
+  return String(valor)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 serve(async (req) => {
@@ -284,7 +298,7 @@ serve(async (req) => {
     <h1 style="color: #0E2A47;">Solicitud de Referencia Laboral</h1>
     <p>Hola,</p>
     <p>Somos <strong>Huella Laboral</strong>, una plataforma que gestiona referencias laborales para generar perfiles confiables.</p>
-    <p><strong>${trabajador.nombre}</strong> te ha solicitado una referencia laboral para usar en su proceso de postulación, y <strong>nos entregó tu correo como una de sus jefaturas anteriores</strong>.</p>
+    <p><strong>${escapeHtml(trabajador.nombre)}</strong> te ha solicitado una referencia laboral para usar en su proceso de postulación, y <strong>nos entregó tu correo como una de sus jefaturas anteriores</strong>.</p>
     <p>Tu respuesta estará visible para reclutadores en nuestra plataforma, pero <strong>no será visible para el postulante</strong>.</p>
     <p>El proceso es muy simple y le será de gran ayuda.</p>
     <div style="margin: 30px 0;">
@@ -324,7 +338,7 @@ serve(async (req) => {
           html: `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <h1 style="color: #0E2A47;">¡Solicitud Recibida!</h1>
-              <p>Hola <strong>${trabajador.nombre}</strong>,</p>
+              <p>Hola <strong>${escapeHtml(trabajador.nombre)}</strong>,</p>
               <p>Gracias por usar Huella Laboral. Tus evaluadores ya recibieron la solicitud de referencia. Una vez que la completen, los reclutadores podrán ver tu perfil en nuestra plataforma.</p>
               <p style="margin-top: 20px;">Puedes hacer seguimiento a tu solicitud en el siguiente link:</p>
               <div style="margin: 20px 0;">
@@ -367,7 +381,7 @@ serve(async (req) => {
             html: `
               <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                 <h1 style="color: #0E2A47;">Documentos para Validar</h1>
-                <p>Trabajador: <strong>${trabajador.nombre}</strong> (${trabajador.rut})</p>
+                <p>Trabajador: <strong>${escapeHtml(trabajador.nombre)}</strong> (${escapeHtml(trabajador.rut)})</p>
                 <div style="margin: 30px 0;">
                   <a href="https://huellalaboral.cl/validar.html?token=${tokenValidacion}"
                     style="display: inline-block; background: #0E2A47; color: white; padding: 14px 28px;
