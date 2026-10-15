@@ -1752,6 +1752,22 @@ Un commit por hallazgo. `crear-solicitud` quedó en **v31**.
 esa comprobación, desplegar desde el repo habría podido pisar un cambio hecho a mano en el panel,
 que es UX-35 y ya pasó una vez.
 
+### Comprobación posterior al cierre (15/10)
+
+PR #22 fusionado (`98ce7fa`) y migración de H-18 aplicada por el dueño. Lo comprobado desde aquí:
+
+| Qué | Cómo | Resultado |
+|-----|------|-----------|
+| H-18 aplicado | Advisors de seguridad del proyecto | ✅ **`function_search_path_mutable` ya no aparece** |
+| La rama está íntegra en `main` | `git diff origin/main..fix/paso-0-seguridad` | ✅ Vacío |
+| Producción no se movió | Las 19 funciones vs. el `MANIFEST`, versión y `ezbr_sha256` | ✅ **Las 19 coinciden.** `crear-solicitud` en v31 · `f7fa98f4…` |
+| Las cabeceras de H-15 | — | ⚠️ **No comprobable desde aquí:** la política de red de la sesión deniega `huellalaboral.cl`. Lo comprueba el dueño con el bloque de consola |
+
+**Lo que siguen diciendo los advisors, y no es de este trabajo:** `rls_enabled_no_policy` en cinco
+tablas —RLS activo sin políticas, que es justo la postura que tiene este producto: todo pasa por
+las edge functions con `service_role`— y `auth_leaked_password_protection` desactivado. Las dos
+son anteriores al Paso 0 y ninguna es un hallazgo abierto todavía; conviene decidir si lo son.
+
 ---
 
 ## UX-34 · El nombre del trabajador entraba sin neutralizar en los correos
@@ -1986,6 +2002,36 @@ cabecera o una fila con ocho, el estado vacío volvería a descuadrar sin que na
 higiene, no un arreglo visible, y el registro no debería decir lo contrario.
 
 El arnés queda en `pedidos/UX-49-tabla-vacia.mjs` y aborta si no encuentra la cabecera o la fila.
+
+### El bloque de consola que mandé estaba mal (15/10)
+
+Al comprobar el cierre, el dueño corrió el bloque que yo le había mandado en el mensaje y le dio
+esto:
+
+```
+cabecera  th 6   ancho 0
+fila             ancho 0   colspan 1
+❌ UX-49: el colspan no coincide con los th.
+```
+
+**Era un fallo del bloque, no del panel.** Usaba `document.querySelector('table')`, y
+`dashboard.html` tiene **dos tablas**: la primera es la de **procesos** —6 `th`—, y mientras se
+ve un proceso está oculta, de ahí los dos anchos en 0. Nunca llegó a mirar la tabla de
+candidatos.
+
+El bloque corregido se ancla a **`#tablaCandidatos`** y aborta si la tabla no existe o está
+oculta, en vez de medir otra cosa y dar un veredicto sobre ella. Queda en
+`pedidos/UX-49-consola.js`, y su arnés en `pedidos/UX-49-consola.mjs`:
+
+| Fase | Qué se comprobó | Resultado |
+|------|-----------------|-----------|
+| **A** · con el `colspan` a 8, como antes del Paso 0 | Dice ❌, nombra el `colspan 8` y no dice ✅ | ✅ **Sabe fallar** |
+| **C** · `dashboard.html` como está en `main` | Dice ✅, cuenta **7 `th` y colspan 7**, sin errores de JS | ✅ |
+
+**La lección, que es la de siempre con una vuelta más:** los dos bloques del mensaje anterior —el
+de H-18 y el de las cabeceras— se probaron antes de mandarlos, y este no. Se escribió en el
+mensaje final, fuera del repo, y por eso se saltó el paso. **Un bloque de comprobación es código,
+aunque vaya dentro de un mensaje.** Los tres viven ahora en `pedidos/`.
 
 ---
 
