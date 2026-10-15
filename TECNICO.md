@@ -6,15 +6,16 @@ qué la protege. Se consulta para saber **dónde tocar**. El porqué está en `F
 **Este documento describe el estado actual y se actualiza en cada iteración.** Documentación
 desactualizada miente con autoridad.
 
-**Actualizado:** 12 de octubre de 2026 · **Estado del código:** cerrados H-01 (`crear-reclutador`
+**Actualizado:** 15 de octubre de 2026 · **Estado del código:** cerrados H-01 (`crear-reclutador`
 v15), H-07 (`dashboard.html` y `admin.html`), H-04/H-05/H-10 (`obtener-proceso` v3,
 `gestionar-proceso` v3, `agregar-candidato` v11, `obtener-stats` v3) y H-02/H-03/H-35
 (`obtener-validacion` v3, más una migración) y la cadena de validación de documentos
 (`crear-solicitud` v28, `validar-documentos` v6, `obtener-estado` v4, `obtener-candidato` v10,
 `agregar-candidato` v12, más una segunda migración). Todos desplegados en producción.
 
-Después, el **Paso 0 de seguridad** del 12/10: UX-34 (`crear-solicitud` **v31**, desplegada),
-H-15 (`vercel.json`, sale al fusionar), **H-18 (migración entregada y sin aplicar)** y UX-49.
+Después, el **Paso 0 de seguridad**, cerrado el 15/10: UX-34 (`crear-solicitud` **v31**), H-15
+(`vercel.json`), H-18 (migración aplicada por el dueño) y UX-49. Y el 15/10, **UX-73**
+(`obtener-estado` **v5**): la respuesta del evaluador dejó de viajar al navegador del trabajador.
 
 **Esta lista de versiones duplica lo que `MANIFEST.md` ya mantiene por función, y eso es UX-46**,
 abierto. La fuente fiable de versiones es el `MANIFEST`; esta cabecera es un resumen de lectura.
@@ -143,6 +144,35 @@ Los cuatro hashes tienen que coincidir. Al cerrar H-04/H-05/H-10 valían `6df77b
 - Función 10 no deniega, **filtra**: devuelve `200` con los recuentos de los procesos propios que
   hubiera en el array, o `{candidatos: 0, evaluaciones: 0}` si no había ninguno. Un cero ahí puede
   significar "no tienes datos" o "ninguno de esos procesos es tuyo", y no se distinguen a propósito.
+
+### Lo que devuelve `obtener-estado`, y lo que ya no (UX-73, desde el 15/10)
+
+Es la única función que alimenta `estado.html`, la pantalla del trabajador. Su respuesta tiene
+tres bloques:
+
+| Bloque | Qué lleva |
+|--------|-----------|
+| `trabajador` | `nombre` y `rut`. Nada más de la fila |
+| `documentos` | `cert_estado`, `cert_razon_invalido`, `finiq_estado`, `cert_empleos`, `cert_permanencia`, `causal_validada`, `causal_texto` |
+| `evaluaciones.lista` | **Un objeto vacío `{}` por cada evaluación válida. Y nada más** |
+
+**La lista va vacía de contenido a propósito, y conviene que no se «arregle».** M-1 le promete al
+evaluador que su respuesta «no será visible para el postulante». Hasta el 15/10 esta función hacía
+`select('*')` sobre `evaluaciones` y devolvía la lista entera: notas, comentario, nombre, correo,
+RUT y empresa del evaluador viajaban al navegador del trabajador, donde cualquiera con el enlace
+de seguimiento los leía desde las herramientas del navegador. La pantalla solo pintaba el número,
+pero eso nunca fue protección: lo que no debe salir, no se envía.
+
+Tres cosas que no son obvias:
+
+- **A la base se le pide solo `rechazo`.** Es lo único que decide si una evaluación cuenta, y no
+  sale de la función: se usa para filtrar y se descarta.
+- **Los rechazos no van ni como elemento vacío.** Cuántos evaluadores dijeron «no trabajó conmigo»
+  también es dato del evaluador. Por eso la lista tiene 2 elementos cuando hay 2 válidas y 1
+  rechazo, no 3.
+- **La forma —una lista— se mantuvo para no tocar `estado.html`.** La pantalla hace
+  `.filter(e => !e.rechazo).length` y `{}` pasa ese filtro, así que el número no cambió. La
+  función se desplegó antes de fusionar el frontend, y esa compatibilidad es lo que lo permitió.
 
 ### `validacionVigente` está duplicado a propósito en tres funciones
 

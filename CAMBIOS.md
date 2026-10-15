@@ -10,25 +10,49 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 
 ## Estado general
 
-| | Cerrados | En curso | Pendientes | Total |
-|---|:---:|:---:|:---:|:---:|
-| Hallazgos `H-nn` de la auditoría | 11 | 0 | 39 | 50 |
+| | Cerrados | En curso | Fuera | A producto | Pendientes | Total |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| Hallazgos `H-nn` de la auditoría | **15** | 0 | 1 | 1 | **33** | 50 |
 
-**Cerrados:** H-01, H-07, H-04, H-05 y H-10 el 11/08; H-02, H-03 y H-35 el 12/08; **H-15 y H-18 el
-12/10**, en el Paso 0.
+**Los 15 cerrados**, en orden: H-01, H-02, H-03, H-04, H-05, H-07, H-09, H-10, H-11, H-12, H-13,
+H-15, H-18, H-22 y H-35. Por fechas: H-01, H-07, H-04, H-05 y H-10 el 11/08; H-02, H-03, H-22 y
+H-35 el 12/08; H-12 aceptado el 11/08 y H-09 el 11/10; **H-11, H-13, H-15 y H-18 el 15/10**.
 
-**En curso:** ninguno. El **Paso 0 de seguridad** —UX-34, H-15, H-18 y lo que faltaba de UX-49— se
-escribió el 12/10 en el **PR #22** y quedó **cerrado del todo el 15/10**: fusionado, desplegado,
-migración aplicada y las cuatro comprobaciones en verde. `crear-solicitud` quedó en v31. Antes se
-habían cerrado **UX-47**, **UX-45** y **UX-42** el 14/08.
+**Fuera: H-17** —requiere plan Pro—. **A producto: H-08**, que se revisa al ejecutar la
+eliminación del buscador por RUT. Los dos salen de la cuenta de pendientes: 15 + 1 + 1 + 33 = 50.
+El detalle de los siete que se clasificaron sin tocar código está en «Clasificación de los
+hallazgos del paso 0».
+
+**En curso:** ninguno.
+
+**Lo último cerrado — `UX-73`, el 15/10.** `obtener-estado` devolvía al navegador del trabajador
+las notas, el comentario y los datos del evaluador, que M-1 promete que no verá. Ya no:
+`obtener-estado` **v5**, `estado.html` sin tocar. Era el único riesgo de datos abierto.
+
+Antes, el **Paso 0 de seguridad** —UX-34, H-15, H-18 y lo que faltaba de UX-49— se escribió el
+12/10 en el **PR #22** y quedó **cerrado del todo el 15/10**: fusionado, desplegado, migración
+aplicada y las cuatro comprobaciones en verde. `crear-solicitud` quedó en v31. Y antes, **UX-47**,
+**UX-45** y **UX-42** el 14/08.
 
 **Nada pendiente de la mano del dueño.** La migración de H-18 la aplicó él el 15/10 —`apply_migration`
 está prohibido en este proyecto— y el aviso `function_search_path_mutable` ya no aparece en los
 advisors.
 
-**Siguiente trabajo agrupado: el Bloque 11 · panel del reclutador** —H-08, UX-29, UX-23 y UX-21—,
-cuatro hallazgos de `dashboard.html` para un solo despliegue. Tiene dos avisos de orden que hay que
-leer antes de escribir el pedido; están en su sección.
+**El orden del trabajo lo fija el plan del dueño del 11/10, y no es el panel del reclutador.**
+Donde este documento decía «siguiente trabajo agrupado: Bloque 11», decía algo que el plan ya había
+sustituido:
+
+| Paso | Qué | Estado |
+|:---:|---|---|
+| 0 | Seguridad | ✅ **Cerrado el 15/10**, UX-73 incluido |
+| 1 | Los correos de cada actor (**UX-69**) | **Siguiente** |
+| 2 | La trazabilidad de los correos (**UX-44**) | Después |
+| 3 | El login con sesión vencida (**H-16**, **UX-52**) | Después |
+| 4 | La identidad del evaluador (**UX-72**) | Después |
+| 5 | La credencial del trabajador (**UX-32**) | Después |
+
+El Bloque 11 no desaparece: **H-08 pasó a producto** —se revisa al ejecutar la eliminación del
+buscador por RUT— y UX-29, UX-23 y UX-21 siguen abiertos, fuera de los cinco pasos.
 
 **UX-28** quedó cerrado el 14/08: la primera versión en el PR #13 y el ajuste que quitó el muro de
 la pantalla del trabajador en el PR #14.
@@ -1743,7 +1767,7 @@ Ni funciones, ni migración, ni despliegue: salió por Vercel al fusionar.
 
 ---
 
-## Paso 0 · Cierre de seguridad (12/10/2026)
+## Paso 0 · Cierre de seguridad (escrito el 12/10, cerrado el 15/10/2026)
 
 Cuatro hallazgos en un PR, el **#22**: **UX-34**, **H-15**, **H-18** y lo que faltaba de **UX-49**.
 Un commit por hallazgo. `crear-solicitud` quedó en **v31**.
@@ -1773,10 +1797,29 @@ nada que se midiera aquí. El bloque sí se había probado antes contra dos serv
 **Criterio de cierre, los cuatro:** código desplegado ✅ · prueba A ✅ · camino feliz intacto ✅ ·
 caminos hostiles rechazados ✅ · no regresión ✅ · respaldo regenerado ✅ · visto bueno ✅.
 
-**Lo que siguen diciendo los advisors, y no es de este trabajo:** `rls_enabled_no_policy` en cinco
-tablas —RLS activo sin políticas, que es justo la postura que tiene este producto: todo pasa por
-las edge functions con `service_role`— y `auth_leaked_password_protection` desactivado. Las dos
-son anteriores al Paso 0 y ninguna es un hallazgo abierto todavía; conviene decidir si lo son.
+**Los dos avisos que siguen saliendo en los advisors ya tienen número, y aquí se dijo que no.**
+Esa afirmación era mía y estaba mal:
+
+- `rls_enabled_no_policy` en cinco tablas es **H-13, cerrado el 15/10**. Las 8 tablas están
+  cerradas para quien no tiene sesión, y las 3 que llevan reglas exigen sesión y solo dejan tocar
+  las filas propias. El aviso describe la postura, no un agujero.
+- `auth_leaked_password_protection` es **H-17, fuera**: comprobar contraseñas contra
+  HaveIBeenPwned requiere plan Pro.
+
+### Clasificación de los hallazgos del paso 0
+
+Cuatro llevaron código —UX-34, H-15, H-18 y UX-49—. **Los otros siete se cerraron sin tocar nada**,
+y eso es una decisión, no un olvido: conviene que quede por qué.
+
+| Hallazgo | Resultado |
+|---|---|
+| **H-09** | Cerrado sin cambios el 11/10: solo lo aprovecha quien **ya tiene el enlace**, y para responder tarde |
+| **H-11** | Cerrado sin cambios el 15/10: Supabase limita el login a **30 intentos cada 5 minutos por IP**, y las contraseñas exigen 8 caracteres con mayúscula, minúscula y número |
+| **H-12** | Cerrado: **aceptado el 11/08**. Es la decisión de `FUNCIONAL.md` §6.6 —`token_consulta` no caduca ni se revoca—, no un pendiente |
+| **H-13** | Cerrado el 15/10: las 8 tablas están cerradas para quien no tiene sesión, y las 3 que llevan reglas exigen sesión y solo dejan tocar las filas propias. Es lo que el advisor marca como `rls_enabled_no_policy` |
+| **H-17** | **Fuera:** comprobar contraseñas contra HaveIBeenPwned requiere plan Pro |
+| **H-08** | **Pasa a producto:** se revisa al ejecutar la eliminación del buscador por RUT. Deja de ser trabajo del Bloque 11 |
+| **UX-65** | Cerrado sin cambios el 15/10: `trabajador.html` **ya bloquea** que el evaluador lleve el correo del trabajador |
 
 ---
 
@@ -1842,7 +1885,7 @@ hay señal de que un correo haya salido**: si algo fallara aquí, la función re
 
 ## H-15 · El sitio no enviaba cabeceras de seguridad
 
-🟠 Seguridad de segunda línea · Esfuerzo XS · **Estado: ✅ EN PRODUCCIÓN** (fusionado el 15/10/2026)
+🟠 Seguridad de segunda línea · Esfuerzo XS · **Estado: ✅ EN PRODUCCIÓN** (escrito el 12/10, cerrado el 15/10/2026)
 
 ### El problema
 
@@ -2052,6 +2095,83 @@ aunque vaya dentro de un mensaje.** Los tres viven ahora en `pedidos/`.
 
 ---
 
+## UX-73 · La respuesta del evaluador llegaba al navegador del trabajador
+
+🔴 Datos · Esfuerzo S · **Estado: ✅ DESPLEGADO** (15/10/2026) · `obtener-estado` v5
+
+### El problema
+
+M-1 le promete al evaluador, por escrito: *«Tu respuesta estará visible para reclutadores en
+nuestra plataforma, pero no será visible para el postulante»*. Es lo que sostiene que un exjefe
+conteste con franqueza, y `FUNCIONAL.md` §7 llama a ese correo el más frágil del sistema.
+
+**La pantalla cumplía y la función no.** `estado.html` solo pinta el número —línea 347,
+`.filter(e => !e.rechazo).length`—, pero `obtener-estado` hacía `select('*')` sobre `evaluaciones`
+y devolvía la lista entera en `evaluaciones.lista`:
+
+| Lo que viajaba | Ejemplo |
+|---|---|
+| Las cuatro notas | `desempeno`, `puntualidad`, `confiabilidad`, `relaciones` |
+| El comentario libre | `comentarios`, texto que escribió el evaluador |
+| Quién es el evaluador | `nombre_evaluador`, `email_evaluador`, `empresa_evaluador`, `rut_evaluador`, `rut_empresa`, `cargo` |
+| Los rechazos | `rechazo`, con el texto de quien dijo que no trabajó con esa persona |
+| Las llaves internas | `token`, `empleador_id` |
+
+**Cualquiera con el enlace de seguimiento lo leía desde las herramientas del navegador.** No hacía
+falta saber programar: pestaña de red, la respuesta de `obtener-estado`, y ahí estaba todo. Que la
+pantalla no lo pintara nunca fue protección: **lo que no debe salir, no se envía**.
+
+### El cambio
+
+Solo `supabase/functions/obtener-estado/index.ts`. `estado.html` no se tocó.
+
+- A la base se le pide **solo `rechazo`**, que es lo único que decide si una evaluación cuenta. No
+  sale de la función: se usa para filtrar y se descarta.
+- `evaluaciones.lista` sigue existiendo, con **un objeto vacío `{}` por cada evaluación válida**.
+- **Los rechazos no van ni como elemento vacío.** Cuántos evaluadores dijeron que no también es
+  dato del evaluador.
+- Se quitó el `.order('fecha_completado')`: ordenar objetos vacíos no ordena nada.
+
+**Por qué una lista de objetos vacíos y no un número.** Porque **la función se despliega antes de
+que el dueño fusione**, así que durante un rato la respuesta nueva convive con el `estado.html`
+que hoy está en producción. Un `evaluaciones: { total: 2 }` habría dejado la pantalla mostrando 0
+en ese hueco. `{}` pasa el filtro `!e.rechazo` igual que una fila con `rechazo` nulo, así que el
+número no cambia en ningún momento. Es la asimetría de despliegue de siempre: Vercel publica al
+fusionar, las funciones van por su cuenta, y el orden importa.
+
+### Verificación, antes de desplegar
+
+Sobre el **fuente real transpilado**, con la base simulada. El arnés está en
+`pedidos/UX-73-obtener-estado.mjs`. Datos: **dos evaluaciones válidas con notas y comentario, y un
+rechazo**.
+
+**La base simulada respeta las columnas pedidas, como hace PostgREST.** Sin eso, la fase C pasaría
+aunque el cambio no sirviera de nada: el filtro del final limpiaría una respuesta que la base
+habría enviado entera igual.
+
+| Fase | Qué se comprobó | Resultado |
+|------|-----------------|-----------|
+| **A** · `main` | 3 elementos, **20 claves cada uno**, los 9 valores sensibles presentes en la respuesta, y a la base le pide `*` | ✅ **El fallo existía** |
+| **C** · la rama | 2 elementos, **cero claves**, cero valores sensibles, y a la base solo le pide `rechazo`. `evaluaciones.lista` queda en `[{},{}]` | ✅ |
+| **B** · la rama | El conteo de la línea 347 da **2**, igual que con `main` | ✅ |
+| **B2** · la rama | **`estado.html` de verdad, en Chromium**, sin tocarlo: «2 evaluaciones recibidas en el sistema» con las dos respuestas, sin errores de JS y sin ningún valor sensible en la página | ✅ |
+| **D** · ambos | `trabajador` y `documentos` idénticos, y a `documentos` se le pide exactamente lo mismo | ✅ |
+
+**B2 existe porque la línea 347 copiada en el arnés puede quedarse vieja.** La pantalla real no:
+carga el `estado.html` del repo, que es el mismo que está en producción porque el pedido prohíbe
+tocarlo.
+
+Comprobación previa, el único motivo para parar: producción tenía `obtener-estado` en
+**v4 · `8e9b0eb2f3e75d2b…`**, lo que registraba el `MANIFEST`, y el respaldo era idéntico al repo.
+
+### Lo que no cambia, y conviene no confundir
+
+**El reclutador sigue viéndolo todo.** `obtener-candidato` no se tocó: el panel sigue mostrando
+notas, comentarios y evaluadores, que es justo lo que M-1 promete. UX-73 no esconde las
+evaluaciones; las saca **de la pantalla del trabajador**, que es donde no debían estar.
+
+---
+
 ## Decisiones de producto tomadas durante el trabajo
 
 Decisiones que no son de un solo hallazgo y que afectan cómo se abordan los siguientes.
@@ -2112,9 +2232,37 @@ descritos en prosa sin forma de referirse a ellos.
 | UX-46 | **La cabecera de `TECNICO.md` lleva su propia lista de versiones**, duplicando lo que `MANIFEST.md` ya mantiene por función | Abierto. Documentación, **no afecta al producto** |
 | UX-47 | **La tabla de candidatos no muestra el estado de los documentos**: un finiquito subido y sin validar sale como un guion, y el motivo del rechazo desborda la celda | ✅ **Cerrado el 14/08**, PR #20 |
 | UX-48 | **`formatearCausal` mezcla traducir con rellenar ausencias.** Devuelve un guion cuando no hay causal, y esa cadena tiene contenido, así que cada llamante tiene que deshacer el relleno | Abierto |
-| UX-49 | **Los encabezados de la tabla no cuadran con las filas.** Siete columnas en la cabecera, ocho en la fila de invitación pendiente | ✅ **Cerrado el 12/10** en dos partes, con una corrección al diagnóstico |
+| UX-49 | **Los encabezados de la tabla no cuadran con las filas.** Siete columnas en la cabecera, ocho en la fila de invitación pendiente | ✅ **Cerrado el 15/10** en dos partes, con una corrección al diagnóstico |
 
 **La serie ya no tiene huecos entre UX-22 y UX-49.**
+
+### La serie sigue: UX-50 a UX-74
+
+Estos no estaban en esta bitácora: salieron de las revisiones del dueño y de los pedidos, y
+vivían fuera. Entran aquí con su estado, que es lo que les faltaba para poder referirse a ellos.
+
+| ID | Qué pasa | Estado |
+|----|----------|--------|
+| UX-50 | Con el filtro «Verificada», **el denominador del contador no filtra**. Diseño decidido el 14/08: guardar la marca de verificada al crear la invitación | Abierto, **aplazado** |
+| UX-51 | Los enlaces a la portada apuntan a `index.html` **en vez de a la raíz**, en 8 de las 12 páginas | Abierto |
+| UX-52 | **El panel aparece en blanco al cargar**, sin indicador | Abierto. **Paso 3** del plan, con H-16 |
+| UX-53 | En las tablas del panel **no se entra por el nombre** y hay columnas sin título | Abierto |
+| UX-54 | Los avisos nativos de «Finalizar» y «Eliminar» **tardan en aparecer** | Abierto |
+| UX-55 | La tabla de candidatos **no tiene orden útil**; `ordenarCandidatos` está vacía | Abierto |
+| UX-56 | El panel lateral es fijo y **le quita espacio a la tabla** | Abierto |
+| UX-57 … UX-66 | Los diez de la **fase 5 funcional**, en `auditoria/FASE-5-FUNCIONAL.md` | Ver ese anexo. **UX-65 cerrado sin cambios el 15/10** |
+| UX-67 | **La escala de permanencia castiga a quien lleva poco tiempo trabajando** | Abierto |
+| UX-68 | Los documentos **se revisan a mano**; extraerlos con IA es viable | Abierto |
+| UX-69 | **No existe el recorrido de correos como diseño** | **En definición. Paso 1 del plan: es lo siguiente** |
+| UX-70 | **No hay módulo de revisión de documentos** para el equipo interno | Abierto |
+| UX-71 | **No existe un modelo de roles** | Abierto |
+| UX-72 | **No está definido cómo se verifica la identidad del evaluador** | Abierto. **Paso 4** del plan |
+| UX-73 | **La respuesta del evaluador llegaba al navegador del trabajador** | ✅ **Cerrado el 15/10**, `obtener-estado` v5 |
+| UX-74 | Se registró que desactivar a un reclutador no le quitaba el acceso | **Descartado: falso hallazgo.** `gestionar-usuario` ya bloquea la cuenta en el login de Supabase al desactivar o eliminar |
+
+**UX-74 es el único descartado de toda la serie**, y conviene que se quede escrito en vez de
+borrarse: un hallazgo que resultó falso cuesta lo mismo de reabrir que uno real si no consta por
+qué se cerró.
 
 ### UX-48 · una función que engaña a quien la llama
 
@@ -2144,7 +2292,7 @@ termina antes que las filas. **Este informe lo había mandado a UX-29**; lo corr
 14/08. Arreglar el formato del contenido no habría tocado la estructura, y darlo por cubierto
 habría dejado el descuadre vivo con el hallazgo cerrado.
 
-**UX-29 sigue abierto; UX-49 se cerró el 12/10.** Y con una corrección: medido el 12/10, **la fila
+**UX-29 sigue abierto; UX-49 se cerró el 15/10.** Y con una corrección: medido el 12/10, **la fila
 de ocho columnas ya no existía** —la había quitado `edc3d2a` al rehacer la tabla en UX-47—, así
 que de las tres piezas del diagnóstico solo quedaba viva la del `colspan="8"` del estado vacío.
 Que la separación entre los dos hallazgos fuera correcta no significa que el síntoma siguiera ahí
@@ -2254,7 +2402,7 @@ el caso de M-2 en la siguiente.
 | UX-34 | `crear-solicitud`, líneas 254, 294 y 337 del respaldo | Interpola `${trabajador.nombre}` sin escapar en el HTML de los correos **M-1, M-2 y M-3**. No es XSS —los clientes de correo no ejecutan scripts— pero sí inyección de HTML en el correo a contacto frío que `FUNCIONAL.md` §7 llama el más frágil del sistema | H-07 | ✅ Cerrado el 12/10, Paso 0 |
 | UX-35 | Proceso, no código | **Un cambio hecho en el editor del panel de Supabase no deja rastro en el repositorio, y nada lo detecta solo.** El 13/08 producción tuvo durante un rato una versión de `crear-solicitud` que no existía en ninguna rama. El siguiente despliegue desde el repo la habría pisado en silencio. Lo único que lo evitó fue que el dueño avisara | Cambio manual de M-2 | Abierto, sin pedido |
 | UX-48 | `dashboard.html`, `formatearCausal` | **Mezcla traducir con rellenar ausencias.** Hace `CAUSAL_LABELS[valor] || valor || '—'`: el guion que devuelve es una cadena con contenido, así que **quien la llama no puede distinguir «no hay causal» de «la causal es este texto»** sin comparar contra el guion literal. Ha obligado a escribir `x === '—' ? null : x` en tres sitios. Debería traducir y devolver vacío; quien llame decide qué pintar. **Toca tres vistas** | UX-28, tarjetas de `estado.html` y UX-47 | Abierto, sin pedido |
-| UX-49 | `dashboard.html`, la tabla de candidatos | **Los encabezados no cuadran con las filas.** 7 `<th>` en la cabecera, 8 columnas en la fila de invitación pendiente —`<td>` + `colspan="6"` + `<td>`— y `colspan="8"` en el estado vacío. La fila cuelga un ancho por la derecha y la banda gris de la cabecera termina antes. **No es UX-29:** aquello es el formato del contenido, esto la estructura de la tabla | UX-47 | ✅ Cerrado el 12/10, Paso 0. **La fila de ocho columnas ya no existía**: ver la corrección en la sección de UX-49 |
+| UX-49 | `dashboard.html`, la tabla de candidatos | **Los encabezados no cuadran con las filas.** 7 `<th>` en la cabecera, 8 columnas en la fila de invitación pendiente —`<td>` + `colspan="6"` + `<td>`— y `colspan="8"` en el estado vacío. La fila cuelga un ancho por la derecha y la banda gris de la cabecera termina antes. **No es UX-29:** aquello es el formato del contenido, esto la estructura de la tabla | UX-47 | ✅ Cerrado el 15/10, Paso 0. **La fila de ocho columnas ya no existía**: ver la corrección en la sección de UX-49 |
 
 **Por qué UX-34 no se arregló en H-07:** es una edge function, y el pedido de H-07 acotaba el
 alcance a `dashboard.html` y `admin.html`. **Y por qué tardó hasta el 12/10:** el dueño decidió el
@@ -2272,6 +2420,11 @@ borrar la fila, o marcarla como retirada conservando la trazabilidad del consent
 ---
 
 ## Bloque 11 · panel del reclutador
+
+> **Ya no es el siguiente trabajo, y uno de sus cuatro hallazgos se fue.** El plan del dueño del
+> 11/10 pone delante los cinco pasos del «Estado general», y **H-08 pasó a producto**: se revisa
+> al ejecutar la eliminación del buscador por RUT. UX-29, UX-23 y UX-21 siguen abiertos. Lo que
+> hay debajo se mantiene porque los dos avisos de orden siguen valiendo el día que se ejecute.
 
 Cuatro hallazgos que viven en `dashboard.html` y **conviene resolver en un solo despliegue**.
 Agrupados por el dueño el 14/08.
