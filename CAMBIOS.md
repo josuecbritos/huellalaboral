@@ -2097,7 +2097,7 @@ aunque vaya dentro de un mensaje.** Los tres viven ahora en `pedidos/`.
 
 ## UX-73 · La respuesta del evaluador llegaba al navegador del trabajador
 
-🔴 Datos · Esfuerzo S · **Estado: ✅ DESPLEGADO** (15/10/2026) · `obtener-estado` v5
+🔴 Datos · Esfuerzo S · **Estado: ✅ DESPLEGADO** (15/10/2026) · `obtener-estado` v5 · **PR #24**
 
 ### El problema
 
@@ -2163,6 +2163,22 @@ tocarlo.
 
 Comprobación previa, el único motivo para parar: producción tenía `obtener-estado` en
 **v4 · `8e9b0eb2f3e75d2b…`**, lo que registraba el `MANIFEST`, y el respaldo era idéntico al repo.
+
+### Los dos bloques que corre el dueño, también probados
+
+La lección de UX-49 aplicada desde el principio: **un bloque de comprobación es código aunque vaya
+dentro de un mensaje.** Ninguno de los dos se puede ejecutar contra producción desde la sesión, así
+que los dos se ejecutaron contra algo.
+
+| Bloque | Dónde se probó | Las fases que importan |
+|---|---|---|
+| `pedidos/UX-73-enlace.sql` · el enlace y el recuento | Postgres 16 local y desechable (`pedidos/UX-73-sql-local.sh`) | **Un trabajador sin ninguna evaluación da 0, no 1.** Es la trampa del `LEFT JOIN`: con `count(*)` la fila vacía se contaba como válida. Y uno sin `token_consulta` lo dice, en vez de devolver un enlace nulo |
+| `pedidos/UX-73-consola.js` · qué llega al navegador | `estado.html` real en Chromium, con dos respuestas simuladas (`pedidos/UX-73-consola.mjs`) | Con la respuesta **vieja** dice ❌ y nombra los campos que viajan; con la **nueva** dice ✅ y cuenta los 2 elementos. Y aborta en los tres casos en que no hay nada que medir: sin `?token=`, con la clave anon de otro largo, y con la función devolviendo 500 |
+
+**La clave anon del bloque va escrita literal y se comprueba que mide 208 antes de llamar a nada.**
+El arnés comprueba además que es la misma que usa `estado.html`: una clave copiada que se quede
+vieja daría un fallo falso, igual que lo dio una vez sacarla de la página con una expresión
+regular, que capturó 347 caracteres.
 
 ### Lo que no cambia, y conviene no confundir
 
