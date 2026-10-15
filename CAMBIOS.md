@@ -18,12 +18,13 @@ caminos hostiles rechazados + no regresión + limpieza + respaldo regenerado + v
 12/10**, en el Paso 0.
 
 **En curso:** ninguno. El **Paso 0 de seguridad** —UX-34, H-15, H-18 y lo que faltaba de UX-49— se
-cerró el 12/10 en el **PR #22**; `crear-solicitud` quedó en v31. Antes se habían cerrado **UX-47**, **UX-45**
-y **UX-42** el 14/08.
+escribió el 12/10 en el **PR #22** y quedó **cerrado del todo el 15/10**: fusionado, desplegado,
+migración aplicada y las cuatro comprobaciones en verde. `crear-solicitud` quedó en v31. Antes se
+habían cerrado **UX-47**, **UX-45** y **UX-42** el 14/08.
 
-**Pendiente de la mano del dueño:** la migración de H-18 **no está aplicada** —`apply_migration`
-está prohibido— y la aplica él desde el editor SQL. Hasta entonces, H-18 está corregido en el repo
-y **no en la base**.
+**Nada pendiente de la mano del dueño.** La migración de H-18 la aplicó él el 15/10 —`apply_migration`
+está prohibido en este proyecto— y el aviso `function_search_path_mutable` ya no aparece en los
+advisors.
 
 **Siguiente trabajo agrupado: el Bloque 11 · panel del reclutador** —H-08, UX-29, UX-23 y UX-21—,
 cuatro hallazgos de `dashboard.html` para un solo despliegue. Tiene dos avisos de orden que hay que
@@ -1752,6 +1753,31 @@ Un commit por hallazgo. `crear-solicitud` quedó en **v31**.
 esa comprobación, desplegar desde el repo habría podido pisar un cambio hecho a mano en el panel,
 que es UX-35 y ya pasó una vez.
 
+### Comprobación posterior al cierre (15/10) — el Paso 0 queda cerrado
+
+PR #22 fusionado (`98ce7fa`), H-15 y UX-49 desplegados por Vercel, y migración de H-18 aplicada
+por el dueño.
+
+| Qué | Quién y cómo | Resultado |
+|-----|--------------|-----------|
+| **H-18 aplicado** | Desde aquí, advisors de seguridad del proyecto | ✅ **`function_search_path_mutable` ya no aparece** |
+| **H-15 · las seis cabeceras** | **El dueño**, con el bloque en la consola de `huellalaboral.cl` | ✅ Comprobadas |
+| **UX-49 · el estado vacío** | **El dueño**, con el bloque corregido, en el panel real | ✅ **7 `th` y colspan 7, cabecera y fila terminan las dos en 1038 px** |
+| La rama está íntegra en `main` | Desde aquí, `git diff origin/main..fix/paso-0-seguridad` | ✅ Vacío |
+| Producción no se movió | Desde aquí, las 19 funciones vs. el `MANIFEST` | ✅ **Las 19 coinciden** en versión y `ezbr_sha256`. `crear-solicitud` en v31 · `f7fa98f4…` |
+
+**Las cabeceras no se pudieron comprobar desde la sesión:** la política de red deniega
+`huellalaboral.cl` (403 al CONNECT del proxy). Por eso esa fila dice «el dueño» y no se apoya en
+nada que se midiera aquí. El bloque sí se había probado antes contra dos servidores locales.
+
+**Criterio de cierre, los cuatro:** código desplegado ✅ · prueba A ✅ · camino feliz intacto ✅ ·
+caminos hostiles rechazados ✅ · no regresión ✅ · respaldo regenerado ✅ · visto bueno ✅.
+
+**Lo que siguen diciendo los advisors, y no es de este trabajo:** `rls_enabled_no_policy` en cinco
+tablas —RLS activo sin políticas, que es justo la postura que tiene este producto: todo pasa por
+las edge functions con `service_role`— y `auth_leaked_password_protection` desactivado. Las dos
+son anteriores al Paso 0 y ninguna es un hallazgo abierto todavía; conviene decidir si lo son.
+
 ---
 
 ## UX-34 · El nombre del trabajador entraba sin neutralizar en los correos
@@ -1816,7 +1842,7 @@ hay señal de que un correo haya salido**: si algo fallara aquí, la función re
 
 ## H-15 · El sitio no enviaba cabeceras de seguridad
 
-🟠 Seguridad de segunda línea · Esfuerzo XS · **Estado: ✅ EN LA RAMA** (12/10/2026)
+🟠 Seguridad de segunda línea · Esfuerzo XS · **Estado: ✅ EN PRODUCCIÓN** (fusionado el 15/10/2026)
 
 ### El problema
 
@@ -1854,7 +1880,8 @@ seis que cierra una fuga concreta de este producto.
 Sin `includeSubDomains` ni `preload` en HSTS, a propósito: comprometen subdominios que aquí no se
 controlan y `preload` es difícil de revertir.
 
-**Se despliega al fusionar.** Revertir es revertir el commit.
+**Se desplegó al fusionar el 15/10.** Revertir sería revertir el commit: `vercel.json` es un
+archivo nuevo y no toca nada más.
 
 ### El bloque de comprobación también se probó antes de mandarlo
 
@@ -1881,7 +1908,7 @@ sitio con cabeceras de uno sin ellas**, que es lo que hay que saber antes de fia
 
 ## H-18 · La función de fechas no fijaba dónde busca
 
-🟡 Seguridad, riesgo bajo · Esfuerzo XS · **Estado: ⏸️ EN LA RAMA, sin aplicar a la base** (12/10/2026)
+🟡 Seguridad, riesgo bajo · Esfuerzo XS · **Estado: ✅ APLICADO A LA BASE** (15/10/2026)
 
 ### El problema
 
@@ -1913,7 +1940,8 @@ cambiar ningún dato —le asigna a su primera columna su propio valor—, compa
 después para ver **qué campo cambió**, y **termina con un error intencional que lo deshace todo**.
 El texto del error es el informe, y dice que el error es intencional.
 
-Hasta que se aplique, **H-18 está corregido en el repo y no en la base**.
+**Aplicada el 15/10 por el dueño.** Comprobado desde aquí: el aviso `function_search_path_mutable`
+ya no aparece en los advisors de seguridad del proyecto.
 
 ### El bloque se probó antes de mandárselo al dueño
 
@@ -1952,7 +1980,7 @@ en refrescar; el bloque de arriba es la comprobación que no depende de eso.
 
 ## UX-49 · Lo que faltaba, y una corrección al diagnóstico
 
-🔵 Presentación · Esfuerzo XS · **Estado: ✅ EN LA RAMA** (12/10/2026) · cerrado en dos partes
+🔵 Presentación · Esfuerzo XS · **Estado: ✅ EN PRODUCCIÓN** (fusionado el 15/10/2026) · cerrado en dos partes
 
 ### Las dos partes
 
@@ -1986,6 +2014,41 @@ cabecera o una fila con ocho, el estado vacío volvería a descuadrar sin que na
 higiene, no un arreglo visible, y el registro no debería decir lo contrario.
 
 El arnés queda en `pedidos/UX-49-tabla-vacia.mjs` y aborta si no encuentra la cabecera o la fila.
+
+### El bloque de consola que mandé estaba mal (15/10)
+
+Al comprobar el cierre, el dueño corrió el bloque que yo le había mandado en el mensaje y le dio
+esto:
+
+```
+cabecera  th 6   ancho 0
+fila             ancho 0   colspan 1
+❌ UX-49: el colspan no coincide con los th.
+```
+
+**Era un fallo del bloque, no del panel.** Usaba `document.querySelector('table')`, y
+`dashboard.html` tiene **dos tablas**: la primera es la de **procesos** —6 `th`—, y mientras se
+ve un proceso está oculta, de ahí los dos anchos en 0. Nunca llegó a mirar la tabla de
+candidatos.
+
+El bloque corregido se ancla a **`#tablaCandidatos`** y aborta si la tabla no existe o está
+oculta, en vez de medir otra cosa y dar un veredicto sobre ella. Queda en
+`pedidos/UX-49-consola.js`, y su arnés en `pedidos/UX-49-consola.mjs`:
+
+| Fase | Qué se comprobó | Resultado |
+|------|-----------------|-----------|
+| **A** · con el `colspan` a 8, como antes del Paso 0 | Dice ❌, nombra el `colspan 8` y no dice ✅ | ✅ **Sabe fallar** |
+| **C** · `dashboard.html` como está en `main` | Dice ✅, cuenta **7 `th` y colspan 7**, sin errores de JS | ✅ |
+
+**Lo que dio en el panel real**, con un proceso sin candidatos abierto: `7 th y colspan 7`, y
+cabecera y fila terminando las dos en **1038 px**. Es el mismo resultado que el arnés da en local
+—donde la ventana es de 1400 px y la tabla termina en 1367—, con el ancho de la pantalla del
+dueño en vez del de la prueba.
+
+**La lección, que es la de siempre con una vuelta más:** los dos bloques del mensaje anterior —el
+de H-18 y el de las cabeceras— se probaron antes de mandarlos, y este no. Se escribió en el
+mensaje final, fuera del repo, y por eso se saltó el paso. **Un bloque de comprobación es código,
+aunque vaya dentro de un mensaje.** Los tres viven ahora en `pedidos/`.
 
 ---
 
