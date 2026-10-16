@@ -7,8 +7,11 @@
 //   A · la respuesta vieja, con la lista entera → el bloque DEBE decir ❌
 //   C · la respuesta nueva, con [{},{}]        → el bloque DEBE decir ✅
 //
-// Y tres comprobaciones de que aborta cuando debe: sin `?token=`, con la clave
-// anon de otro largo, y con la función devolviendo un error.
+// Y cuatro comprobaciones de que aborta cuando debe: sin `?token=`, con la
+// clave anon de otro largo, **con un carácter de la clave cambiado por uno que
+// no es ASCII manteniendo los 208** —el caso que se escapó la primera vez— y
+// con la función devolviendo un error. Más la salida de emergencia: usar la
+// clave que la propia página ya tiene cargada.
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs'
 import fs from 'fs'
 import path from 'path'
@@ -17,7 +20,7 @@ const REPO = path.resolve(new URL('.', import.meta.url).pathname, '..')
 const BLOQUE = fs.readFileSync(path.join(REPO, 'pedidos/UX-73-consola.js'), 'utf8')
 
 // La clave del bloque tiene que ser la que usan las páginas, y medir 208.
-const CLAVE = BLOQUE.match(/const ANON_KEY = '([^']+)'/)?.[1]
+const CLAVE = BLOQUE.match(/const ANON_KEY_LITERAL = '([^']+)'/)?.[1]
 const CLAVE_PAGINA = fs.readFileSync(path.join(REPO, 'estado.html'), 'utf8').match(/'(eyJ[A-Za-z0-9_\-.]+)'/)?.[1]
 if (!CLAVE || CLAVE.length !== 208) throw new Error(`la clave del bloque mide ${CLAVE?.length}, no 208`)
 if (CLAVE !== CLAVE_PAGINA) throw new Error('la clave del bloque no es la de estado.html')
@@ -88,11 +91,28 @@ const okSinToken = hay(sinToken, 'no tiene `?token=`')
 console.log(`  sin ?token= en la URL:          ${marca(okSinToken)}`)
 if (!okSinToken) { malos++; console.log(sinToken.join('\n')) }
 
-const clavePartida = BLOQUE.replace(/const ANON_KEY = '[^']+'/, "const ANON_KEY = 'eyJcorta'")
+const clavePartida = BLOQUE.replace(/const ANON_KEY_LITERAL = '[^']+'/, "const ANON_KEY_LITERAL = 'eyJcorta'")
 const malaClave = await correr({ bloque: clavePartida })
 const okMalaClave = hay(malaClave, 'debe medir 208') && !hay(malaClave, '✅ UX-73') && !hay(malaClave, '❌ UX-73')
 console.log(`  clave anon de otro largo:       ${marca(okMalaClave)}`)
 if (!okMalaClave) { malos++; console.log(malaClave.join('\n')) }
+
+// El caso que se escapó de verdad: el pegado cambia UN carácter por uno que no
+// es ASCII. El largo sigue siendo 208, así que comprobar el largo no basta.
+const guionLargo = CLAVE.slice(0, 50) + '–' + CLAVE.slice(51)
+if (guionLargo.length !== 208) throw new Error('la clave estropeada debe seguir midiendo 208, o la prueba no prueba nada')
+const mangled = await correr({ bloque: BLOQUE.replace(CLAVE, guionLargo) })
+const okMangled = hay(mangled, 'no son ASCII') && hay(mangled, 'posición 50') && hay(mangled, 'U+2013')
+                  && !hay(mangled, '✅ UX-73') && !hay(mangled, 'ISO-8859-1')
+console.log(`  un carácter no ASCII, largo 208: ${marca(okMangled)}`)
+if (!okMangled) { malos++; console.log(mangled.join('\n')) }
+
+// Y la salida de emergencia: la clave de la página, que no pasa por el pegado.
+const dePagina = await correr({ bloque: BLOQUE.replace('const USAR_LA_CLAVE_DE_LA_PAGINA = false', 'const USAR_LA_CLAVE_DE_LA_PAGINA = true')
+                                             .replace(CLAVE, guionLargo) })
+const okDePagina = hay(dePagina, '✅ UX-73 correcto')
+console.log(`  con la clave de la página:      ${marca(okDePagina)}`)
+if (!okDePagina) { malos++; console.log(dePagina.join('\n')) }
 
 const error500 = await correr({ estado: 500, cuerpo: '{"error":"x"}' })
 const ok500 = hay(error500, 'respondió 500') && !hay(error500, '✅ UX-73')
@@ -102,4 +122,4 @@ if (!ok500) { malos++; console.log(error500.join('\n')) }
 await nav.close()
 console.log('\n' + '═'.repeat(90))
 if (malos) { console.log(`❌ ${malos} comprobaciones mal. El bloque no sirve como está.`); process.exit(1) }
-console.log('✅ El bloque distingue la respuesta vieja de la nueva, y aborta en los tres casos en que no hay nada que medir.')
+console.log('✅ El bloque distingue la respuesta vieja de la nueva, aborta en los cuatro casos en que no hay nada que medir, y la salida de emergencia funciona.')

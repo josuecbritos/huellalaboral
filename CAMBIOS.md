@@ -2173,12 +2173,43 @@ que los dos se ejecutaron contra algo.
 | Bloque | Dónde se probó | Las fases que importan |
 |---|---|---|
 | `pedidos/UX-73-enlace.sql` · el enlace y el recuento | Postgres 16 local y desechable (`pedidos/UX-73-sql-local.sh`) | **Un trabajador sin ninguna evaluación da 0, no 1.** Es la trampa del `LEFT JOIN`: con `count(*)` la fila vacía se contaba como válida. Y uno sin `token_consulta` lo dice, en vez de devolver un enlace nulo |
-| `pedidos/UX-73-consola.js` · qué llega al navegador | `estado.html` real en Chromium, con dos respuestas simuladas (`pedidos/UX-73-consola.mjs`) | Con la respuesta **vieja** dice ❌ y nombra los campos que viajan; con la **nueva** dice ✅ y cuenta los 2 elementos. Y aborta en los tres casos en que no hay nada que medir: sin `?token=`, con la clave anon de otro largo, y con la función devolviendo 500 |
+| `pedidos/UX-73-consola.js` · qué llega al navegador | `estado.html` real en Chromium, con dos respuestas simuladas (`pedidos/UX-73-consola.mjs`) | Con la respuesta **vieja** dice ❌ y nombra los campos que viajan; con la **nueva** dice ✅ y cuenta los 2 elementos. Y aborta en los cuatro casos en que no hay nada que medir: sin `?token=`, con la clave de otro largo, **con un carácter de la clave cambiado por uno que no es ASCII manteniendo los 208**, y con la función devolviendo 500 |
 
-**La clave anon del bloque va escrita literal y se comprueba que mide 208 antes de llamar a nada.**
-El arnés comprueba además que es la misma que usa `estado.html`: una clave copiada que se quede
-vieja daría un fallo falso, igual que lo dio una vez sacarla de la página con una expresión
-regular, que capturó 347 caracteres.
+**La clave anon del bloque va escrita literal y se comprueba antes de llamar a nada.** El arnés
+comprueba además que es la misma que usa `estado.html`: una clave copiada que se quede vieja daría
+un fallo falso, igual que lo dio una vez sacarla de la página con una expresión regular, que
+capturó 347 caracteres.
+
+#### Comprobar el largo no bastaba (16/10)
+
+La primera versión del bloque falló en la consola del dueño con
+`TypeError: Failed to execute 'fetch' … String contains non ISO-8859-1 code point`.
+
+**El pegado cambió un carácter de la clave por uno parecido que no es ASCII.** El largo siguió
+siendo 208, así que la comprobación pasó sin enterarse, y reventó `fetch`: una cabecera HTTP solo
+admite ASCII. Reproducido en Chromium: sustituir un carácter por `–` (U+2013) deja la clave en 208
+y da **ese mismo error, palabra por palabra**.
+
+Es otra vuelta de lo de siempre, con un matiz que conviene no perder: **la comprobación existía y
+no comprobaba lo que fallaba.** Un largo correcto no dice que el contenido sea utilizable.
+
+Lo que se cambió:
+
+| | Antes | Ahora |
+|---|---|---|
+| Qué revisa de la clave | Solo el largo | **Carácter por carácter que sea ASCII**, y después el largo |
+| Qué dice cuando falla | Nada: el error salía de `fetch` | La posición, el carácter y su `U+xxxx`, y que el pegado la estropeó |
+| Salida de emergencia | No había | `USAR_LA_CLAVE_DE_LA_PAGINA = true`: usa la variable `ANON_KEY` que la página ya tiene cargada, que no pasa por el portapapeles |
+
+**La salida de emergencia no es la expresión regular de antes**, y por eso se acepta: aquella
+buscaba en el texto de la página y capturó 347 caracteres; esta lee la variable que la página usa
+de verdad, y pasa por las mismas dos comprobaciones. Viene apagada: la opción por omisión sigue
+siendo la clave literal, como pide el pedido.
+
+**Y el arnés pilló un segundo fallo al probar esa salida**, que habría reventado igual en la
+consola: la constante del bloque se llamaba `ANON_KEY` igual que la de la página, así que la
+tapaba, y leerla daba `Cannot access 'ANON_KEY' before initialization`. Ahora se llama `CLAVE`.
+Dos fallos del mismo bloque, los dos encontrados ejecutándolo y ninguno leyéndolo.
 
 ### Lo que no cambia, y conviene no confundir
 

@@ -4,16 +4,54 @@
 // seguimiento, `https://huellalaboral.cl/estado.html?token=…`. Solo lee: hace
 // la misma llamada que hace la página.
 //
-// La clave anon va escrita literal y se comprueba que mide 208 caracteres
-// ANTES de llamar a nada. No se saca de la página con una expresión regular:
-// un intento capturó 347 caracteres y dio un fallo falso.
+// La clave anon va escrita literal y se comprueba ANTES de llamar a nada. No se
+// saca de la página con una expresión regular: un intento capturó 347
+// caracteres y dio un fallo falso.
+//
+// COMPROBAR EL LARGO NO BASTA, y costó un intento fallido averiguarlo: el
+// pegado cambió un carácter de la clave por uno parecido que no es ASCII, el
+// largo siguió siendo 208, y `fetch` reventó con «String contains non
+// ISO-8859-1 code point». Una cabecera HTTP solo admite ASCII. Por eso ahora se
+// revisan las dos cosas, y el error dice en qué posición está el carácter malo.
 (async () => {
-  const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c';
+  // Si el pegado vuelve a estropear la clave, poner esto en `true`: el bloque
+  // usa entonces la variable `ANON_KEY` que la propia página ya tiene cargada,
+  // que es el mismo valor y no pasa por el portapapeles. No es la expresión
+  // regular de antes —no se busca nada en el texto de la página, se lee la
+  // variable—, pero se sigue comprobando igual antes de usarla.
+  const USAR_LA_CLAVE_DE_LA_PAGINA = false;
+
+  const ANON_KEY_LITERAL = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4Ymx6bXhjbWFlcnljdmRnZnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTgxNDUsImV4cCI6MjA4NzQzNDE0NX0.NCwvIYGT3hinm0EW3e8EkdSYZgHiCTNkuvDohR0SP0c';
   const SUPABASE_URL = 'https://dxblzmxcmaerycvdgfpy.supabase.co';
 
-  if (ANON_KEY.length !== 208) {
-    throw new Error(`UX-73: la clave anon mide ${ANON_KEY.length} caracteres y debe medir 208. No se llama a nada.`);
+  function revisarClave(clave, origen) {
+    if (typeof clave !== 'string' || !clave) {
+      throw new Error(`UX-73: no hay clave anon (${origen}). No se llama a nada.`);
+    }
+    const malos = [...clave]
+      .map((c, i) => [i, c])
+      .filter(([, c]) => c.codePointAt(0) > 127);
+    if (malos.length) {
+      const detalle = malos
+        .map(([i, c]) => `posición ${i}: «${c}» U+${c.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}`)
+        .join(' · ');
+      throw new Error(
+        `UX-73: la clave anon (${origen}) tiene ${malos.length} carácter(es) que no son ASCII, y una cabecera HTTP no los admite. ` +
+        `${detalle}. El pegado la estropeó: el largo cuadra igual, así que no sirve comprobar solo el largo. ` +
+        `Vuelve a copiarla, o pon USAR_LA_CLAVE_DE_LA_PAGINA en true. No se llama a nada.`);
+    }
+    if (clave.length !== 208) {
+      throw new Error(`UX-73: la clave anon (${origen}) mide ${clave.length} caracteres y debe medir 208. No se llama a nada.`);
+    }
+    return clave;
   }
+
+  // OJO con el nombre: si esta constante se llamara `ANON_KEY`, taparía la de la
+  // página dentro de este bloque y leerla daría «Cannot access 'ANON_KEY' before
+  // initialization». Lo pilló el arnés, no la consola del dueño.
+  const CLAVE = USAR_LA_CLAVE_DE_LA_PAGINA
+    ? revisarClave(typeof ANON_KEY === 'string' ? ANON_KEY : null, 'la de la página')
+    : revisarClave(ANON_KEY_LITERAL, 'la escrita en el bloque');
 
   const token = new URLSearchParams(location.search).get('token');
   if (!token) {
@@ -21,7 +59,7 @@
   }
 
   const r = await fetch(`${SUPABASE_URL}/functions/v1/obtener-estado?token=${encodeURIComponent(token)}`,
-    { headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` }, cache: 'no-store' });
+    { headers: { apikey: CLAVE, Authorization: `Bearer ${CLAVE}` }, cache: 'no-store' });
   if (!r.ok) throw new Error(`UX-73: la función respondió ${r.status}. No hay nada que comprobar.`);
 
   const texto = await r.text();
