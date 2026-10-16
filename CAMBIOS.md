@@ -25,9 +25,11 @@ hallazgos del paso 0».
 
 **En curso:** ninguno.
 
-**Lo último cerrado — `UX-73`, el 15/10.** `obtener-estado` devolvía al navegador del trabajador
-las notas, el comentario y los datos del evaluador, que M-1 promete que no verá. Ya no:
-`obtener-estado` **v5**, `estado.html` sin tocar. Era el único riesgo de datos abierto.
+**Lo último cerrado — `UX-73`.** `obtener-estado` devolvía al navegador del trabajador las notas,
+el comentario y los datos del evaluador, que M-1 promete que no verá. Ya no: **v5**, desplegada el
+15/10, `estado.html` sin tocar, y **comprobado en producción el 16/10** con un trabajador que
+tiene una evaluación válida —un elemento vacío, cero claves, y la pantalla mostrando 1—. Era el
+único riesgo de datos abierto.
 
 Antes, el **Paso 0 de seguridad** —UX-34, H-15, H-18 y lo que faltaba de UX-49— se escribió el
 12/10 en el **PR #22** y quedó **cerrado del todo el 15/10**: fusionado, desplegado, migración
@@ -2097,7 +2099,7 @@ aunque vaya dentro de un mensaje.** Los tres viven ahora en `pedidos/`.
 
 ## UX-73 · La respuesta del evaluador llegaba al navegador del trabajador
 
-🔴 Datos · Esfuerzo S · **Estado: ✅ DESPLEGADO** (15/10/2026) · `obtener-estado` v5 · **PR #24**
+🔴 Datos · Esfuerzo S · **Estado: ✅ CERRADO** · desplegado el 15/10, comprobado en producción el 16/10/2026 · `obtener-estado` v5 · **PR #24**
 
 ### El problema
 
@@ -2228,6 +2230,22 @@ Para elegir ese trabajador se añade **`pedidos/UX-73-con-evaluaciones.sql`**, q
 con su recuento y su enlace, ordenados por evaluaciones válidas. Probado en el mismo Postgres
 local, como el otro.
 
+### Comprobación en producción (16/10) — UX-73 queda cerrado
+
+| Qué | Resultado |
+|-----|-----------|
+| Trabajador con **1 evaluación válida**, abierto por su enlace de seguimiento | `evaluaciones.lista → 1 elemento(s): {"lista":[{}]}` |
+| Claves de ese elemento | **0 — ninguna** |
+| Campos de evaluación en toda la respuesta | **ninguno** |
+| Lo que muestra la pantalla | **1**, el mismo número que dio el SQL |
+
+**Esta corrida sí demuestra algo, y la anterior no.** El primer intento fue sobre un trabajador
+sin evaluaciones: `[]`, y una lista vacía sale igual con el cambio bien que con la función rota.
+La diferencia entre las dos corridas es exactamente lo que separa una comprobación de un trámite.
+
+Con esto se cumple el criterio de cierre: código desplegado ✅ · prueba A ✅ · camino feliz intacto
+✅ · caminos hostiles rechazados ✅ · no regresión ✅ · respaldo regenerado ✅ · visto bueno ✅.
+
 ### Lo que no cambia, y conviene no confundir
 
 **El reclutador sigue viéndolo todo.** `obtener-candidato` no se tocó: el panel sigue mostrando
@@ -2321,7 +2339,7 @@ vivían fuera. Entran aquí con su estado, que es lo que les faltaba para poder 
 | UX-70 | **No hay módulo de revisión de documentos** para el equipo interno | Abierto |
 | UX-71 | **No existe un modelo de roles** | Abierto |
 | UX-72 | **No está definido cómo se verifica la identidad del evaluador** | Abierto. **Paso 4** del plan |
-| UX-73 | **La respuesta del evaluador llegaba al navegador del trabajador** | ✅ **Cerrado el 15/10**, `obtener-estado` v5 |
+| UX-73 | **La respuesta del evaluador llegaba al navegador del trabajador** | ✅ **Cerrado el 16/10**, `obtener-estado` v5 desplegada el 15/10 |
 | UX-74 | Se registró que desactivar a un reclutador no le quitaba el acceso | **Descartado: falso hallazgo.** `gestionar-usuario` ya bloquea la cuenta en el login de Supabase al desactivar o eliminar |
 
 **UX-74 es el único descartado de toda la serie**, y conviene que se quede escrito en vez de
