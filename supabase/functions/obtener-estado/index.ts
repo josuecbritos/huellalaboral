@@ -75,14 +75,34 @@ serve(async (req) => {
 
     const trabajador = trabajadores[0]
 
-    // Obtener evaluaciones del trabajador
+    // ─── UX-73 · aquí no sale contenido de las evaluaciones ───────────────────
+    // M-1 le promete al evaluador que su respuesta «estará visible para
+    // reclutadores en nuestra plataforma, pero no será visible para el
+    // postulante». `estado.html` cumple: solo pinta el número. Esta función no
+    // cumplía: hacía `select('*')` y devolvía notas, comentario y datos del
+    // evaluador al navegador del trabajador, donde cualquiera con el enlace de
+    // seguimiento los lee desde las herramientas del navegador.
+    //
+    // Se pide SOLO `rechazo`, que es lo único que decide si una evaluación
+    // cuenta, y nunca sale de esta función: se usa aquí para filtrar y se
+    // descarta.
     const { data: evaluaciones, error: evalError } = await supabase
       .from('evaluaciones')
-      .select('*')
+      .select('rechazo')
       .eq('trabajador_id', trabajador.id)
-      .order('fecha_completado', { ascending: false })
 
     if (evalError) throw evalError
+
+    // Un objeto VACÍO por cada evaluación válida, y ninguno por los rechazos.
+    // La pantalla hace `.filter(e => !e.rechazo).length`, así que el número que
+    // muestra es el mismo de antes —`{}` pasa ese filtro igual que una fila con
+    // `rechazo` nulo— y ya no viaja nada más. Tampoco cuántos rechazaron: eso
+    // también es dato del evaluador.
+    //
+    // Se quitó el `.order(...)`: ordenar objetos vacíos no ordena nada.
+    const evaluacionesValidas = (evaluaciones || [])
+      .filter((e: any) => !e.rechazo)
+      .map(() => ({}))
 
     // Obtener documentos validados
     const { data: documentos, error: docError } = await supabase
@@ -129,7 +149,8 @@ serve(async (req) => {
           causal_texto: causalValidada === true ? (finiquito?.causal_salida || null) : null,
         },
         evaluaciones: {
-          lista: evaluaciones || []
+          // UX-73: elementos vacíos, uno por evaluación válida. Ver arriba.
+          lista: evaluacionesValidas
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

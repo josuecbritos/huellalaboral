@@ -21,11 +21,13 @@ Regenerados después:
   (UX-45, versión 10 → 11).
 - `crear-solicitud.ts` el **12/10** al neutralizar el nombre y el RUT del trabajador en los tres
   correos (UX-34, versión 30 → 31).
+- `obtener-estado.ts` el **15/10** al dejar de devolver contenido de las evaluaciones
+  (UX-73, versión 4 → 5).
 
-**19 funciones · 3,042 líneas · 117,569 bytes (114.8 KB)**
+**19 funciones · 3,063 líneas · 118,888 bytes (116.1 KB)**
 
 Las líneas son líneas de contenido. Ningún archivo termina en salto de línea, así que `wc -l`
-devuelve una menos por archivo: 3,023 + 19 = 3,042.
+devuelve una menos por archivo: 3,044 + 19 = 3,063.
 
 Contenido íntegro y literal de cada `index.ts` desplegado, un archivo por función,
 sin resumir ni reformatear. `version` es la versión activa en producción al momento
@@ -46,7 +48,7 @@ del respaldo; `ezbr_sha256` es el hash que reporta Supabase para ese despliegue.
 | `crear-proceso.ts` | 4 | 82 | 2,489 | `f77e34079efb1e7f…` |
 | `autenticar.ts` | 3 | 108 | 3,646 | `89407d4afe037367…` |
 | `listar-usuarios.ts` | 3 | 64 | 2,180 | `da020c2b3433b0ff…` |
-| `obtener-estado.ts` | 4 | 145 | 5,767 | `8e9b0eb2f3e75d2b…` |
+| `obtener-estado.ts` | 5 | 166 | 7,086 | `fe54708b46ffcb5a…` |
 | `obtener-validacion.ts` | 3 | 114 | 4,123 | `b5e8f62d4d781b9e…` |
 | `obtener-proceso.ts` | 3 | 116 | 4,295 | `f3c1110b5adc901a…` |
 | `obtener-stats.ts` | 3 | 144 | 5,394 | `579d2aaea7922de9…` |
@@ -66,9 +68,9 @@ cubre `crear-reclutador.ts`. Para el resto, lo comprobado es que producción est
 versión y con el mismo `ezbr_sha256` que registra la tabla. El detalle por archivo está abajo.
 
 **Los recuentos de esa tabla son del 11/08 y no se han rehecho.** Desde entonces se regeneró
-`agregar-candidato.ts` dos veces y `crear-solicitud.ts` dos (13/08), y `obtener-candidato.ts` una
-(14/08), así que el total vigente es el de la cabecera —3.042 líneas, 117.569 bytes—, no el de la
-fila. La comprobación de versión y `ezbr_sha256` sí se repitió antes de cada despliegue, incluido
+`agregar-candidato.ts` dos veces y `crear-solicitud.ts` tres (13/08 y 12/10), `obtener-candidato.ts`
+una (14/08) y `obtener-estado.ts` una (15/10), así que el total vigente es el de la cabecera
+—3.063 líneas, 118.888 bytes—, no el de la fila. La comprobación de versión y `ezbr_sha256` sí se repitió antes de cada despliegue, incluido
 el del 14/08: las 19 seguían donde el respaldo decía.
 
 ## Notas
@@ -98,7 +100,7 @@ lea más garantía de la que hay.
 | `crear-solicitud.ts` | H-02/H-03, M-1, el cambio manual de M-2, y UX-34 | **Solo copia del fuente enviado a desplegar** en su v31. La v30 sí se había reconstruido leyendo producción. Ver la nota de abajo |
 | `obtener-validacion.ts` | H-02 | Igual |
 | `validar-documentos.ts` | H-03 | Igual |
-| `obtener-estado.ts` | Cadena de validación | Igual |
+| `obtener-estado.ts` | Cadena de validación, luego UX-73 | Igual. La vigente es la **v5 del 15/10**, y tampoco se releyó |
 | `obtener-candidato.ts` | Cadena de validación, luego UX-45 | Igual. La vigente es la v11 del 14/08 |
 
 Las cinco últimas son las de menor rigor y conviene decir por qué: releerlas de producción habría
