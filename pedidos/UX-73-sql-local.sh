@@ -4,10 +4,11 @@
 # corre el dueño no puede ejecutarse desde la sesión: esto evita mandárselo sin
 # haberlo ejecutado nunca.
 #
-# Tres casos, y el segundo es el que importa:
+# Cuatro casos, y el segundo es el que importa:
 #   1 · trabajador con 2 válidas y 1 rechazo → 2, 1, 3, y el enlace completo
 #   2 · trabajador SIN evaluaciones          → 0, no 1. Es la trampa del LEFT JOIN
 #   3 · trabajador sin `token_consulta`      → lo dice, en vez de devolver null
+#   4 · el listado de quién tiene evaluaciones → ordena por válidas, 2 arriba
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -53,6 +54,7 @@ insert into public.trabajadores (nombre, rut, token_consulta) values ('Sin Token
 SQL
 
 cp "$REPO/pedidos/UX-73-enlace.sql" "$T/enlace.sql"
+cp "$REPO/pedidos/UX-73-con-evaluaciones.sql" "$T/con-evaluaciones.sql"
 # Los casos 2 y 3 usan el mismo SQL cambiando solo el RUT.
 sed "s/'11.111.111-1'/'22.222.222-2'/" "$T/enlace.sql" > "$T/enlace2.sql"
 sed "s/'11.111.111-1'/'33.333.333-3'/" "$T/enlace.sql" > "$T/enlace3.sql"
@@ -67,3 +69,5 @@ linea; echo "2 · sin evaluaciones → se espera 0, no 1"
 psql_ "-x -f $T/enlace2.sql"
 linea; echo "3 · sin token_consulta → lo dice en vez de devolver null"
 psql_ "-x -f $T/enlace3.sql"
+linea; echo "4 · quién tiene evaluaciones → Ana primero con 2, los otros dos con 0"
+psql_ "-f $T/con-evaluaciones.sql"

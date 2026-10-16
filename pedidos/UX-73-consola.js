@@ -86,7 +86,15 @@
   const claves = [...new Set(lista.flatMap(e => Object.keys(e)))];
   const enElTexto = CAMPOS.filter(c => texto.includes(`"${c}"`));
 
-  if (claves.length === 0 && enElTexto.length === 0) {
+  if (claves.length === 0 && enElTexto.length === 0 && lista.length === 0) {
+    // Una lista vacía es consistente con el cambio Y con la función rota: no
+    // distingue una cosa de la otra. Decir ✅ aquí sería comprobar sobre la nada.
+    console.warn('⚠️  UX-73 NO CONCLUYENTE: la lista viene vacía, así que esto no demuestra nada.');
+    console.warn('   Una lista vacía sale igual si el cambio está bien que si la función devolviera siempre cero.');
+    console.warn('   Si el SQL dijo 0 evaluaciones válidas para este trabajador, la respuesta es correcta pero');
+    console.warn('   la prueba hay que repetirla con un trabajador QUE TENGA al menos una evaluación válida.');
+    console.warn('   Si el SQL dijo más de 0, esto es un fallo: avisa.');
+  } else if (claves.length === 0 && enElTexto.length === 0) {
     console.log(`✅ UX-73 correcto: ${lista.length} elemento(s), ninguno con claves, y ningún campo de evaluación en toda la respuesta.`);
     console.log('   Compara ese número con el que dio el SQL: deben ser el mismo.');
   } else {

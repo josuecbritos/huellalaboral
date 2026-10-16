@@ -2211,6 +2211,23 @@ consola: la constante del bloque se llamaba `ANON_KEY` igual que la de la págin
 tapaba, y leerla daba `Cannot access 'ANON_KEY' before initialization`. Ahora se llama `CLAVE`.
 Dos fallos del mismo bloque, los dos encontrados ejecutándolo y ninguno leyéndolo.
 
+#### Un tercero: el bloque daba ✅ sobre una lista vacía (16/10)
+
+Con la clave ya arreglada, la primera corrida en producción dio
+`evaluaciones.lista → 0 elemento(s): {"lista":[]}` y el bloque respondió **✅**.
+
+**Está mal, y es el error clásico de esta bitácora con otra cara.** Una lista vacía sale igual si
+el cambio está bien que si la función devolviera siempre cero: **no distingue una cosa de la
+otra**. El ✅ decía «no hay nada sensible» sobre una respuesta donde no había nada, punto.
+
+Ahora, con cero elementos, el bloque imprime **⚠️ NO CONCLUYENTE** y explica qué hacer: si el SQL
+también dijo 0, la respuesta es correcta pero la prueba hay que repetirla con un trabajador que
+tenga al menos una evaluación válida; si el SQL dijo más de 0, es un fallo.
+
+Para elegir ese trabajador se añade **`pedidos/UX-73-con-evaluaciones.sql`**, que lista a todos
+con su recuento y su enlace, ordenados por evaluaciones válidas. Probado en el mismo Postgres
+local, como el otro.
+
 ### Lo que no cambia, y conviene no confundir
 
 **El reclutador sigue viéndolo todo.** `obtener-candidato` no se tocó: el panel sigue mostrando

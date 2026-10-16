@@ -85,6 +85,18 @@ console.log(`  dice ✅ y no ❌:                 ${marca(cOk)}`)
 console.log(`  cuenta los 2 elementos:         ${marca(cCuenta)}`)
 if (!cOk || !cCuenta) { malos++; console.log(c.join('\n')) }
 
+console.log('\n' + '═'.repeat(90) + '\nVACÍA · lista sin elementos: NO es un ✅, es un no concluyente')
+const VACIA = JSON.stringify({
+  trabajador: { nombre: 'Ana Pérez', rut: '11.111.111-1' },
+  documentos: { cert_estado: 'validado', cert_razon_invalido: null, finiq_estado: 'validado',
+                cert_empleos: 3, cert_permanencia: 4, causal_validada: true, causal_texto: 'renuncia' },
+  evaluaciones: { lista: [] },
+})
+const v = await correr({ cuerpo: VACIA })
+const vAvisa = hay(v, 'NO CONCLUYENTE') && !hay(v, '✅ UX-73 correcto') && !hay(v, '❌ UX-73')
+console.log(`  avisa y no da ✅:               ${marca(vAvisa)}`)
+if (!vAvisa) { malos++; console.log(v.join('\n')) }
+
 console.log('\n' + '═'.repeat(90) + '\nAborta cuando debe')
 const sinToken = await correr({ url: '' })
 const okSinToken = hay(sinToken, 'no tiene `?token=`')
